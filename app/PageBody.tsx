@@ -6,7 +6,7 @@ export default function PageBody() {
   return (
     <div className="p-4">
       <Label className=" justify-center text-2xl">Admin Page</Label>
-      <div className="border p-4 rounded-2xl flex flex-col gap-5">
+      <div className="border p-4 flex flex-col gap-5">
         <div className="flex flex-col gap-1">
           <Label>Email Address</Label>
           <Input placeholder="Email Address" type="email" />
