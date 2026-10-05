@@ -1,3 +1,8 @@
+import PageBody from "./PageBody";
 export default function App() {
-  return <div></div>;
+  return (
+    <div>
+      <PageBody />
+    </div>
+  );
 }
