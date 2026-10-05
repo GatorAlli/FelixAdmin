@@ -15,7 +15,7 @@ export default function PageBody() {
           <Label>Password</Label>
           <Input placeholder="Password" type="password" />
         </div>
-        <Button className="bg-[#186636]">Login</Button>
+        <Button className="bg-[#186636] hover:bg-[#124f2a]">Login</Button>
       </div>
     </div>
   );
