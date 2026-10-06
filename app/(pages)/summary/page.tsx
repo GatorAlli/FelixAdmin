@@ -1,16 +1,16 @@
-export function Summary() {
+export default function Summary() {
   return (
     <div>
-      <table>
-        <thead className="gap-3 border border-black font-heading">
+      <table className="border border-separate border-spacing-4">
+        <thead className="">
           <tr>
-            <th>SL</th> <th>Created by</th> <th>FELIX ORDER REF.</th>{" "}
-            <th>Felix SO No</th> <th>Felix SO DATE</th> <th>EMI Order Ref</th>{" "}
-            <th>PAYMENT MODE</th> <th>CLIENT ORDER REF</th>{" "}
-            <th>CLIENT ORDER DATE</th> <th>CLIENT ORDER VALUE</th>{" "}
-            <th>PROJECT NAME</th> <th>CLIENT NAME</th> <th>End User</th>{" "}
-            <th>PRODUCT/ SYSTEM</th> <th>TT or L/C REF.</th> <th>LC DATE</th>{" "}
-            <th>LATEST DATE OF SHIPMENT</th> <th>DATE OF EXPAIRY</th>{" "}
+            <th>SL</th> <th>Created by</th> <th>FELIX ORDER REF.</th>
+            <th>Felix SO No</th> <th>Felix SO DATE</th> <th>EMI Order Ref</th>
+            <th>PAYMENT MODE</th> <th>CLIENT ORDER REF</th>
+            <th>CLIENT ORDER DATE</th> <th>CLIENT ORDER VALUE</th>
+            <th>PROJECT NAME</th> <th>CLIENT NAME</th> <th>End User</th>
+            <th>PRODUCT/ SYSTEM</th> <th>TT or L/C REF.</th> <th>LC DATE</th>
+            <th>LATEST DATE OF SHIPMENT</th> <th>DATE OF EXPAIRY</th>
             <th>CONSIGNEE</th> <th>ORDER HANDLED BY</th>
             <th>SUPPLIERS</th>
             <th>TRANE</th>
