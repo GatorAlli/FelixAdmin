@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 
 export default function OrderForm() {
   // Each field has its own state, following your Label/Input pattern.
-  const [createdBy, setCreatedBy] = useState("");
   const [felixSoNo, setFelixSoNo] = useState("");
   const [felixSoDate, setFelixSoDate] = useState("");
   const [emiOrderRef, setEmiOrderRef] = useState("");
@@ -40,21 +39,12 @@ export default function OrderForm() {
   const nextSupplierId = useRef(2);
 
   return (
-    <form onSubmit={(e) => {
-      e.preventDefault();
-      // TODO: Add submission functionality later.
-    }}>
-      <div>
-        <Label htmlFor="createdBy">Created by</Label>
-        <Input
-          id="createdBy"
-          name="createdBy"
-          type="text"
-          required
-          value={createdBy}
-          onChange={(e) => setCreatedBy(e.target.value)}
-        />
-      </div>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        // TODO: Add submission functionality later.
+      }}
+    >
       <div>
         <Label htmlFor="felixSoNo">Felix SO number</Label>
         <Input
@@ -274,9 +264,13 @@ export default function OrderForm() {
               value={row.supplier}
               onChange={(e) => {
                 // Update only this row's supplier name.
-                setSuppliers((rows) => rows.map((item) =>
-                  item.id === row.id ? { ...item, supplier: e.target.value } : item
-                ));
+                setSuppliers((rows) =>
+                  rows.map((item) =>
+                    item.id === row.id
+                      ? { ...item, supplier: e.target.value }
+                      : item,
+                  ),
+                );
               }}
             />
             <Label htmlFor={`supplier-amount-${row.id}`}>Amount (BDT)</Label>
@@ -288,15 +282,23 @@ export default function OrderForm() {
               value={row.amount}
               onChange={(e) => {
                 // Update only this row's amount; keep it as a string so it can be cleared.
-                setSuppliers((rows) => rows.map((item) =>
-                  item.id === row.id ? { ...item, amount: e.target.value } : item
-                ));
+                setSuppliers((rows) =>
+                  rows.map((item) =>
+                    item.id === row.id
+                      ? { ...item, amount: e.target.value }
+                      : item,
+                  ),
+                );
               }}
             />
             <Button
               type="button"
               aria-label={`Remove supplier ${index + 1}`}
-              onClick={() => setSuppliers((rows) => rows.filter((item) => item.id !== row.id))}
+              onClick={() =>
+                setSuppliers((rows) =>
+                  rows.filter((item) => item.id !== row.id),
+                )
+              }
             >
               −
             </Button>
