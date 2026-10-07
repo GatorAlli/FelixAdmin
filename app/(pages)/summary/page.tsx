@@ -4,8 +4,8 @@ export default function Summary() {
       <table className="border border-separate border-spacing-4">
         <thead className="">
           <tr>
-            <th>SL</th> <th>Created by</th> <th>FELIX ORDER REF.</th>
-            <th>Felix SO No</th> <th>Felix SO DATE</th> <th>EMI Order Ref</th>
+            <th>SL</th> <th>Created by</th> <th>ORDER REF.</th>
+            <th>SO No</th> <th>SO DATE</th> <th>EMI Order Ref</th>
             <th>PAYMENT MODE</th> <th>CLIENT ORDER REF</th>
             <th>CLIENT ORDER DATE</th> <th>CLIENT ORDER VALUE</th>
             <th>PROJECT NAME</th> <th>CLIENT NAME</th> <th>End User</th>
