@@ -35,6 +35,8 @@ export default function PageBody() {
   const [remarks, setRemarks] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState("");
 
+  const [paymentModeOther, setPaymentModeOther] = useState("");
+
   // Each supplier row holds its name and amount. Stable IDs keep rows separate when one is removed.
   const [suppliers, setSuppliers] = useState([
     { id: 1, supplier: "", amount: "" },
@@ -93,15 +95,57 @@ export default function PageBody() {
         />
       </div>
       <div>
-        <Label htmlFor="paymentMode">Payment mode</Label>
-        <Input
-          placeholder="LC/TT/OTHER"
-          id="paymentMode"
-          name="paymentMode"
-          type="text"
-          value={paymentMode}
-          onChange={(e) => setPaymentMode(e.target.value)}
-        />
+        <Label htmlFor="paymentMode">{paymentMode}</Label>
+      </div>
+      <div>
+        <Label className="text-2xl">Payment Mode</Label>
+        <div className="flex justify-between">
+          <Label htmlFor="paymentMode">LC</Label>
+          <Input
+            id="paymentMode"
+            name="paymentMode"
+            type="radio"
+            value={paymentMode}
+            onChange={() => {
+              setPaymentMode("LC");
+
+              setPaymentModeOther("");
+            }}
+          />
+        </div>
+        <div className="flex justify-between">
+          <Label htmlFor="paymentMode">TT</Label>
+          <Input
+            id="paymentMode"
+            name="paymentMode"
+            type="radio"
+            value={paymentMode}
+            onChange={() => {
+              setPaymentMode("TT");
+              setPaymentModeOther("");
+            }}
+          />
+        </div>
+        <div className="flex justify-between">
+          <Label htmlFor="paymentMode">Other</Label>
+          <Input
+            id="paymentMode"
+            name="paymentMode"
+            type="radio"
+            value={paymentMode}
+            onChange={() => {
+              setPaymentModeOther("Other");
+            }}
+          />
+          {paymentModeOther === "Other" && (
+            <Input
+              value={paymentMode}
+              onChange={(e) => {
+                setPaymentMode(e.target.value);
+              }}
+            />
+          )}
+        </div>
       </div>
       <div>
         <Label htmlFor="clientOrderRef">Client order reference</Label>
@@ -165,7 +209,7 @@ export default function PageBody() {
         />
       </div>
       <div>
-        <Label htmlFor="productSystem">Product / system</Label>
+        <Label htmlFor="productSystem">Product/System</Label>
         <Input
           placeholder="BMS/FDAS/CCTV/HVAC Products/PA/VFD/Home Automation/Fire Suppression"
           id="productSystem"
@@ -238,128 +282,134 @@ export default function PageBody() {
       </div>
 
       {/* Supplier names use inputs, with suggestions for the brands in the schema. */}
-      <div>
-        <datalist id="supplier-options">
-          <option value="TRANE" />
-          <option value="BELIMO" />
-          <option value="DANFOSS" />
-          <option value="HONEYWELL" />
-          <option value="REGELTECHNIK" />
-          <option value="DWYER" />
-          <option value="ALPS" />
-          <option value="CONTROL 4" />
-          <option value="LUTRON" />
-          <option value="LANDIS+GYR" />
-          <option value="RBH" />
-          <option value="PROSTAR" />
-          <option value="GISSMATIC" />
-          <option value="ZKTECO" />
-          <option value="ADTESHIA" />
-          <option value="FIKE" />
-          <option value="TECOFI" />
-          <option value="SEWO" />
-          <option value="EBELCO" />
-          <option value="DOOYA" />
-          <option value="POGO" />
-          <option value="PARK HELP" />
-          <option value="FOSHAN" />
-          <option value="KELE" />
-          <option value="MULTICABLE" />
-          <option value="DEYZ" />
-          <option value="SIEMENS" />
-          <option value="FLASH TURTLE" />
-          <option value="SERVO" />
-          <option value="HABOO" />
-          <option value="OTHERS" />
-        </datalist>
-        {suppliers.map((row, index) => (
-          <div key={row.id} className="flex">
-            <Label>{index + 1}.</Label>
-            <Label htmlFor={`supplier-${row.id}`}>Supplier</Label>
+      <div className="flex justify-between gap-10">
+        <div>
+          <div>
+            <Label htmlFor="misCost">Miscellaneous cost (BDT)</Label>
             <Input
-              id={`supplier-${row.id}`}
-              name="supplier"
-              placeholder="Supplier"
-              list="supplier-options"
-              value={row.supplier}
-              onChange={(e) => {
-                // Update only this row's supplier name.
-                setSuppliers((rows) =>
-                  rows.map((item) =>
-                    item.id === row.id
-                      ? { ...item, supplier: e.target.value }
-                      : item,
-                  ),
-                );
-              }}
-            />
-            <Label htmlFor={`supplier-amount-${row.id}`}>Amount</Label>
-            <Input
-              id={`supplier-amount-${row.id}`}
-              name="supplierAmount"
+              id="misCost"
+              name="misCost"
               type="number"
-              min="0"
               step="0.01"
-              value={row.amount}
-              placeholder="in BDT"
-              onChange={(e) => {
-                // Update only this row's amount; keep it as a string so it can be cleared.
-                setSuppliers((rows) =>
-                  rows.map((item) =>
-                    item.id === row.id
-                      ? { ...item, amount: e.target.value }
-                      : item,
-                  ),
-                );
-              }}
+              value={misCost}
+              onChange={(e) => setMisCost(e.target.value)}
             />
-            <Button
-              type="button"
-              aria-label={`Remove supplier ${index + 1}`}
-              onClick={() =>
-                setSuppliers((rows) =>
-                  rows.filter((item) => item.id !== row.id),
-                )
-              }
-            >
-              −
-            </Button>
           </div>
-        ))}
-        <Button
-          type="button"
-          aria-label="Add supplier"
-          onClick={() => {
-            // Append a new empty row with an ID that has not been used before.
-            const id = nextSupplierId.current++;
-            setSuppliers((rows) => [...rows, { id, supplier: "", amount: "" }]);
-          }}
-        >
-          +
-        </Button>
-      </div>
-
-      <div>
-        <Label htmlFor="emiCost">EMI cost (BDT)</Label>
-        <Input
-          id="emiCost"
-          name="emiCost"
-          type="number"
-          step="0.01"
-          value={emiCost}
-          onChange={(e) => setEmiCost(e.target.value)}
-        />
-      </div>
-      <div>
-        <Label htmlFor="misCost">Miscellaneous cost (BDT)</Label>
-        <Input
-          id="misCost"
-          name="misCost"
-          type="number"
-          step="0.01"
-          value={misCost}
-          onChange={(e) => setMisCost(e.target.value)}
-        />
+          <div>
+            <Label htmlFor="emiCost">EMI cost (BDT)</Label>
+            <Input
+              id="emiCost"
+              name="emiCost"
+              type="number"
+              step="0.01"
+              value={emiCost}
+              onChange={(e) => setEmiCost(e.target.value)}
+            />
+          </div>
+        </div>
+        <div>
+          <datalist id="supplier-options">
+            <option value="TRANE" />
+            <option value="BELIMO" />
+            <option value="DANFOSS" />
+            <option value="HONEYWELL" />
+            <option value="REGELTECHNIK" />
+            <option value="DWYER" />
+            <option value="ALPS" />
+            <option value="CONTROL 4" />
+            <option value="LUTRON" />
+            <option value="LANDIS+GYR" />
+            <option value="RBH" />
+            <option value="PROSTAR" />
+            <option value="GISSMATIC" />
+            <option value="ZKTECO" />
+            <option value="ADTESHIA" />
+            <option value="FIKE" />
+            <option value="TECOFI" />
+            <option value="SEWO" />
+            <option value="EBELCO" />
+            <option value="DOOYA" />
+            <option value="POGO" />
+            <option value="PARK HELP" />
+            <option value="FOSHAN" />
+            <option value="KELE" />
+            <option value="MULTICABLE" />
+            <option value="DEYZ" />
+            <option value="SIEMENS" />
+            <option value="FLASH TURTLE" />
+            <option value="SERVO" />
+            <option value="HABOO" />
+            <option value="OTHERS" />
+          </datalist>
+          {suppliers.map((row, index) => (
+            <div key={row.id} className="flex">
+              <Label>{index + 1}.</Label>
+              <Label htmlFor={`supplier-${row.id}`}>Supplier</Label>
+              <Input
+                id={`supplier-${row.id}`}
+                name="supplier"
+                placeholder="Supplier"
+                list="supplier-options"
+                value={row.supplier}
+                onChange={(e) => {
+                  // Update only this row's supplier name.
+                  setSuppliers((rows) =>
+                    rows.map((item) =>
+                      item.id === row.id
+                        ? { ...item, supplier: e.target.value }
+                        : item,
+                    ),
+                  );
+                }}
+              />
+              <Label htmlFor={`supplier-amount-${row.id}`}>Amount</Label>
+              <Input
+                id={`supplier-amount-${row.id}`}
+                name="supplierAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={row.amount}
+                placeholder="in BDT"
+                onChange={(e) => {
+                  // Update only this row's amount; keep it as a string so it can be cleared.
+                  setSuppliers((rows) =>
+                    rows.map((item) =>
+                      item.id === row.id
+                        ? { ...item, amount: e.target.value }
+                        : item,
+                    ),
+                  );
+                }}
+              />
+              <Button
+                type="button"
+                aria-label={`Remove supplier ${index + 1}`}
+                onClick={() =>
+                  setSuppliers((rows) =>
+                    rows.filter((item) => item.id !== row.id),
+                  )
+                }
+              >
+                −
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            aria-label="Add supplier"
+            onClick={() => {
+              // Append a new empty row with an ID that has not been used before.
+              const id = nextSupplierId.current++;
+              setSuppliers((rows) => [
+                ...rows,
+                { id, supplier: "", amount: "" },
+              ]);
+            }}
+          >
+            +
+          </Button>
+        </div>
       </div>
       <div>
         <Label htmlFor="payBack">Pay back (BDT)</Label>
