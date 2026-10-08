@@ -217,7 +217,7 @@ export default function PageBody() {
             name="productSystem"
             type="radio"
             value={productSystem}
-            onChange={(e) => setProductSystem("BMS")}
+            onChange={() => setProductSystem("BMS")}
           />
         </div>
         <div className="flex">
@@ -227,7 +227,7 @@ export default function PageBody() {
             name="productSystem"
             type="radio"
             value={productSystem}
-            onChange={(e) => setProductSystem("FDAS")}
+            onChange={() => setProductSystem("FDAS")}
           />
         </div>
         <div className="flex">
@@ -237,7 +237,7 @@ export default function PageBody() {
             name="productSystem"
             type="radio"
             value={productSystem}
-            onChange={(e) => setProductSystem("CCTV")}
+            onChange={() => setProductSystem("CCTV")}
           />
         </div>
 
@@ -248,7 +248,7 @@ export default function PageBody() {
             name="productSystem"
             type="radio"
             value={productSystem}
-            onChange={(e) => setProductSystem("HVAC Products")}
+            onChange={() => setProductSystem("HVAC Products")}
           />
         </div>
 
@@ -259,7 +259,7 @@ export default function PageBody() {
             name="productSystem"
             type="radio"
             value={productSystem}
-            onChange={(e) => setProductSystem("PA")}
+            onChange={() => setProductSystem("PA")}
           />
         </div>
 
@@ -270,7 +270,7 @@ export default function PageBody() {
             name="productSystem"
             type="radio"
             value={productSystem}
-            onChange={(e) => setProductSystem("VFD")}
+            onChange={() => setProductSystem("VFD")}
           />
         </div>
 
@@ -281,7 +281,7 @@ export default function PageBody() {
             name="productSystem"
             type="radio"
             value={productSystem}
-            onChange={(e) => setProductSystem("Home Automation")}
+            onChange={() => setProductSystem("Home Automation")}
           />
         </div>
 
@@ -292,7 +292,7 @@ export default function PageBody() {
             name="productSystem"
             type="radio"
             value={productSystem}
-            onChange={(e) => setProductSystem("Fire Suppression")}
+            onChange={() => setProductSystem("Fire Suppression")}
           />
         </div>
       </div>
