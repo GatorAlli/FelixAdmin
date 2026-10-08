@@ -95,9 +95,6 @@ export default function PageBody() {
         />
       </div>
       <div>
-        <Label htmlFor="paymentMode">{paymentMode}</Label>
-      </div>
-      <div>
         <Label className="text-2xl">Payment Mode</Label>
         <div className="flex justify-between">
           <Label htmlFor="paymentMode">LC</Label>
@@ -209,15 +206,95 @@ export default function PageBody() {
         />
       </div>
       <div>
-        <Label htmlFor="productSystem">Product/System</Label>
-        <Input
-          placeholder="BMS/FDAS/CCTV/HVAC Products/PA/VFD/Home Automation/Fire Suppression"
-          id="productSystem"
-          name="productSystem"
-          type="text"
-          value={productSystem}
-          onChange={(e) => setProductSystem(e.target.value)}
-        />
+        <Label htmlFor="productSystem" className="text-2xl">
+          Product/System
+        </Label>
+
+        <div className="flex">
+          <Label>BMS</Label>
+          <Input
+            id="productSystem"
+            name="productSystem"
+            type="radio"
+            value={productSystem}
+            onChange={(e) => setProductSystem("BMS")}
+          />
+        </div>
+        <div className="flex">
+          <Label>FDAS</Label>
+          <Input
+            id="productSystem"
+            name="productSystem"
+            type="radio"
+            value={productSystem}
+            onChange={(e) => setProductSystem("FDAS")}
+          />
+        </div>
+        <div className="flex">
+          <Label>CCTV</Label>
+          <Input
+            id="productSystem"
+            name="productSystem"
+            type="radio"
+            value={productSystem}
+            onChange={(e) => setProductSystem("CCTV")}
+          />
+        </div>
+
+        <div className="flex">
+          <Label>HVAC Products</Label>
+          <Input
+            id="productSystem"
+            name="productSystem"
+            type="radio"
+            value={productSystem}
+            onChange={(e) => setProductSystem("HVAC Products")}
+          />
+        </div>
+
+        <div className="flex">
+          <Label>PA</Label>
+          <Input
+            id="productSystem"
+            name="productSystem"
+            type="radio"
+            value={productSystem}
+            onChange={(e) => setProductSystem("PA")}
+          />
+        </div>
+
+        <div className="flex">
+          <Label>VFD</Label>
+          <Input
+            id="productSystem"
+            name="productSystem"
+            type="radio"
+            value={productSystem}
+            onChange={(e) => setProductSystem("VFD")}
+          />
+        </div>
+
+        <div className="flex">
+          <Label>Home Automation</Label>
+          <Input
+            id="productSystem"
+            name="productSystem"
+            type="radio"
+            value={productSystem}
+            onChange={(e) => setProductSystem("Home Automation")}
+          />
+        </div>
+
+        <div className="flex">
+          <Label>Fire Suppression</Label>
+          <Input
+            id="productSystem"
+            name="productSystem"
+            type="radio"
+            value={productSystem}
+            onChange={(e) => setProductSystem("Fire Suppression")}
+          />
+        </div>
       </div>
       <div>
         <Label htmlFor="ttOrLcRef">TT or L/C reference</Label>
