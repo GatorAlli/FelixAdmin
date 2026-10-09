@@ -28,7 +28,8 @@ export default async function Home() {
           <tr>
             <th>SL</th>
             <th>CREATED BY</th>
-            <th>EMI ORDER REF.</th>
+            <th>ORDER NO.</th>
+            <th>EMI REF.</th>
             <th>CLIENT ORDER DATE</th>
             <th>CLIENT ORDER VALUE</th>
             <th>PROJECT NAME</th>
@@ -42,6 +43,7 @@ export default async function Home() {
             <tr key={e.sl}>
               <td>{e.sl}</td>
               <td>{e.createdBy}</td>
+              <td>{e.felixOrderRef}</td>
               <td>{e.emiOrderRef}</td>
               <td>{e.clientOrderDate}</td>
               <td>{e.clientOrderValue}</td>
