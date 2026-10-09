@@ -49,7 +49,12 @@ export default async function Home() {
               <td>{e.clientName}</td>
               <td>{e.endUser}</td>
               <td>
-                <Button>Edit</Button>
+                <Link
+                  href={`/order_form/${e.sl}`}
+                  className={buttonVariants({})}
+                >
+                  Edit
+                </Link>
               </td>
             </tr>
           ))}
