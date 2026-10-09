@@ -2,7 +2,8 @@
 
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/drizzle/drizzle-index";
-import { data } from "@/lib/drizzle/schema";
+import { data, type NewOrder } from "@/lib/drizzle/schema";
+import { revalidatePath } from "next/cache";
 
 const supplierColumns = {
   TRANE: "trane",
@@ -67,7 +68,10 @@ function readOptionalDate(formData: FormData, name: string) {
   return { value, error: null };
 }
 
-export async function createOrder(formData: FormData) {
+// Both creating and editing use the same field validation and conversion.
+function readOrderValues(formData: FormData):
+  | { ok: true; values: Omit<NewOrder, "sl" | "felixOrderRef"> }
+  | { ok: false; message: string } {
   const createdBy = readText(formData, "createdBy");
   if (!createdBy) {
     return { ok: false, message: "Created by is required." };
@@ -141,8 +145,6 @@ export async function createOrder(formData: FormData) {
 
   const values = {
     createdBy,
-    // A temporary value satisfies the NOT NULL column until the generated primary key is known.
-    felixOrderRef: "FCL/FPO/2024/PENDING",
     felixSoNo: readText(formData, "felixSoNo") || null,
     felixSoDate: dateFields.felixSoDate.value,
     emiOrderRef: readText(formData, "emiOrderRef") || null,
@@ -161,6 +163,10 @@ export async function createOrder(formData: FormData) {
     consignee: readText(formData, "consignee") || null,
     orderHandledBy: readText(formData, "orderHandledBy") || null,
     suppliers: selectedSuppliers.length ? selectedSuppliers.join(", ") : null,
+    // Clear amounts for suppliers that were removed from the form during editing.
+    ...(Object.fromEntries(
+      Object.values(supplierColumns).map((column) => [column, null]),
+    ) as Record<SupplierKey, null>),
     ...supplierValues,
     emiCost: numericFields.emiCost.value,
     misCost: numericFields.misCost.value,
@@ -171,11 +177,22 @@ export async function createOrder(formData: FormData) {
     remarks: readText(formData, "remarks") || null,
   };
 
+  return { ok: true, values };
+}
+
+export async function createOrder(formData: FormData) {
+  const parsed = readOrderValues(formData);
+  if (!parsed.ok) return parsed;
+
   try {
     const result = await db.transaction(async (transaction) => {
       const [insertedOrder] = await transaction
         .insert(data)
-        .values(values)
+        .values({
+          ...parsed.values,
+          // The generated primary key is needed before building the final reference.
+          felixOrderRef: "FCL/FPO/2024/PENDING",
+        })
         .returning({ sl: data.sl });
 
       if (!insertedOrder)
@@ -197,5 +214,39 @@ export async function createOrder(formData: FormData) {
       ok: false,
       message: "Could not save the order. Please try again.",
     };
+  }
+}
+
+// Update only the existing row identified by its primary key.
+export async function updateOrder(orderId: number, formData: FormData) {
+  if (!Number.isInteger(orderId) || orderId < 1) {
+    return { ok: false, message: "Invalid order ID." };
+  }
+
+  const parsed = readOrderValues(formData);
+  if (!parsed.ok) return parsed;
+
+  try {
+    const [updatedOrder] = await db
+      .update(data)
+      // The primary key and Felix order reference are excluded from these values.
+      .set(parsed.values)
+      .where(eq(data.sl, orderId))
+      .returning({ felixOrderRef: data.felixOrderRef });
+
+    if (!updatedOrder) {
+      return { ok: false, message: "Order not found." };
+    }
+
+    revalidatePath("/summary");
+    revalidatePath("/home");
+    revalidatePath(`/order_form/${orderId}`);
+    return {
+      ok: true,
+      message: `Order updated: ${updatedOrder.felixOrderRef}`,
+    };
+  } catch (error) {
+    console.error("Unable to update order", error);
+    return { ok: false, message: "Could not update the order. Please try again." };
   }
 }
