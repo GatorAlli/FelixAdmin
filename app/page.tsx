@@ -5,6 +5,7 @@ import { ArrowRight, Plus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 const sora = Sora({
   subsets: ["latin"],
   weight: ["600"],
@@ -39,6 +40,9 @@ const FallingParticles = () => {
   );
 };
 export default function App() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   return (
     <div
       className={`min-h-screen flex w-full bg-[#F8FAFC] ${manrope.className}`}
@@ -80,7 +84,7 @@ export default function App() {
               className={`text-4xl md:text-[44px] tracking-tight text-black mb-3 leading-tight ${sora.className}`}
             >
               {" "}
-              Welcome back{" "}
+              Welcome Back{" "}
             </h1>
           </div>
           {/* Sign in page */}
