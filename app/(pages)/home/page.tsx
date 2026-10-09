@@ -4,8 +4,12 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import AddIcon from "@hugeicons/core-free-icons/Add01Icon";
+import { db } from "@/lib/drizzle/drizzle-index";
+import { data } from "@/lib/drizzle/schema";
 
-export default function Home() {
+export default async function Home() {
+  const orders = await db.select().from(data);
+
   return (
     <div className="p-4 flex flex-col">
       <div className="flex gap-3 items-center py-4">
@@ -29,7 +33,20 @@ export default function Home() {
             <th>END USER</th>
           </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+          {orders.map((e) => (
+            <tr key={e.sl}>
+              <td>{e.sl}</td>
+              <td>{e.createdBy}</td>
+              <td>{e.emiOrderRef}</td>
+              <td>{e.clientOrderDate}</td>
+              <td>{e.clientOrderValue}</td>
+              <td>{e.projectName}</td>
+              <td>{e.clientName}</td>
+              <td>{e.endUser}</td>
+            </tr>
+          ))}
+        </tbody>
       </table>
     </div>
   );
