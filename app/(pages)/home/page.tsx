@@ -1,11 +1,12 @@
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import AddIcon from "@hugeicons/core-free-icons/Add01Icon";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data } from "@/lib/drizzle/schema";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
   const orders = await db.select().from(data);
@@ -13,11 +14,13 @@ export default async function Home() {
   return (
     <div className="p-4 flex flex-col">
       <div className="flex gap-3 items-center py-4">
-        <Button className="">
+        <Link href="/order_form" className={buttonVariants({})}>
           <HugeiconsIcon icon={AddIcon}></HugeiconsIcon>
           Create New Order
-        </Button>
-        <Button className="">Summary</Button>
+        </Link>
+        <Link href="/summary" className={buttonVariants({})}>
+          Summary
+        </Link>
       </div>
 
       <table className="border border-separate border-spacing-4">
