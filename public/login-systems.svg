@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="650" viewBox="0 0 720 650" fill="none">
+  <title>Felix building systems technical illustration</title>
+  <desc>A custom illustrative arrangement of HVAC, lighting, fire detection, security, motor drives and building automation equipment.</desc>
+  <defs>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" stroke="#F6F7F4" stroke-opacity=".055" stroke-width=".7"/></pattern>
+  </defs>
+  <rect width="720" height="650" fill="#186636"/>
+  <rect x="24" y="24" width="672" height="602" fill="url(#grid)"/>
+  <g stroke="#F6F7F4" stroke-opacity=".42" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M154 151H215V257H278M544 166H477V279H446M145 326H278M544 350H480V335H446M174 526H215V383H278M535 526H485V405H446"/>
+    <path d="M154 163H202V270H278M544 178H490V291H446M145 338H278M174 538H202V395H278M535 538H497V417H446" opacity=".4"/>
+  </g>
+  <g stroke="#F6F7F4" stroke-opacity=".55" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- HVAC wall controller, with a temperature display and tactile controls. -->
+    <g transform="translate(64 66)">
+      <path d="M10 10H100L110 20V126H10Z" fill="#186636"/>
+      <path d="M10 10L20 0H110V116L100 126M100 10V126M100 10L110 0" stroke-opacity=".3"/>
+      <rect x="23" y="24" width="63" height="42" rx="2"/>
+      <path d="M35 34H46V44H35V55H46M55 34H67V55H55ZM76 33V37M74 35H78"/>
+      <path d="M26 85H36M31 80V90M51 85H61"/>
+      <circle cx="79" cy="86" r="7"/><path d="M79 76V84"/>
+      <path d="M25 108H82" stroke-opacity=".3"/>
+    </g>
+    <!-- Ventilation assembly. -->
+    <g transform="translate(532 64)">
+      <rect x="0" y="0" width="134" height="134" rx="5" fill="#186636"/>
+      <rect x="8" y="8" width="118" height="118" rx="2" stroke-opacity=".3"/>
+      <circle cx="67" cy="67" r="48"/><circle cx="67" cy="67" r="10"/>
+      <path d="M60 58C26 40 27 14 44 25C63 37 65 41 65 57M77 60C95 26 121 27 110 44C98 63 94 65 78 65M74 77C108 95 107 121 90 110C71 98 69 94 69 78M57 74C39 108 13 107 24 90C36 71 40 69 56 69"/>
+      <path d="M16 16H18M116 16H118M16 118H18M116 118H118"/>
+    </g>
+    <!-- Variable frequency drive and its cooling fins. -->
+    <g transform="translate(40 266)">
+      <path d="M12 0H94L112 18V135H12Z" fill="#186636"/><path d="M94 0V135M94 0L112 18"/>
+      <rect x="26" y="17" width="52" height="26" rx="2"/><path d="M36 30H65" stroke="#F6F7F4" stroke-width="3"/>
+      <circle cx="33" cy="58" r="4"/><circle cx="51" cy="58" r="4"/><circle cx="69" cy="58" r="4"/>
+      <path d="M28 81H77M28 88H77M28 95H77M28 102H77M28 109H77M100 29V120M105 35V120" stroke-opacity=".35"/>
+      <path d="M29 135V143M45 135V143M61 135V143M77 135V143"/>
+    </g>
+    <!-- Building automation controller, the centre of the composition. -->
+    <g transform="translate(278 234)">
+      <rect x="0" y="0" width="168" height="208" rx="3" fill="#186636" stroke-opacity=".9"/>
+      <path d="M10 0V208M158 0V208M0 36H168M0 169H168" stroke-opacity=".3"/>
+      <rect x="27" y="60" width="114" height="58" rx="2"/>
+      <path d="M40 100V89H51V95H63V78H75V91H88V72H100V88H115V80H128" stroke="#F6F7F4" stroke-width="2.5"/>
+      <path d="M29 132H84M29 143H64" stroke-opacity=".3"/>
+      <circle cx="123" cy="137" r="5" stroke="#F6F7F4"/><circle cx="140" cy="137" r="3" stroke="#F80304"/>
+      <path d="M26 17H142M26 187H142"/>
+      <path d="M31 10V24M46 10V24M61 10V24M76 10V24M91 10V24M106 10V24M121 10V24M136 10V24M31 180V194M46 180V194M61 180V194M76 180V194M91 180V194M106 180V194M121 180V194M136 180V194" stroke-opacity=".6"/>
+    </g>
+    <!-- Lighting control module. -->
+    <g transform="translate(540 276)">
+      <path d="M0 10H103L116 22V116H0Z" fill="#186636"/><path d="M103 10V116L116 106V22" stroke-opacity=".3"/>
+      <path d="M15 29H87M15 92H87M22 23V35M36 23V35M50 23V35M64 23V35M78 23V35M22 86V98M36 86V98M50 86V98M64 86V98M78 86V98"/>
+      <circle cx="29" cy="61" r="10"/><circle cx="71" cy="61" r="10"/>
+      <path d="M29 45V54M29 68V75M14 61H22M36 61H44M71 45V54M71 68V75M56 61H64M78 61H86" stroke-opacity=".4"/>
+    </g>
+    <!-- Fire alarm call point and audible alarm. -->
+    <g transform="translate(76 486)">
+      <rect x="0" y="0" width="94" height="97" rx="3" fill="#186636"/>
+      <rect x="12" y="15" width="70" height="48" rx="1" stroke="#F80304" stroke-opacity=".7"/>
+      <path d="M28 39H65M47 26V52M23 78H71" stroke-opacity=".4"/>
+      <circle cx="127" cy="27" r="19"/><circle cx="127" cy="27" r="10"/>
+      <path d="M103 53H151M103 58H151M109 63H145M153 8C163 18 163 37 153 46" stroke-opacity=".4"/>
+    </g>
+    <!-- Security camera and wall bracket. -->
+    <g transform="translate(535 474)">
+      <path d="M0 8L94 0L129 21L113 62L16 58Z" fill="#186636"/>
+      <path d="M0 8L36 32L129 21M36 32L16 58"/>
+      <ellipse cx="26" cy="39" rx="9" ry="13" transform="rotate(24 26 39)"/>
+      <path d="M66 61L60 88H38V108M38 81H26V116H38M60 88H75L83 69"/>
+      <path d="M54 13L94 10" stroke-opacity=".3"/>
+    </g>
+  </g>
+  <g fill="#F6F7F4" fill-opacity=".48" font-family="Arial,sans-serif" font-size="9" letter-spacing="1">
+    <text x="74" y="217">HVAC CONTROL</text><text x="540" y="217">VENTILATION</text>
+    <text x="53" y="425">MOTOR DRIVE</text><text x="547" y="418">LIGHTING CONTROL</text>
+    <text x="291" y="469">BUILDING AUTOMATION</text><text x="77" y="608">FIRE DETECTION</text><text x="546" y="608">SECURITY</text>
+  </g>
+  <g stroke="#F6F7F4" stroke-opacity=".2" stroke-width="1">
+    <path d="M25 44V25H44M676 25H695V44M25 607V626H44M676 626H695V607"/>
+    <path d="M240 505H457M240 500V510M457 500V510M24 245V460M19 245H29M19 460H29"/>
+  </g>
+  <g fill="#F80304"><circle cx="215" cy="257" r="2.5"/><circle cx="480" cy="350" r="2.5"/><circle cx="215" cy="526" r="2.5"/></g>
+</svg>

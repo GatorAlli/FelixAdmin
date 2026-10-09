@@ -1,22 +1,112 @@
+"use client";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { Sora, Manrope } from "next/font/google";
+import { ArrowRight, Plus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
+const sora = Sora({ 
+  subsets: ["latin"], 
+  weight: ["600"] 
+});
+const manrope = Manrope({ 
+  subsets: ["latin"], 
+  weight: ["400", "500", "600"] 
+});
+const FallingParticles = () => {
+const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+ if (!mounted) return null;
+return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {[...Array(30)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute top-[-10%] w-1 h-1 bg-white/20 rounded-full"
+          style={{
+            left: `${Math.random() * 100}%`,
+            animation: `fall ${Math.random() * 5 + 5}s linear infinite`,
+            animationDelay: `${Math.random() * 5}s`,
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes fall {
+          0% { transform: translateY(-10vh); opacity: 0; }
+          10% { opacity: 1; }
+          100% { transform: translateY(110vh); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+};
 export default function App() {
   return (
-    <div>
-      <div className="p-4">
-        <Label className=" justify-center text-2xl">Admin Page</Label>
-        <div className="border p-4 flex flex-col gap-5">
-          <div className="flex flex-col gap-1">
-            <Label>Email Address</Label>
-            <Input placeholder="Email Address" type="email" />
+    <div className={`min-h-screen flex w-full bg-[#F8FAFC] ${manrope.className}`}>
+      <div className="relative hidden md:flex md:w-1/2 bg-[#186636] items-center justify-center overflow-hidden">
+        <FallingParticles />
+        <div className="relative z-10 w-[70%] max-w-lg">
+          <Image 
+            src="/login-systems.svg" 
+            alt="System Schematic Illustration" 
+            width={600} 
+            height={600} 
+            priority
+            className="object-contain w-full h-auto"/>
+        </div>
+      </div>
+      <div className="w-full md:w-1/2 flex flex-col relative bg-[#F8FAFC]">
+        <div className="absolute top-6 right-8 z-20"></div>
+        {/* Content */}
+        <div className="flex-1 flex flex-col justify-center px-8 sm:px-16 lg:px-24 max-w-2xl mx-auto w-full mt-12 md:mt-0">
+          {/* Logo */}
+          <div className="mb-12 relative">
+            <Image 
+              src="/logo.svg" 
+              alt="Felix Controls Limited" 
+              width={160} 
+              height={45} 
+              className="object-contain mb-6"/>
+            {/* animated line */}
+            <div className="w-full h-px bg-gray-200 relative flex items-center">
+              <Plus className="absolute -right-3 h-4 w-4 text-[#186636] opacity-50" />
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <Label>Password</Label>
-            <Input placeholder="Password" type="password" />
+          {/* Header part */}
+          <div className="mb-10">
+            <h1 className={`text-4xl md:text-[44px] tracking-tight text-black mb-3 leading-tight ${sora.className}`}>   Welcome back </h1>
           </div>
-          <Button className="bg-[#186636] hover:bg-[#124f2a]">Login</Button>
+          {/* Sign in page */}
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="email" className="text-[13px] uppercase tracking-wide font-semibold text-gray-900">Email Address</Label>
+              <Input 
+                id="email" 
+                placeholder="Email address" 
+                type="email" 
+                className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-[#186636] focus-visible:border-[#186636] placeholder:text-gray-400"/>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password" className="text-[13px] uppercase tracking-wide font-semibold text-gray-900">Password</Label>
+              <Input 
+                id="password" 
+                placeholder="Password" 
+                type="password" 
+                className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-[#186636] focus-visible:border-[#186636] placeholder:text-gray-400"/>
+            </div>
+           {/* animated button */}
+            <Button className="w-full normal-case bg-[#186636] hover:bg-[#124f2a] text-white mt-4 py-7 px-6 text-[17px] font-semibold rounded-lg transition-colors group">
+              <div className="relative flex w-full items-center justify-between">
+                <span className="relative z-10">Sign In</span>
+                 {/* Arrow moving */}
+                <div className="bg-black/10 p-1.5 rounded-full group-hover:bg-black/20 transition-all duration-300 group-hover:translate-x-1 flex-shrink-0 z-10">
+                  <ArrowRight className="h-5 w-5 text-white" strokeWidth={2.5} />
+                </div>
+                <span className="absolute left-0 bottom-[-6px] h-[1px] w-0 bg-white transition-all duration-300 ease-out group-hover:w-full opacity-0 group-hover:opacity-100" />
+              </div>
+            </Button>
+          </div>
         </div>
       </div>
     </div>
