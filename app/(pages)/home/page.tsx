@@ -1,5 +1,5 @@
 import { Label } from "@/components/ui/label";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -34,6 +34,7 @@ export default async function Home() {
             <th>PROJECT NAME</th>
             <th>CLIENT NAME</th>
             <th>END USER</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -47,6 +48,9 @@ export default async function Home() {
               <td>{e.projectName}</td>
               <td>{e.clientName}</td>
               <td>{e.endUser}</td>
+              <td>
+                <Button>Edit</Button>
+              </td>
             </tr>
           ))}
         </tbody>

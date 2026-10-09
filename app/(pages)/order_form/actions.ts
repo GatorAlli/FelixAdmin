@@ -82,7 +82,9 @@ export async function createOrder(formData: FormData) {
     paymentReceived: readOptionalNumber(formData, "paymentReceived"),
     felixOhAndProfit: readOptionalNumber(formData, "felixOhAndProfit"),
   };
-  const numericError = Object.values(numericFields).find((field) => field.error);
+  const numericError = Object.values(numericFields).find(
+    (field) => field.error,
+  );
   if (numericError?.error) {
     return { ok: false, message: numericError.error };
   }
@@ -108,12 +110,16 @@ export async function createOrder(formData: FormData) {
     const supplierName = supplierNames[index];
     const supplierAmount = supplierAmounts[index];
     const name = typeof supplierName === "string" ? supplierName.trim() : "";
-    const amount = typeof supplierAmount === "string" ? supplierAmount.trim() : "";
+    const amount =
+      typeof supplierAmount === "string" ? supplierAmount.trim() : "";
 
     // The initial blank supplier row is optional; partially filled rows are not.
     if (!name && !amount) continue;
     if (!name || !amount) {
-      return { ok: false, message: "Complete both supplier and amount for each row." };
+      return {
+        ok: false,
+        message: "Complete both supplier and amount for each row.",
+      };
     }
 
     const column = supplierColumns[name as keyof typeof supplierColumns];
@@ -172,7 +178,8 @@ export async function createOrder(formData: FormData) {
         .values(values)
         .returning({ sl: data.sl });
 
-      if (!insertedOrder) throw new Error("Order insert returned no primary key.");
+      if (!insertedOrder)
+        throw new Error("Order insert returned no primary key.");
 
       const felixOrderRef = `FCL/FPO/2024/${String(insertedOrder.sl).padStart(3, "0")}`;
       await transaction
@@ -186,6 +193,9 @@ export async function createOrder(formData: FormData) {
     return { ok: true, message: `Order created: ${result}` };
   } catch (error) {
     console.error("Unable to create order", error);
-    return { ok: false, message: "Could not save the order. Please try again." };
+    return {
+      ok: false,
+      message: "Could not save the order. Please try again.",
+    };
   }
 }
