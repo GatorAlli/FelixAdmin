@@ -5,9 +5,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createOrder } from "./actions";
+import { useParams } from "next/navigation";
 
 export default function PageBody() {
-  // Each field has its own state, following your Label/Input pattern.
+  // Slug
+  const { edit_slug } = useParams<{ edit_slug: string }>();
+
+  // States
   const [createdBy, setCreatedBy] = useState("");
   const [felixSoNo, setFelixSoNo] = useState("");
   const [felixSoDate, setFelixSoDate] = useState("");
@@ -37,7 +41,6 @@ export default function PageBody() {
 
   const [paymentModeOther, setPaymentModeOther] = useState("");
 
-  // Each supplier row holds its name and amount. Stable IDs keep rows separate when one is removed.
   const [suppliers, setSuppliers] = useState([
     { id: 1, supplier: "", amount: "" },
   ]);
