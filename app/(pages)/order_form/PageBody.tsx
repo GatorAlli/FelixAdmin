@@ -4,10 +4,15 @@ import { useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { createOrder } from "./actions";
+import { createOrder, updateOrder } from "./actions";
+import { useParams } from "next/navigation";
+import { type Order } from "@/lib/drizzle/schema";
 
-export default function PageBody() {
-  // Each field has its own state, following your Label/Input pattern.
+export default function PageBody({ orderDetails }: { orderDetails?: Order }) {
+  // Slug
+  const { edit_slug } = useParams<{ edit_slug: string }>();
+
+  // States
   const [createdBy, setCreatedBy] = useState("");
   const [felixSoNo, setFelixSoNo] = useState("");
   const [felixSoDate, setFelixSoDate] = useState("");
@@ -37,21 +42,114 @@ export default function PageBody() {
 
   const [paymentModeOther, setPaymentModeOther] = useState("");
 
-  // Each supplier row holds its name and amount. Stable IDs keep rows separate when one is removed.
   const [suppliers, setSuppliers] = useState([
     { id: 1, supplier: "", amount: "" },
   ]);
-  const nextSupplierId = useRef(2);
+  // Saved supplier rows use IDs 1–31; newly added rows start after those.
+  const nextSupplierId = useRef(32);
+  const [loadedOrderDetails, setLoadedOrderDetails] = useState<Order>();
+
+  // Only load a new order once. Without this guard, the setters cause a render loop.
+  if (orderDetails && orderDetails !== loadedOrderDetails) {
+    setLoadedOrderDetails(orderDetails);
+    // Database nulls become empty strings so the inputs can display them.
+    setCreatedBy(orderDetails.createdBy ?? "");
+    setFelixSoNo(orderDetails.felixSoNo ?? "");
+    setFelixSoDate(orderDetails.felixSoDate ?? "");
+    setEmiOrderRef(orderDetails.emiOrderRef ?? "");
+    setPaymentMode(orderDetails.paymentMode ?? "");
+    setClientOrderRef(orderDetails.clientOrderRef ?? "");
+    setClientOrderDate(orderDetails.clientOrderDate ?? "");
+    setClientOrderValue(orderDetails.clientOrderValue ?? "");
+    setProjectName(orderDetails.projectName ?? "");
+    setClientName(orderDetails.clientName ?? "");
+    setEndUser(orderDetails.endUser ?? "");
+    setProductSystem(orderDetails.productSystem ?? "");
+    setTtOrLcRef(orderDetails.ttOrLcRef ?? "");
+    setLcDate(orderDetails.lcDate ?? "");
+    setLatestDateOfShipment(orderDetails.latestDateOfShipment ?? "");
+    setDateOfExpiry(orderDetails.dateOfExpiry ?? "");
+    setConsignee(orderDetails.consignee ?? "");
+    setOrderHandledBy(orderDetails.orderHandledBy ?? "");
+    setEmiCost(orderDetails.emiCost ?? "");
+    setMisCost(orderDetails.misCost ?? "");
+    setPayBack(orderDetails.payBack ?? "");
+    setTotalOrderCost(orderDetails.totalOrderCost ?? "");
+    setPaymentReceived(orderDetails.paymentReceived ?? "");
+    setFelixOhAndProfit(orderDetails.felixOhAndProfit ?? "");
+    setRemarks(orderDetails.remarks ?? "");
+    setPaymentModeOther(
+      orderDetails.paymentMode &&
+        orderDetails.paymentMode !== "LC" &&
+        orderDetails.paymentMode !== "TT"
+        ? "Other"
+        : "",
+    );
+
+    // Convert the supplier amount columns back into the form's editable rows.
+    const savedSuppliers = [
+      { supplier: "TRANE", amount: orderDetails.trane },
+      { supplier: "BELIMO", amount: orderDetails.belimo },
+      { supplier: "DANFOSS", amount: orderDetails.danfoss },
+      { supplier: "HONEYWELL", amount: orderDetails.honeywell },
+      { supplier: "REGELTECHNIK", amount: orderDetails.regeltechnik },
+      { supplier: "DWYER", amount: orderDetails.dwyer },
+      { supplier: "ALPS", amount: orderDetails.alps },
+      { supplier: "CONTROL 4", amount: orderDetails.control4 },
+      { supplier: "LUTRON", amount: orderDetails.lutron },
+      { supplier: "LANDIS+GYR", amount: orderDetails.landisGyr },
+      { supplier: "RBH", amount: orderDetails.rbh },
+      { supplier: "PROSTAR", amount: orderDetails.prostar },
+      { supplier: "GISSMATIC", amount: orderDetails.gissmatic },
+      { supplier: "ZKTECO", amount: orderDetails.zkteco },
+      { supplier: "ADTESHIA", amount: orderDetails.adteshia },
+      { supplier: "FIKE", amount: orderDetails.fike },
+      { supplier: "TECOFI", amount: orderDetails.tecofi },
+      { supplier: "SEWO", amount: orderDetails.sewo },
+      { supplier: "EBELCO", amount: orderDetails.ebelco },
+      { supplier: "DOOYA", amount: orderDetails.dooya },
+      { supplier: "POGO", amount: orderDetails.pogo },
+      { supplier: "PARK HELP", amount: orderDetails.parkHelp },
+      { supplier: "FOSHAN", amount: orderDetails.foshan },
+      { supplier: "KELE", amount: orderDetails.kele },
+      { supplier: "MULTICABLE", amount: orderDetails.multicable },
+      { supplier: "DEYZ", amount: orderDetails.deyz },
+      { supplier: "SIMENS", amount: orderDetails.simens },
+      { supplier: "FLASH TURTLE", amount: orderDetails.flashTurtle },
+      { supplier: "SERVO", amount: orderDetails.servo },
+      { supplier: "HABOO", amount: orderDetails.haboo },
+      { supplier: "OTHERS", amount: orderDetails.others },
+    ]
+      .map((row, index) => ({ ...row, id: index + 1 }))
+      .filter(
+        (row): row is { id: number; supplier: string; amount: string } =>
+          row.amount !== null,
+      );
+    setSuppliers(
+      savedSuppliers.length
+        ? savedSuppliers
+        : [{ id: 1, supplier: "", amount: "" }],
+    );
+  }
 
   return (
     <form
       onSubmit={async (e) => {
         e.preventDefault();
+
         setSubmissionMessage("");
-        const result = await createOrder(new FormData(e.currentTarget));
-        setSubmissionMessage(result.message);
+        if (orderDetails) {
+          const result = await updateOrder(
+            orderDetails.sl,
+            new FormData(e.currentTarget),
+          );
+          setSubmissionMessage(result.message);
+        } else {
+          const result = await createOrder(new FormData(e.currentTarget));
+          setSubmissionMessage(result.message);
+        }
       }}
-      className="p-4"
+      className="p-4 flex flex-col gap-10"
     >
       <div>
         <Label htmlFor="createdBy">Created by</Label>
@@ -103,6 +201,7 @@ export default function PageBody() {
             name="paymentMode"
             type="radio"
             value={paymentMode}
+            checked={paymentMode === "LC" && paymentModeOther !== "Other"}
             onChange={() => {
               setPaymentMode("LC");
 
@@ -117,6 +216,7 @@ export default function PageBody() {
             name="paymentMode"
             type="radio"
             value={paymentMode}
+            checked={paymentMode === "TT" && paymentModeOther !== "Other"}
             onChange={() => {
               setPaymentMode("TT");
               setPaymentModeOther("");
@@ -130,6 +230,7 @@ export default function PageBody() {
             name="paymentMode"
             type="radio"
             value={paymentMode}
+            checked={paymentModeOther === "Other"}
             onChange={() => {
               setPaymentModeOther("Other");
             }}
