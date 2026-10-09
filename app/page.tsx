@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+
+import { createClient } from "@supabase/supabase-js";
+
 const sora = Sora({
   subsets: ["latin"],
   weight: ["600"],
@@ -42,6 +45,11 @@ const FallingParticles = () => {
 export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+  );
 
   return (
     <div
@@ -87,8 +95,8 @@ export default function App() {
               Welcome Back{" "}
             </h1>
           </div>
-          {/* Sign in page */}
-          <div className="flex flex-col gap-6">
+          {/* Sign In Form */}
+          <form className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <Label
                 htmlFor="email"
@@ -118,7 +126,10 @@ export default function App() {
               />
             </div>
             {/* animated button */}
-            <Button className="w-full normal-case bg-[#186636] hover:bg-[#124f2a] text-white mt-4 py-7 px-6 text-[17px] font-semibold rounded-lg transition-colors group">
+            <Button
+              type="submit"
+              className="w-full normal-case bg-[#186636] hover:bg-[#124f2a] text-white mt-4 py-7 px-6 text-[17px] font-semibold rounded-lg transition-colors group"
+            >
               <div className="relative flex w-full items-center justify-between">
                 <span className="relative z-10">Sign In</span>
                 {/* Arrow moving */}
@@ -131,7 +142,7 @@ export default function App() {
                 <span className="absolute left-0 bottom-[-6px] h-[1px] w-0 bg-white transition-all duration-300 ease-out group-hover:w-full opacity-0 group-hover:opacity-100" />
               </div>
             </Button>
-          </div>
+          </form>
         </div>
       </div>
     </div>
