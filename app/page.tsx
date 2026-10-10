@@ -96,7 +96,10 @@ export default function App() {
             </h1>
           </div>
           {/* Sign In Form */}
-          <form className="flex flex-col gap-6">
+          <form onSubmit={async(e) => {e.preventDefault()
+           supabase.auth.signInWithPassword({email, password})
+          }
+          } className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <Label
                 htmlFor="email"
