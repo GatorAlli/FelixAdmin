@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import { Sora, Manrope } from "next/font/google";
 import { ArrowRight, Plus } from "lucide-react";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -45,6 +47,9 @@ const FallingParticles = () => {
 export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+
+  const router = useRouter();
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -96,10 +101,30 @@ export default function App() {
             </h1>
           </div>
           {/* Sign In Form */}
-          <form onSubmit={async(e) => {e.preventDefault()
-           supabase.auth.signInWithPassword({email, password})
-          }
-          } className="flex flex-col gap-6">
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (email !== "" && password !== "") {
+                const loginResult = await supabase.auth.signInWithPassword({
+                  email,
+                  password,
+                });
+                if (loginResult.error) {
+                  setMessage("Invalid Credentials");
+                } else if (loginResult.data) {
+                  setMessage("Signed In Successfully");
+                  router.push("/home");
+                }
+              } else if (!email && !password) {
+                setMessage("Enter email and password");
+              } else if (!password) {
+                setMessage("Enter a password");
+              } else {
+                setMessage("Enter email");
+              }
+            }}
+            className="flex flex-col gap-6"
+          >
             <div className="flex flex-col gap-2">
               <Label
                 htmlFor="email"
@@ -111,6 +136,10 @@ export default function App() {
                 id="email"
                 placeholder="Email address"
                 type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                }}
                 className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-[#186636] focus-visible:border-[#186636] placeholder:text-gray-400"
               />
             </div>
@@ -125,6 +154,10 @@ export default function App() {
                 id="password"
                 placeholder="Password"
                 type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                }}
                 className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-[#186636] focus-visible:border-[#186636] placeholder:text-gray-400"
               />
             </div>
@@ -145,6 +178,7 @@ export default function App() {
                 <span className="absolute left-0 bottom-[-6px] h-[1px] w-0 bg-white transition-all duration-300 ease-out group-hover:w-full opacity-0 group-hover:opacity-100" />
               </div>
             </Button>
+            {message === "NULL" || <Label>{message}</Label>}
           </form>
         </div>
       </div>
