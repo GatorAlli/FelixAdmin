@@ -1,7 +1,9 @@
+import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data } from "@/lib/drizzle/schema";
 
 export default async function Summary() {
+  await requireUser();
   const orders = await db.select().from(data);
 
   return (

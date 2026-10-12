@@ -6,11 +6,10 @@ import { ArrowRight, Plus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { supabase, user } from "@/lib/supabase/actions";
+import { supabase } from "@/lib/supabase/actions";
 
-import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
 const sora = Sora({
@@ -57,7 +56,7 @@ export default function App() {
     let active = true;
     async function checkUser() {
       const user = await supabase.auth.getUser();
-      if (active && !user.error && user.data) {
+      if (active && !user.error && user.data.user) {
         router.replace("/home");
       }
     }
@@ -127,6 +126,7 @@ export default function App() {
                 } else if (loginResult.data) {
                   setMessage("Signed In Successfully");
                   router.push("/home");
+                  router.refresh();
                 }
               } else if (!email && !password) {
                 setMessage("Enter email and password");

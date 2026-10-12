@@ -1,6 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
+import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data, type NewOrder } from "@/lib/drizzle/schema";
 import { revalidatePath } from "next/cache";
@@ -181,6 +182,7 @@ function readOrderValues(formData: FormData):
 }
 
 export async function createOrder(formData: FormData) {
+  await requireUser();
   const parsed = readOrderValues(formData);
   if (!parsed.ok) return parsed;
 
@@ -219,6 +221,7 @@ export async function createOrder(formData: FormData) {
 
 // Update only the existing row identified by its primary key.
 export async function updateOrder(orderId: number, formData: FormData) {
+  await requireUser();
   if (!Number.isInteger(orderId) || orderId < 1) {
     return { ok: false, message: "Invalid order ID." };
   }

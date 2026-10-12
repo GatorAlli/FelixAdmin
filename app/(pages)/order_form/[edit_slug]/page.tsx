@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import PageBody from "../PageBody";
 import { data } from "@/lib/drizzle/schema";
@@ -8,6 +9,7 @@ export default async function OrderForm({
 }: {
   params: Promise<{ edit_slug: string }>;
 }) {
+  await requireUser();
   const { edit_slug } = await params;
   const order = await db
     .select()

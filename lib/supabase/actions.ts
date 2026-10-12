@@ -1,8 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
+"use client";
 
-export const supabase = createClient(
+import { createBrowserClient } from "@supabase/ssr";
+
+// Store the browser session in cookies so server pages can verify the same login.
+export const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
 );
-
-export const user = await supabase.auth.getUser();
