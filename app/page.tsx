@@ -6,7 +6,9 @@ import { ArrowRight, Plus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import { supabase, user } from "@/lib/supabase/actions";
 
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
@@ -51,10 +53,21 @@ export default function App() {
 
   const router = useRouter();
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-  );
+  useEffect(() => {
+    let active = true;
+    async function checkUser() {
+      const user = await supabase.auth.getUser();
+      if (active && !user.error && user.data) {
+        router.replace("/home");
+      }
+    }
+
+    void checkUser();
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
 
   return (
     <div
@@ -169,13 +182,13 @@ export default function App() {
               <div className="relative flex w-full items-center justify-between">
                 <span className="relative z-10">Sign In</span>
                 {/* Arrow moving */}
-                <div className="bg-black/10 p-1.5 rounded-full group-hover:bg-black/20 transition-all duration-300 group-hover:translate-x-1 flex-shrink-0 z-10">
+                <div className="bg-black/10 p-1.5 rounded-full group-hover:bg-black/20 transition-all duration-300 group-hover:translate-x-1 shrink-0 z-10">
                   <ArrowRight
                     className="h-5 w-5 text-white"
                     strokeWidth={2.5}
                   />
                 </div>
-                <span className="absolute left-0 bottom-[-6px] h-[1px] w-0 bg-white transition-all duration-300 ease-out group-hover:w-full opacity-0 group-hover:opacity-100" />
+                <span className="absolute left-0 bottom-1.5 h-px w-0 bg-white transition-all duration-300 ease-out group-hover:w-full opacity-0 group-hover:opacity-100" />
               </div>
             </Button>
             {message === "NULL" || <Label>{message}</Label>}
