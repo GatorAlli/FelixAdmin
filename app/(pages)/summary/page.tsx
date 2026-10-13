@@ -1,10 +1,11 @@
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data } from "@/lib/drizzle/schema";
+import { asc } from "drizzle-orm";
 
 export default async function Summary() {
   await requireUser();
-  const orders = await db.select().from(data);
+  const orders = await db.select().from(data).orderBy(asc(data.sl));
 
   return (
     <div>

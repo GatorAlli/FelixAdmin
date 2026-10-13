@@ -70,5 +70,11 @@ export const data = p.pgTable("data", {
   remarks: p.text(),
 });
 
+export const users = p.pgTable("users", {
+  name: p.varchar(),
+  email: p.varchar(),
+  status: p.varchar(),
+});
+
 export type Order = typeof data.$inferSelect;
 export type NewOrder = typeof data.$inferInsert;

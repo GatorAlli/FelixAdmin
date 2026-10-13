@@ -8,10 +8,11 @@ import { db } from "@/lib/drizzle/drizzle-index";
 import { data } from "@/lib/drizzle/schema";
 import { SignOutButton } from "@/app/components/signOutButton";
 import { requireUser } from "@/lib/supabase/auth";
+import { asc } from "drizzle-orm";
 
 export default async function Home() {
   await requireUser();
-  const orders = await db.select().from(data);
+  const orders = await db.select().from(data).orderBy(asc(data.sl));
 
   return (
     <div className="p-4 flex flex-col">
