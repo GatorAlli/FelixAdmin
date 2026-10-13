@@ -46,7 +46,7 @@ export default async function Home() {
           </thead>
           <tbody>
             {orders.map((e) => (
-              <tr key={e.sl}>
+              <tr key={e.sl} className="">
                 <td>{e.sl}</td>
                 <td>{e.createdBy}</td>
                 <td>{e.felixOrderRef}</td>
@@ -59,9 +59,9 @@ export default async function Home() {
                 <td>
                   <Link
                     href={`/order_form/${e.sl}`}
-                    className={buttonVariants({})}
+                    className={buttonVariants()}
                   >
-                    Edit
+                    View
                   </Link>
                 </td>
               </tr>

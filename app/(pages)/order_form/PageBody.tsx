@@ -3,11 +3,19 @@
 import { useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
 import { createOrder, updateOrder } from "./actions";
 import { type Order } from "@/lib/drizzle/schema";
+import { User } from "@supabase/supabase-js";
 
-export default function PageBody({ orderDetails }: { orderDetails?: Order }) {
+export default function PageBody({
+  orderDetails,
+  isAdmin,
+}: {
+  orderDetails?: Order;
+  isAdmin: boolean;
+}) {
   // States
   const [createdBy, setCreatedBy] = useState("");
   const [felixSoNo, setFelixSoNo] = useState("");
@@ -664,13 +672,17 @@ export default function PageBody({ orderDetails }: { orderDetails?: Order }) {
         </div>
       ) : (
         <div>
-          <Button
-            onClick={() => {
-              setIsEditing(!isEditing);
-            }}
-          >
-            Edit
-          </Button>
+          {isAdmin ? (
+            <Button
+              onClick={() => {
+                setIsEditing(!isEditing);
+              }}
+            >
+              Edit
+            </Button>
+          ) : (
+            <div></div>
+          )}
           <div className="p-4 flex flex-col gap-10">
             <div>
               <Label>Created by</Label>
@@ -951,6 +963,9 @@ export default function PageBody({ orderDetails }: { orderDetails?: Order }) {
               <Label className="font-bold">{remarks}</Label>
             </div>
           </div>
+          <Link href="/home" className={buttonVariants()}>
+            Back
+          </Link>
         </div>
       )}
     </div>

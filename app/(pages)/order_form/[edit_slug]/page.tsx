@@ -1,7 +1,7 @@
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import PageBody from "../PageBody";
-import { data } from "@/lib/drizzle/schema";
+import { data, users } from "@/lib/drizzle/schema";
 import { eq } from "drizzle-orm";
 
 export default async function OrderForm({
@@ -9,16 +9,29 @@ export default async function OrderForm({
 }: {
   params: Promise<{ edit_slug: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
+
+  let adminStatus = false;
+
   const { edit_slug } = await params;
   const order = await db
     .select()
     .from(data)
     .where(eq(data.sl, Number(edit_slug)))
     .limit(1);
+
+  const userArray = await db.select().from(users);
+
+  userArray.forEach((e) => {
+    if (e.email === user.email && e.status === "admin") {
+      adminStatus = true;
+      return;
+    }
+  });
+
   return (
     <div>
-      <PageBody orderDetails={order[0]} />
+      <PageBody orderDetails={order[0]} isAdmin={adminStatus} />
     </div>
   );
 }
