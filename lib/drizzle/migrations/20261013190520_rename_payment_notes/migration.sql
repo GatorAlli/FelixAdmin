@@ -1,0 +1,1 @@
+ALTER TABLE "data" RENAME COLUMN "remarks" TO "paymentNotes";

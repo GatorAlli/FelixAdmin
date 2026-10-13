@@ -8,31 +8,20 @@ function readText(formData: FormData, name: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function readOptionalNumber(formData: FormData, name: string) {
+// Fees are optional percentages, with up to four decimal places.
+function readOptionalFee(formData: FormData, name: string) {
   const value = readText(formData, name);
   if (!value) return { value: null, error: null };
-
-  const number = Number(value);
-  if (!Number.isFinite(number) || number < 0) {
-    return { value: null, error: `${name} must be a non-negative number.` };
-  }
-
-  // Drizzle/Postgres numeric fields accept decimal values as strings.
-  return { value, error: null };
-}
-
-function readOptionalDate(formData: FormData, name: string) {
-  const value = readText(formData, name);
-  if (!value) return { value: null, error: null };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return { value: null, error: `${name} must be a valid date.` };
+  const [whole] = value.split(".");
+  if (!/^\d+(?:\.\d{1,4})?$/.test(value) || whole.replace(/^0+/, "").length > 14) {
+    return { value: null, error: `${name} must be a non-negative percentage with at most 4 decimal places.` };
   }
   return { value, error: null };
 }
 
 // Both creating and editing use the same field validation and conversion.
 export function readOrderValues(formData: FormData, authenticatedUsername: string):
-  | { ok: true; values: Omit<NewOrder, "sl" | "felixOrderRef"> }
+  | { ok: true; values: Omit<NewOrder, "sl" | "felixOrderRef" | "createdDate"> }
   | { ok: false; message: string } {
   // The server supplies this name after authentication; FormData cannot override it.
   const createdBy = authenticatedUsername.trim();
@@ -46,30 +35,22 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     return { ok: false, message: "Both exchange rates must be positive decimals with at most 8 decimal places." };
   }
 
-  const numericFields = {
-    clientOrderValue: readOptionalNumber(formData, "clientOrderValue"),
-    emiCost: readOptionalNumber(formData, "emiCost"),
-    totalOrderCost: readOptionalNumber(formData, "totalOrderCost"),
-    paymentReceived: readOptionalNumber(formData, "paymentReceived"),
-    felixOhAndProfit: readOptionalNumber(formData, "felixOhAndProfit"),
-  };
-  const numericError = Object.values(numericFields).find(
-    (field) => field.error,
-  );
-  if (numericError?.error) {
-    return { ok: false, message: numericError.error };
-  }
+  const orderHandlingFee = readOptionalFee(formData, "orderHandlingFee");
+  const miscellaneousHandlingFee = readOptionalFee(formData, "miscellaneousHandlingFee");
+  const feeError = orderHandlingFee.error ?? miscellaneousHandlingFee.error;
+  if (feeError) return { ok: false, message: feeError };
 
-  const dateFields = {
-    felixSoDate: readOptionalDate(formData, "felixSoDate"),
-    clientOrderDate: readOptionalDate(formData, "clientOrderDate"),
-    lcDate: readOptionalDate(formData, "lcDate"),
-    latestDateOfShipment: readOptionalDate(formData, "latestDateOfShipment"),
-    dateOfExpiry: readOptionalDate(formData, "dateOfExpiry"),
-  };
-  const dateError = Object.values(dateFields).find((field) => field.error);
-  if (dateError?.error) {
-    return { ok: false, message: dateError.error };
+  // Existing clientOrderValue stays in USD for summaries; keep the input separately.
+  const clientOrderOriginalValue = readText(formData, "clientOrderValue");
+  const clientOrderCurrency = formData.get("clientOrderCurrency") ?? "USD";
+  if (!isCurrency(clientOrderCurrency)) {
+    return { ok: false, message: "Choose a valid currency for the order value." };
+  }
+  const clientOrderUsdValue = clientOrderOriginalValue
+    ? convertToUsd(clientOrderOriginalValue, clientOrderCurrency, gbpToUsdRate, eurToUsdRate)
+    : null;
+  if (clientOrderOriginalValue && clientOrderUsdValue === null) {
+    return { ok: false, message: "Enter a valid order value (up to 2 decimal places and within the supported range)." };
   }
 
   const supplierNames = formData.getAll("supplier");
@@ -168,22 +149,17 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     gbpToUsdRate,
     eurToUsdRate,
     supplierCurrencyDetails,
-    felixSoNo: readText(formData, "felixSoNo") || null,
-    felixSoDate: dateFields.felixSoDate.value,
-    emiOrderRef: readText(formData, "emiOrderRef") || null,
     paymentMode: readText(formData, "paymentMode") || null,
-    clientOrderRef: readText(formData, "clientOrderRef") || null,
-    clientOrderDate: dateFields.clientOrderDate.value,
-    clientOrderValue: numericFields.clientOrderValue.value,
+    clientOrderValue: clientOrderUsdValue,
+    clientOrderOriginalValue: clientOrderOriginalValue || null,
+    clientOrderCurrency,
     projectName: readText(formData, "projectName") || null,
+    projectNotes: readText(formData, "projectNotes") || null,
+    orderHandlingFee: orderHandlingFee.value,
+    miscellaneousHandlingFee: miscellaneousHandlingFee.value,
     clientName: readText(formData, "clientName") || null,
     endUser: readText(formData, "endUser") || null,
     productSystem: readText(formData, "productSystem") || null,
-    ttOrLcRef: readText(formData, "ttOrLcRef") || null,
-    lcDate: dateFields.lcDate.value,
-    latestDateOfShipment: dateFields.latestDateOfShipment.value,
-    dateOfExpiry: dateFields.dateOfExpiry.value,
-    consignee: readText(formData, "consignee") || null,
     orderHandledBy: readText(formData, "orderHandledBy") || null,
     suppliers: selectedSuppliers.length ? selectedSuppliers.join(", ") : null,
     // Clear amounts for suppliers that were removed from the form during editing.
@@ -191,13 +167,9 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
       Object.values(supplierColumns).map((column) => [column, null]),
     ) as Record<SupplierKey, null>),
     ...supplierValues,
-    emiCost: numericFields.emiCost.value,
     misCost: miscellaneousExpenses.length ? totalMiscellaneousCost : null,
     miscellaneousExpenses,
-    totalOrderCost: numericFields.totalOrderCost.value,
-    paymentReceived: numericFields.paymentReceived.value,
-    felixOhAndProfit: numericFields.felixOhAndProfit.value,
-    remarks: readText(formData, "remarks") || null,
+    paymentNotes: readText(formData, "paymentNotes") || null,
   };
 
   return { ok: true, values };

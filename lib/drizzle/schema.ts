@@ -1,32 +1,26 @@
 import * as p from "drizzle-orm/pg-core";
-import type { SupplierCurrencyDetail } from "./currency";
+import type { Currency, SupplierCurrencyDetail } from "./currency";
 import type { MiscellaneousExpense } from "./expenses";
 
 export const data = p.pgTable("data", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   createdBy: p.varchar().notNull(),
+  createdDate: p.date(),
   felixOrderRef: p.varchar().notNull(),
 
-  felixSoNo: p.varchar(),
-  felixSoDate: p.date(),
-  emiOrderRef: p.varchar(),
   paymentMode: p.varchar(),
 
-  clientOrderRef: p.varchar(),
-  clientOrderDate: p.date(),
   clientOrderValue: p.numeric({ precision: 18, scale: 2 }),
+  clientOrderOriginalValue: p.numeric({ precision: 18, scale: 2 }),
+  clientOrderCurrency: p.varchar().$type<Currency>(),
 
   projectName: p.varchar(),
+  projectNotes: p.text(),
   clientName: p.varchar(),
   endUser: p.varchar(),
   productSystem: p.text(),
 
-  ttOrLcRef: p.varchar(),
-  lcDate: p.date(),
-  latestDateOfShipment: p.date(),
-  dateOfExpiry: p.date(),
 
-  consignee: p.varchar(),
   orderHandledBy: p.varchar(),
   suppliers: p.text(),
   gbpToUsdRate: p.numeric({ precision: 18, scale: 8 }),
@@ -65,14 +59,13 @@ export const data = p.pgTable("data", {
   haboo: p.numeric({ precision: 18, scale: 2 }),
   others: p.numeric({ precision: 18, scale: 2 }),
 
-  emiCost: p.numeric({ precision: 18, scale: 2 }),
   misCost: p.numeric({ precision: 18, scale: 2 }),
   miscellaneousExpenses: p.jsonb().$type<MiscellaneousExpense[]>(),
-  totalOrderCost: p.numeric({ precision: 18, scale: 2 }),
-  paymentReceived: p.numeric({ precision: 18, scale: 2 }),
-  felixOhAndProfit: p.numeric({ precision: 18, scale: 2 }),
 
-  remarks: p.text(),
+  paymentNotes: p.text(),
+  // Fee settings are percentages: 5 means 5%, not 0.05.
+  orderHandlingFee: p.numeric({ precision: 18, scale: 4 }),
+  miscellaneousHandlingFee: p.numeric({ precision: 18, scale: 4 }),
 });
 
 export const users = p.pgTable("users", {

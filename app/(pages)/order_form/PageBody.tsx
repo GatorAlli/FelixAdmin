@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { createOrder, updateOrder } from "./actions";
@@ -21,48 +22,60 @@ import {
   isCurrency,
   restoreSupplierRows,
   type SupplierRow,
+  type Currency,
 } from "@/lib/drizzle/currency";
 
 import { restoreExpenses, type ExpenseRow } from "@/lib/drizzle/expenses";
+import { formatOrderDate } from "@/lib/drizzle/order-date";
+
+const systemTypes = [
+  "BMS",
+  "FDAS",
+  "CCTV",
+  "ACCESS CONTROL",
+  "HOME AUTOMATION",
+];
+const orderHandlers = ["EMI ENGINEERING", "TAXILA IMPEX"];
+// SETTINGS sheet: G = 5%, H = 2%. Inputs store percentages, not fractions.
+const DEFAULT_ORDER_HANDLING_FEE = "5";
+const DEFAULT_MISCELLANEOUS_HANDLING_FEE = "2";
 
 export default function PageBody({
   orderDetails,
   isAdmin,
   username,
+  currentDate,
 }: {
   orderDetails?: Order;
   isAdmin: boolean;
   username: string;
+  currentDate: string;
 }) {
+  // Existing orders retain their recorded date; new orders display today's date.
+  const [createdDate, setCreatedDate] = useState<string | null>(
+    orderDetails ? orderDetails.createdDate : currentDate,
+  );
   // States
-  const [felixSoNo, setFelixSoNo] = useState("");
 
   const [felixOrderNo, setFelixOrderNo] = useState("");
-  const [felixSoDate, setFelixSoDate] = useState("");
-  const [emiOrderRef, setEmiOrderRef] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
-  const [clientOrderRef, setClientOrderRef] = useState("");
-  const [clientOrderDate, setClientOrderDate] = useState("");
   const [clientOrderValue, setClientOrderValue] = useState("");
+  const [clientOrderCurrency, setClientOrderCurrency] = useState<Currency>("USD");
   const [projectName, setProjectName] = useState("");
+  const [projectNotes, setProjectNotes] = useState("");
+  const [orderHandlingFee, setOrderHandlingFee] = useState(DEFAULT_ORDER_HANDLING_FEE);
+  const [miscellaneousHandlingFee, setMiscellaneousHandlingFee] = useState(DEFAULT_MISCELLANEOUS_HANDLING_FEE);
   const [clientName, setClientName] = useState("");
   const [endUser, setEndUser] = useState("");
   const [productSystem, setProductSystem] = useState("");
-  const [ttOrLcRef, setTtOrLcRef] = useState("");
-  const [lcDate, setLcDate] = useState("");
-  const [latestDateOfShipment, setLatestDateOfShipment] = useState("");
-  const [dateOfExpiry, setDateOfExpiry] = useState("");
-  const [consignee, setConsignee] = useState("");
+  const [systemTypeChoice, setSystemTypeChoice] = useState("");
   const [orderHandledBy, setOrderHandledBy] = useState("");
-  const [emiCost, setEmiCost] = useState("");
+  const [orderHandlerChoice, setOrderHandlerChoice] = useState("");
   const [expenses, setExpenses] = useState<ExpenseRow[]>([
     { id: 1, name: "", amount: "", currency: "USD" },
   ]);
   const nextExpenseId = useRef(2);
-  const [totalOrderCost, setTotalOrderCost] = useState("");
-  const [paymentReceived, setPaymentReceived] = useState("");
-  const [felixOhAndProfit, setFelixOhAndProfit] = useState("");
-  const [remarks, setRemarks] = useState("");
+  const [paymentNotes, setPaymentNotes] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState("");
 
   const [paymentModeOther, setPaymentModeOther] = useState("");
@@ -80,26 +93,34 @@ export default function PageBody({
   // Only load a new order once. Without this guard, the setters cause a render loop.
   if (orderDetails && orderDetails !== loadedOrderDetails) {
     setLoadedOrderDetails(orderDetails);
+    setCreatedDate(orderDetails.createdDate);
     setFelixOrderNo(orderDetails.felixOrderRef);
     // Database nulls become empty strings so the inputs can display them.
-    setFelixSoNo(orderDetails.felixSoNo ?? "");
-    setFelixSoDate(orderDetails.felixSoDate ?? "");
-    setEmiOrderRef(orderDetails.emiOrderRef ?? "");
     setPaymentMode(orderDetails.paymentMode ?? "");
-    setClientOrderRef(orderDetails.clientOrderRef ?? "");
-    setClientOrderDate(orderDetails.clientOrderDate ?? "");
-    setClientOrderValue(orderDetails.clientOrderValue ?? "");
+    setClientOrderValue(orderDetails.clientOrderOriginalValue ?? orderDetails.clientOrderValue ?? "");
+    setClientOrderCurrency(orderDetails.clientOrderCurrency ?? "USD");
     setProjectName(orderDetails.projectName ?? "");
+    setProjectNotes(orderDetails.projectNotes ?? "");
+    setOrderHandlingFee(orderDetails.orderHandlingFee ?? DEFAULT_ORDER_HANDLING_FEE);
+    setMiscellaneousHandlingFee(orderDetails.miscellaneousHandlingFee ?? DEFAULT_MISCELLANEOUS_HANDLING_FEE);
     setClientName(orderDetails.clientName ?? "");
     setEndUser(orderDetails.endUser ?? "");
-    setProductSystem(orderDetails.productSystem ?? "");
-    setTtOrLcRef(orderDetails.ttOrLcRef ?? "");
-    setLcDate(orderDetails.lcDate ?? "");
-    setLatestDateOfShipment(orderDetails.latestDateOfShipment ?? "");
-    setDateOfExpiry(orderDetails.dateOfExpiry ?? "");
-    setConsignee(orderDetails.consignee ?? "");
-    setOrderHandledBy(orderDetails.orderHandledBy ?? "");
-    setEmiCost(orderDetails.emiCost ?? "");
+    const savedSystem = orderDetails.productSystem ?? "";
+    const knownSystem = systemTypes.includes(savedSystem.toUpperCase());
+    setProductSystem(knownSystem ? savedSystem.toUpperCase() : savedSystem);
+    setSystemTypeChoice(
+      savedSystem ? (knownSystem ? savedSystem.toUpperCase() : "OTHER") : "",
+    );
+    const savedHandler = orderDetails.orderHandledBy ?? "";
+    const knownHandler = orderHandlers.includes(savedHandler.toUpperCase());
+    setOrderHandledBy(knownHandler ? savedHandler.toUpperCase() : savedHandler);
+    setOrderHandlerChoice(
+      savedHandler
+        ? knownHandler
+          ? savedHandler.toUpperCase()
+          : "OTHERS"
+        : "",
+    );
     const savedExpenses = restoreExpenses(orderDetails);
     // Negative IDs for restored rows cannot collide with newly added positive IDs.
     setExpenses(
@@ -110,10 +131,7 @@ export default function PageBody({
           }))
         : [{ id: 1, name: "", amount: "", currency: "USD" }],
     );
-    setTotalOrderCost(orderDetails.totalOrderCost ?? "");
-    setPaymentReceived(orderDetails.paymentReceived ?? "");
-    setFelixOhAndProfit(orderDetails.felixOhAndProfit ?? "");
-    setRemarks(orderDetails.remarks ?? "");
+    setPaymentNotes(orderDetails.paymentNotes ?? "");
     setPaymentModeOther(
       orderDetails.paymentMode &&
         orderDetails.paymentMode !== "LC" &&
@@ -137,12 +155,13 @@ export default function PageBody({
 
   return (
     <div>
-      <div>
+      <div className="flex justify-between">
         {felixOrderNo ? (
           <Label>Purchase Order Number: {felixOrderNo}</Label>
         ) : (
           <div></div>
         )}
+        <Label>Date Created: {formatOrderDate(createdDate)}</Label>
       </div>
       {isEditing ? (
         <div>
@@ -159,34 +178,61 @@ export default function PageBody({
                 setSubmissionMessage(result.message);
               } else {
                 const result = await createOrder(new FormData(e.currentTarget));
+                if (result.ok && result.createdDate)
+                  setCreatedDate(result.createdDate);
                 setSubmissionMessage(result.message);
               }
             }}
             className="p-4 flex flex-col gap-10"
           >
             <div>
+              <Label htmlFor="orderHandlerChoice">ORDER HANDLED BY</Label>
+              <div className="flex gap-3">
+                <Select
+                  value={orderHandlerChoice}
+                  onValueChange={(value) => {
+                    if (typeof value !== "string") return;
+                    setOrderHandlerChoice(value);
+                    setOrderHandledBy(value === "OTHERS" ? "" : value);
+                  }}
+                >
+                  <SelectTrigger id="orderHandlerChoice">
+                    <SelectValue placeholder="Select order handler" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {orderHandlers.map((handler) => (
+                      <SelectItem key={handler} value={handler}>
+                        {handler}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="OTHERS">OTHERS</SelectItem>
+                  </SelectContent>
+                </Select>
+                {orderHandlerChoice === "OTHERS" && (
+                  <div>
+                    <Label htmlFor="otherOrderHandler">
+                      OTHER ORDER HANDLER
+                    </Label>
+                    <Input
+                      id="otherOrderHandler"
+                      placeholder="Specify order handler"
+                      value={orderHandledBy}
+                      onChange={(e) => setOrderHandledBy(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+              </div>
+              <input
+                type="hidden"
+                name="orderHandledBy"
+                value={orderHandledBy}
+              />
+            </div>
+
+            <div>
               <Label htmlFor="createdBy">Created by</Label>
               <Label id="createdBy">{username}</Label>
-            </div>
-            <div>
-              <Label htmlFor="felixSoNo">Felix SO number</Label>
-              <Input
-                id="felixSoNo"
-                name="felixSoNo"
-                type="text"
-                value={felixSoNo}
-                onChange={(e) => setFelixSoNo(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="felixSoDate">Felix SO date</Label>
-              <Input
-                id="felixSoDate"
-                name="felixSoDate"
-                type="date"
-                value={felixSoDate}
-                onChange={(e) => setFelixSoDate(e.target.value)}
-              />
             </div>
             <div>
               <Label htmlFor="projectName">Project name</Label>
@@ -199,7 +245,7 @@ export default function PageBody({
               />
             </div>
             <div>
-              <Label htmlFor="clientName">Client name</Label>
+              <Label htmlFor="clientName">CUSTOMER</Label>
               <Input
                 id="clientName"
                 name="clientName"
@@ -219,13 +265,12 @@ export default function PageBody({
               />
             </div>
             <div>
-              <Label htmlFor="emiOrderRef">EMI order reference</Label>
-              <Input
-                id="emiOrderRef"
-                name="emiOrderRef"
-                type="text"
-                value={emiOrderRef}
-                onChange={(e) => setEmiOrderRef(e.target.value)}
+              <Label htmlFor="projectNotes">PROJECT NOTES</Label>
+              <Textarea
+                id="projectNotes"
+                name="projectNotes"
+                value={projectNotes}
+                onChange={(e) => setProjectNotes(e.target.value)}
               />
             </div>
             <div>
@@ -282,191 +327,88 @@ export default function PageBody({
               </div>
             </div>
             <div>
-              <Label htmlFor="clientOrderRef">Client order reference</Label>
-              <Input
-                id="clientOrderRef"
-                name="clientOrderRef"
-                type="text"
-                value={clientOrderRef}
-                onChange={(e) => setClientOrderRef(e.target.value)}
-              />
+              <Label htmlFor="clientOrderValue">CLIENT ORDER VALUE</Label>
+              <div className="flex gap-3">
+                <Input
+                  id="clientOrderValue"
+                  name="clientOrderValue"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={clientOrderValue}
+                  onChange={(e) => setClientOrderValue(e.target.value)}
+                />
+                <Label htmlFor="clientOrderCurrency">CURRENCY</Label>
+                <Select
+                  value={clientOrderCurrency}
+                  onValueChange={(currency) => {
+                    if (isCurrency(currency)) setClientOrderCurrency(currency);
+                  }}
+                >
+                  <SelectTrigger id="clientOrderCurrency">
+                    <SelectValue>{clientOrderCurrency === "EUR" ? "Euro" : clientOrderCurrency}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">Euro</SelectItem>
+                    <SelectItem value="GBP">GBP</SelectItem>
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="clientOrderCurrency" value={clientOrderCurrency} />
+                {clientOrderCurrency !== "USD" && (
+                  <div>
+                    <Label htmlFor="clientOrderUsdValue">ORDER VALUE (USD)</Label>
+                    <Input
+                      id="clientOrderUsdValue"
+                      value={convertToUsd(clientOrderValue, clientOrderCurrency, gbpToUsdRate, eurToUsdRate) ?? ""}
+                      placeholder="Enter an amount and valid rate"
+                      readOnly
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             <div>
-              <Label htmlFor="clientOrderDate">Client order date</Label>
-              <Input
-                id="clientOrderDate"
-                name="clientOrderDate"
-                type="date"
-                value={clientOrderDate}
-                onChange={(e) => setClientOrderDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="clientOrderValue">Client order value (USD)</Label>
-              <Input
-                id="clientOrderValue"
-                name="clientOrderValue"
-                type="number"
-                step="0.01"
-                value={clientOrderValue}
-                onChange={(e) => setClientOrderValue(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="productSystem" className="text-2xl">
-                Product/System
+              <Label htmlFor="systemTypeChoice" className="text-2xl">
+                SYSTEM TYPE
               </Label>
-
-              <div className="flex">
-                <Label>BMS</Label>
-                <Input
-                  id="productSystem"
-                  name="productSystem"
-                  type="radio"
-                  value={productSystem}
-                  onChange={() => setProductSystem("BMS")}
-                />
+              <div className="flex gap-3">
+                <Select
+                  value={systemTypeChoice}
+                  onValueChange={(value) => {
+                    if (typeof value !== "string") return;
+                    setSystemTypeChoice(value);
+                    setProductSystem(value === "OTHER" ? "" : value);
+                  }}
+                >
+                  <SelectTrigger id="systemTypeChoice">
+                    <SelectValue placeholder="Select system type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {systemTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="OTHER">OTHER</SelectItem>
+                  </SelectContent>
+                </Select>
+                {systemTypeChoice === "OTHER" && (
+                  <div>
+                    <Label htmlFor="otherSystemType">OTHER SYSTEM TYPE</Label>
+                    <Input
+                      id="otherSystemType"
+                      placeholder="Specify system type"
+                      value={productSystem}
+                      onChange={(e) => setProductSystem(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
               </div>
-              <div className="flex">
-                <Label>FDAS</Label>
-                <Input
-                  id="productSystem"
-                  name="productSystem"
-                  type="radio"
-                  value={productSystem}
-                  onChange={() => setProductSystem("FDAS")}
-                />
-              </div>
-              <div className="flex">
-                <Label>CCTV</Label>
-                <Input
-                  id="productSystem"
-                  name="productSystem"
-                  type="radio"
-                  value={productSystem}
-                  onChange={() => setProductSystem("CCTV")}
-                />
-              </div>
-
-              <div className="flex">
-                <Label>HVAC Products</Label>
-                <Input
-                  id="productSystem"
-                  name="productSystem"
-                  type="radio"
-                  value={productSystem}
-                  onChange={() => setProductSystem("HVAC Products")}
-                />
-              </div>
-
-              <div className="flex">
-                <Label>PA</Label>
-                <Input
-                  id="productSystem"
-                  name="productSystem"
-                  type="radio"
-                  value={productSystem}
-                  onChange={() => setProductSystem("PA")}
-                />
-              </div>
-
-              <div className="flex">
-                <Label>VFD</Label>
-                <Input
-                  id="productSystem"
-                  name="productSystem"
-                  type="radio"
-                  value={productSystem}
-                  onChange={() => setProductSystem("VFD")}
-                />
-              </div>
-
-              <div className="flex">
-                <Label>Home Automation</Label>
-                <Input
-                  id="productSystem"
-                  name="productSystem"
-                  type="radio"
-                  value={productSystem}
-                  onChange={() => setProductSystem("Home Automation")}
-                />
-              </div>
-
-              <div className="flex">
-                <Label>Fire Suppression</Label>
-                <Input
-                  id="productSystem"
-                  name="productSystem"
-                  type="radio"
-                  value={productSystem}
-                  onChange={() => setProductSystem("Fire Suppression")}
-                />
-              </div>
+              {/* Submit either the selected preset or the custom Other text. */}
+              <input type="hidden" name="productSystem" value={productSystem} />
             </div>
-            <div>
-              <Label htmlFor="ttOrLcRef">TT or L/C reference</Label>
-              <Input
-                id="ttOrLcRef"
-                name="ttOrLcRef"
-                type="text"
-                value={ttOrLcRef}
-                onChange={(e) => setTtOrLcRef(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="lcDate">L/C date</Label>
-              <Input
-                id="lcDate"
-                name="lcDate"
-                type="date"
-                value={lcDate}
-                onChange={(e) => setLcDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="latestDateOfShipment">
-                Latest date of shipment
-              </Label>
-              <Input
-                id="latestDateOfShipment"
-                name="latestDateOfShipment"
-                type="date"
-                value={latestDateOfShipment}
-                onChange={(e) => setLatestDateOfShipment(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="dateOfExpiry">Date of expiry</Label>
-              <Input
-                id="dateOfExpiry"
-                name="dateOfExpiry"
-                type="date"
-                value={dateOfExpiry}
-                onChange={(e) => setDateOfExpiry(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="consignee">Consignee</Label>
-              <Input
-                id="consignee"
-                name="consignee"
-                type="text"
-                value={consignee}
-                onChange={(e) => setConsignee(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="orderHandledBy">Order handled by</Label>
-              <Input
-                placeholder="EMI Engineering/Taxilla Impex/Cord Engineering/Others"
-                id="orderHandledBy"
-                name="orderHandledBy"
-                type="text"
-                value={orderHandledBy}
-                onChange={(e) => setOrderHandledBy(e.target.value)}
-              />
-            </div>
-
             {/* Supplier names use inputs, with suggestions for the brands in the schema. */}
             <div className="flex justify-between gap-10">
               <div>
@@ -598,17 +540,6 @@ export default function PageBody({
                 >
                   +
                 </Button>
-                <div>
-                  <Label htmlFor="emiCost">EMI cost (USD)</Label>
-                  <Input
-                    id="emiCost"
-                    name="emiCost"
-                    type="number"
-                    step="0.01"
-                    value={emiCost}
-                    onChange={(e) => setEmiCost(e.target.value)}
-                  />
-                </div>
               </div>
               <div>
                 <datalist id="supplier-options">
@@ -645,7 +576,7 @@ export default function PageBody({
                   <option value="OTHERS" />
                 </datalist>
 
-                <Label className="text-2xl">SUPPLIERS</Label>
+                <Label className="text-2xl">MATERIAL COST</Label>
                 {suppliers.map((row, index) => (
                   <div key={row.id} className="flex">
                     <Label>{index + 1}.</Label>
@@ -768,48 +699,13 @@ export default function PageBody({
               </div>
             </div>
             <div>
-              <Label htmlFor="totalOrderCost">Total order cost (USD)</Label>
+              <Label htmlFor="paymentNotes">Payment Notes</Label>
               <Input
-                id="totalOrderCost"
-                name="totalOrderCost"
-                type="number"
-                step="0.01"
-                value={totalOrderCost}
-                onChange={(e) => setTotalOrderCost(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="paymentReceived">Payment received (USD)</Label>
-              <Input
-                id="paymentReceived"
-                name="paymentReceived"
-                type="number"
-                step="0.01"
-                value={paymentReceived}
-                onChange={(e) => setPaymentReceived(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="felixOhAndProfit">
-                Felix overhead & profit (USD)
-              </Label>
-              <Input
-                id="felixOhAndProfit"
-                name="felixOhAndProfit"
-                type="number"
-                step="0.01"
-                value={felixOhAndProfit}
-                onChange={(e) => setFelixOhAndProfit(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="remarks">Remarks</Label>
-              <Input
-                id="remarks"
-                name="remarks"
+                id="paymentNotes"
+                name="paymentNotes"
                 type="text"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
+                value={paymentNotes}
+                onChange={(e) => setPaymentNotes(e.target.value)}
               />
             </div>
             {/* Rates are saved with this order and shared by all its supplier rows. */}
@@ -838,6 +734,33 @@ export default function PageBody({
                   required
                   value={eurToUsdRate}
                   onChange={(e) => setEurToUsdRate(e.target.value)}
+                />
+              </div>
+            </div>
+            {/* Percentage settings are stored on this order; 5 means 5%. */}
+            <div className="flex gap-10">
+              <div>
+                <Label htmlFor="orderHandlingFee">ORDER HANDLING FEE (%)</Label>
+                <Input
+                  id="orderHandlingFee"
+                  name="orderHandlingFee"
+                  type="number"
+                  min="0"
+                  step="0.0001"
+                  value={orderHandlingFee}
+                  onChange={(e) => setOrderHandlingFee(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="miscellaneousHandlingFee">MISCELLANEOUS HANDLING FEE (%)</Label>
+                <Input
+                  id="miscellaneousHandlingFee"
+                  name="miscellaneousHandlingFee"
+                  type="number"
+                  min="0"
+                  step="0.0001"
+                  value={miscellaneousHandlingFee}
+                  onChange={(e) => setMiscellaneousHandlingFee(e.target.value)}
                 />
               </div>
             </div>
@@ -872,28 +795,25 @@ export default function PageBody({
           )}
           <div className="p-4 flex flex-col gap-10">
             <div>
+              <Label>Order handled by</Label>
+              <Label className="font-bold">{orderHandledBy}</Label>
+            </div>
+
+            <div>
               <Label>Created by</Label>
               <Label className="font-bold">
                 {orderDetails?.createdBy ?? username}
               </Label>
             </div>
 
-            <div>
-              <Label>Felix SO number</Label>
-              <Label className="font-bold">{felixSoNo}</Label>
-            </div>
 
-            <div>
-              <Label>Felix SO date</Label>
-              <Label className="font-bold">{felixSoDate}</Label>
-            </div>
             <div>
               <Label>Project name</Label>
               <Label className="font-bold">{projectName}</Label>
             </div>
 
             <div>
-              <Label>Client name</Label>
+              <Label>CUSTOMER</Label>
               <Label className="font-bold">{clientName}</Label>
             </div>
 
@@ -901,11 +821,11 @@ export default function PageBody({
               <Label>End user</Label>
               <Label className="font-bold">{endUser}</Label>
             </div>
-            <div>
-              <Label>EMI order reference</Label>
-              <Label className="font-bold">{emiOrderRef}</Label>
-            </div>
 
+            <div>
+              <Label>PROJECT NOTES</Label>
+              <Label className="font-bold whitespace-pre-wrap">{projectNotes}</Label>
+            </div>
             <div>
               <Label className="text-2xl">Payment Mode</Label>
 
@@ -950,150 +870,28 @@ export default function PageBody({
               </div>
             </div>
 
-            <div>
-              <Label>Client order reference</Label>
-              <Label className="font-bold">{clientOrderRef}</Label>
-            </div>
+
 
             <div>
-              <Label>Client order date</Label>
-              <Label className="font-bold">{clientOrderDate}</Label>
-            </div>
-
-            <div>
-              <Label>Client order value (USD)</Label>
+              <Label>CLIENT ORDER VALUE ({clientOrderCurrency})</Label>
               <Label className="font-bold">{clientOrderValue}</Label>
+              {clientOrderCurrency !== "USD" && (
+                <div>
+                  <Label>ORDER VALUE (USD)</Label>
+                  <Label className="font-bold">{convertToUsd(clientOrderValue, clientOrderCurrency, gbpToUsdRate, eurToUsdRate) ?? "—"}</Label>
+                </div>
+              )}
             </div>
 
             <div>
-              <Label className="text-2xl">Product/System</Label>
-
-              <div className="flex">
-                <Label htmlFor="productBMS">BMS</Label>
-                <Input
-                  id="productBMS"
-                  name="productSystem"
-                  type="radio"
-                  value="BMS"
-                  checked={productSystem === "BMS"}
-                  disabled
-                />
-              </div>
-
-              <div className="flex">
-                <Label htmlFor="productFDAS">FDAS</Label>
-                <Input
-                  id="productFDAS"
-                  name="productSystem"
-                  type="radio"
-                  value="FDAS"
-                  checked={productSystem === "FDAS"}
-                  disabled
-                />
-              </div>
-
-              <div className="flex">
-                <Label htmlFor="productCCTV">CCTV</Label>
-                <Input
-                  id="productCCTV"
-                  name="productSystem"
-                  type="radio"
-                  value="CCTV"
-                  checked={productSystem === "CCTV"}
-                  disabled
-                />
-              </div>
-
-              <div className="flex">
-                <Label htmlFor="productHVAC">HVAC Products</Label>
-                <Input
-                  id="productHVAC"
-                  name="productSystem"
-                  type="radio"
-                  value="HVAC Products"
-                  checked={productSystem === "HVAC Products"}
-                  disabled
-                />
-              </div>
-
-              <div className="flex">
-                <Label htmlFor="productPA">PA</Label>
-                <Input
-                  id="productPA"
-                  name="productSystem"
-                  type="radio"
-                  value="PA"
-                  checked={productSystem === "PA"}
-                  disabled
-                />
-              </div>
-
-              <div className="flex">
-                <Label htmlFor="productVFD">VFD</Label>
-                <Input
-                  id="productVFD"
-                  name="productSystem"
-                  type="radio"
-                  value="VFD"
-                  checked={productSystem === "VFD"}
-                  disabled
-                />
-              </div>
-
-              <div className="flex">
-                <Label htmlFor="productHomeAutomation">Home Automation</Label>
-                <Input
-                  id="productHomeAutomation"
-                  name="productSystem"
-                  type="radio"
-                  value="Home Automation"
-                  checked={productSystem === "Home Automation"}
-                  disabled
-                />
-              </div>
-
-              <div className="flex">
-                <Label htmlFor="productFireSuppression">Fire Suppression</Label>
-                <Input
-                  id="productFireSuppression"
-                  name="productSystem"
-                  type="radio"
-                  value="Fire Suppression"
-                  checked={productSystem === "Fire Suppression"}
-                  disabled
-                />
-              </div>
+              <Label className="text-2xl">SYSTEM TYPE</Label>
+              <Label className="font-bold">{productSystem}</Label>
             </div>
 
-            <div>
-              <Label>TT or L/C reference</Label>
-              <Label className="font-bold">{ttOrLcRef}</Label>
-            </div>
 
-            <div>
-              <Label>L/C date</Label>
-              <Label className="font-bold">{lcDate}</Label>
-            </div>
 
-            <div>
-              <Label>Latest date of shipment</Label>
-              <Label className="font-bold">{latestDateOfShipment}</Label>
-            </div>
 
-            <div>
-              <Label>Date of expiry</Label>
-              <Label className="font-bold">{dateOfExpiry}</Label>
-            </div>
 
-            <div>
-              <Label>Consignee</Label>
-              <Label className="font-bold">{consignee}</Label>
-            </div>
-
-            <div>
-              <Label>Order handled by</Label>
-              <Label className="font-bold">{orderHandledBy}</Label>
-            </div>
 
             <div className="flex justify-between gap-10">
               <div>
@@ -1129,14 +927,10 @@ export default function PageBody({
                       )}
                     </div>
                   ))}
-                <div>
-                  <Label>EMI cost (USD)</Label>
-                  <Label className="font-bold">{emiCost}</Label>
-                </div>
               </div>
 
               <div>
-                <Label className="text-2xl">SUPPLIERS</Label>
+                <Label className="text-2xl">MATERIAL COST</Label>
                 {suppliers.map((row, index) => (
                   <div key={row.id} className="flex gap-10">
                     <Label>{index + 1}.</Label>
@@ -1171,24 +965,12 @@ export default function PageBody({
               </div>
             </div>
 
-            <div>
-              <Label>Total order cost (USD)</Label>
-              <Label className="font-bold">{totalOrderCost}</Label>
-            </div>
+
+
 
             <div>
-              <Label>Payment received (USD)</Label>
-              <Label className="font-bold">{paymentReceived}</Label>
-            </div>
-
-            <div>
-              <Label>Felix overhead & profit (USD)</Label>
-              <Label className="font-bold">{felixOhAndProfit}</Label>
-            </div>
-
-            <div>
-              <Label>Remarks</Label>
-              <Label className="font-bold">{remarks}</Label>
+              <Label>Payment Notes</Label>
+              <Label className="font-bold">{paymentNotes}</Label>
             </div>
             <div className="flex gap-10">
               <div>
@@ -1202,6 +984,16 @@ export default function PageBody({
                 <Label className="font-bold">
                   {orderDetails?.eurToUsdRate ?? "Not recorded"}
                 </Label>
+              </div>
+            </div>
+            <div className="flex gap-10">
+              <div>
+                <Label>ORDER HANDLING FEE (%)</Label>
+                <Label className="font-bold">{orderHandlingFee}</Label>
+              </div>
+              <div>
+                <Label>MISCELLANEOUS HANDLING FEE (%)</Label>
+                <Label className="font-bold">{miscellaneousHandlingFee}</Label>
               </div>
             </div>
           </div>

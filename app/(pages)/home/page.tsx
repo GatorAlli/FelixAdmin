@@ -57,8 +57,6 @@ export default async function Home() {
               <th className={tdStyling}>SL</th>
               <th className={tdStyling}>CREATED BY</th>
               <th className={tdStyling}>ORDER NO.</th>
-              <th className={tdStyling}>EMI REF.</th>
-              <th className={tdStyling}>CLIENT ORDER DATE</th>
               <th className={tdStyling}>CLIENT ORDER VALUE</th>
               <th className={tdStyling}>PROJECT NAME</th>
               <th className={tdStyling}>CLIENT NAME</th>
@@ -72,8 +70,6 @@ export default async function Home() {
                 <td className={tdStyling}>{e.sl}</td>
                 <td className={tdStyling}>{e.createdBy}</td>
                 <td className={tdStyling}>{e.felixOrderRef}</td>
-                <td className={tdStyling}>{e.emiOrderRef}</td>
-                <td className={tdStyling}>{e.clientOrderDate}</td>
                 <td className={tdStyling}>{e.clientOrderValue}</td>
                 <td className={tdStyling}>{e.projectName}</td>
                 <td className={tdStyling}>{e.clientName}</td>

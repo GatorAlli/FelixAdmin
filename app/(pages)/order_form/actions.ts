@@ -6,6 +6,7 @@ import { db } from "@/lib/drizzle/drizzle-index";
 import { data, users } from "@/lib/drizzle/schema";
 import { revalidatePath } from "next/cache";
 import { readOrderValues } from "@/lib/drizzle/order-values";
+import { currentOrderDate } from "@/lib/drizzle/order-date";
 
 // Resolve attribution on every save. Never trust a name sent by the browser.
 async function readAuthenticatedOrderValues(formData: FormData) {
@@ -32,12 +33,15 @@ export async function createOrder(formData: FormData) {
   const parsed = await readAuthenticatedOrderValues(formData);
   if (!parsed.ok) return parsed;
 
+  // Set only during creation. Updates never include this column.
+  const createdDate = currentOrderDate();
   try {
     const result = await db.transaction(async (transaction) => {
       const [insertedOrder] = await transaction
         .insert(data)
         .values({
           ...parsed.values,
+          createdDate,
           // The generated primary key is needed before building the final reference.
           felixOrderRef: "FCL/FPO/2024/PENDING",
         })
@@ -55,7 +59,7 @@ export async function createOrder(formData: FormData) {
       return felixOrderRef;
     });
 
-    return { ok: true, message: `Order created: ${result}` };
+    return { ok: true, message: `Order created: ${result}`, createdDate };
   } catch (error) {
     console.error("Unable to create order", error);
     return {
@@ -78,7 +82,7 @@ export async function updateOrder(orderId: number, formData: FormData) {
   try {
     const [updatedOrder] = await db
       .update(data)
-      // The primary key and Felix order reference are excluded from these values.
+      // The primary key, order reference and creation date are excluded.
       .set(parsed.values)
       .where(eq(data.sl, orderId))
       .returning({ felixOrderRef: data.felixOrderRef });

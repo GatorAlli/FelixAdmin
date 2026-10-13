@@ -1,3 +1,4 @@
+import { currentOrderDate } from "@/lib/drizzle/order-date";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import PageBody from "../PageBody";
@@ -33,7 +34,7 @@ export default async function OrderForm({
 
   return (
     <div>
-      <PageBody orderDetails={order[0]} isAdmin={adminStatus} username={username} />
+      <PageBody orderDetails={order[0]} isAdmin={adminStatus} username={username} currentDate={currentOrderDate()} />
     </div>
   );
 }

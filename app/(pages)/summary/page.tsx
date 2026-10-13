@@ -19,22 +19,13 @@ export default async function Summary() {
             <th>SL</th>
             <th>Created by</th>
             <th>ORDER REF.</th>
-            <th>SO No</th>
-            <th>SO DATE</th>
-            <th>EMI Order Ref</th>
             <th>PAYMENT MODE</th>
-            <th>CLIENT ORDER REF</th>
-            <th>CLIENT ORDER DATE</th>
-            <th>CLIENT ORDER VALUE</th>
+            <th>CLIENT ORDER VALUE (USD)</th>
             <th>PROJECT NAME</th>
+            <th>PROJECT NOTES</th>
             <th>CLIENT NAME</th>
             <th>End User</th>
-            <th>PRODUCT/ SYSTEM</th>
-            <th>TT or L/C REF.</th>
-            <th>LC DATE</th>
-            <th>LATEST DATE OF SHIPMENT</th>
-            <th>DATE OF EXPAIRY</th>
-            <th>CONSIGNEE</th>
+            <th>SYSTEM TYPE</th>
             <th>ORDER HANDLED BY</th>
             <th>SUPPLIERS</th>
             <th>TRANE</th>
@@ -68,14 +59,12 @@ export default async function Summary() {
             <th>SERVO</th>
             <th>HABOO</th>
             <th>OTHERS</th>
-            <th>EMI COST</th>
             {expenditureColumns.map((name) => (
               <th key={name}>{name} (USD)</th>
             ))}
-            <th>TOTAL ORDER COST</th>
-            <th>PAYMENT RECEIVED</th>
-            <th>FELIX OH & PROFIT</th>
-            <th>REMARKS</th>
+            <th>PAYMENT NOTES</th>
+            <th>ORDER HANDLING FEE (%)</th>
+            <th>MISCELLANEOUS HANDLING FEE (%)</th>
           </tr>
         </thead>
         <tbody>
@@ -84,22 +73,13 @@ export default async function Summary() {
               <td>{e.sl}</td>
               <td>{e.createdBy}</td>
               <td>{e.felixOrderRef}</td>
-              <td>{e.felixSoNo}</td>
-              <td>{e.felixSoDate}</td>
-              <td>{e.emiOrderRef}</td>
               <td>{e.paymentMode}</td>
-              <td>{e.clientOrderRef}</td>
-              <td>{e.clientOrderDate}</td>
               <td>{e.clientOrderValue}</td>
               <td>{e.projectName}</td>
+              <td>{e.projectNotes}</td>
               <td>{e.clientName}</td>
               <td>{e.endUser}</td>
               <td>{e.productSystem}</td>
-              <td>{e.ttOrLcRef}</td>
-              <td>{e.lcDate}</td>
-              <td>{e.latestDateOfShipment}</td>
-              <td>{e.dateOfExpiry}</td>
-              <td>{e.consignee}</td>
               <td>{e.orderHandledBy}</td>
               <td>{e.suppliers}</td>
               <td>{e.trane}</td>
@@ -133,14 +113,12 @@ export default async function Summary() {
               <td>{e.servo}</td>
               <td>{e.haboo}</td>
               <td>{e.others}</td>
-              <td>{e.emiCost}</td>
               {expenditureColumns.map((name) => (
                 <td key={name}>{expenditureAmounts[index].get(name) ?? ""}</td>
               ))}
-              <td>{e.totalOrderCost}</td>
-              <td>{e.paymentReceived}</td>
-              <td>{e.felixOhAndProfit}</td>
-              <td>{e.remarks}</td>
+              <td>{e.paymentNotes}</td>
+              <td>{e.orderHandlingFee}</td>
+              <td>{e.miscellaneousHandlingFee}</td>
             </tr>
           ))}
         </tbody>
