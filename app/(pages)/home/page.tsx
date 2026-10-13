@@ -68,7 +68,7 @@ export default async function Home() {
           </thead>
           <tbody className="border divide-y ">
             {orders.map((e) => (
-              <tr key={e.sl} className="hover:bg-gray-200">
+              <tr key={e.sl}>
                 <td className={tdStyling}>{e.sl}</td>
                 <td className={tdStyling}>{e.createdBy}</td>
                 <td className={tdStyling}>{e.felixOrderRef}</td>

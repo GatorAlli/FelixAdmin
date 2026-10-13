@@ -7,7 +7,21 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { createOrder, updateOrder } from "./actions";
 import { type Order } from "@/lib/drizzle/schema";
-import { User } from "@supabase/supabase-js";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DEFAULT_GBP_TO_USD,
+  DEFAULT_EUR_TO_USD,
+  convertToUsd,
+  isCurrency,
+  restoreSupplierRows,
+  type SupplierRow,
+} from "@/lib/drizzle/currency";
 
 export default function PageBody({
   orderDetails,
@@ -45,14 +59,16 @@ export default function PageBody({
   const [submissionMessage, setSubmissionMessage] = useState("");
 
   const [paymentModeOther, setPaymentModeOther] = useState("");
-  const [suppliers, setSuppliers] = useState([
-    { id: 1, supplier: "", amount: "" },
+  const [suppliers, setSuppliers] = useState<SupplierRow[]>([
+    { id: 1, supplier: "", amount: "", currency: "USD" },
   ]);
+  const [gbpToUsdRate, setGbpToUsdRate] = useState(DEFAULT_GBP_TO_USD);
+  const [eurToUsdRate, setEurToUsdRate] = useState(DEFAULT_EUR_TO_USD);
   // Saved supplier rows use IDs 1–31; newly added rows start after those.
   const nextSupplierId = useRef(32);
   const [loadedOrderDetails, setLoadedOrderDetails] = useState<Order>();
 
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(!orderDetails);
 
   // Only load a new order once. Without this guard, the setters cause a render loop.
   if (orderDetails && orderDetails !== loadedOrderDetails) {
@@ -91,50 +107,15 @@ export default function PageBody({
         : "",
     );
 
-    // Convert the supplier amount columns back into the form's editable rows.
-    const savedSuppliers = [
-      { supplier: "TRANE", amount: orderDetails.trane },
-      { supplier: "BELIMO", amount: orderDetails.belimo },
-      { supplier: "DANFOSS", amount: orderDetails.danfoss },
-      { supplier: "HONEYWELL", amount: orderDetails.honeywell },
-      { supplier: "REGELTECHNIK", amount: orderDetails.regeltechnik },
-      { supplier: "DWYER", amount: orderDetails.dwyer },
-      { supplier: "ALPS", amount: orderDetails.alps },
-      { supplier: "CONTROL 4", amount: orderDetails.control4 },
-      { supplier: "LUTRON", amount: orderDetails.lutron },
-      { supplier: "LANDIS+GYR", amount: orderDetails.landisGyr },
-      { supplier: "RBH", amount: orderDetails.rbh },
-      { supplier: "PROSTAR", amount: orderDetails.prostar },
-      { supplier: "GISSMATIC", amount: orderDetails.gissmatic },
-      { supplier: "ZKTECO", amount: orderDetails.zkteco },
-      { supplier: "ADTESHIA", amount: orderDetails.adteshia },
-      { supplier: "FIKE", amount: orderDetails.fike },
-      { supplier: "TECOFI", amount: orderDetails.tecofi },
-      { supplier: "SEWO", amount: orderDetails.sewo },
-      { supplier: "EBELCO", amount: orderDetails.ebelco },
-      { supplier: "DOOYA", amount: orderDetails.dooya },
-      { supplier: "POGO", amount: orderDetails.pogo },
-      { supplier: "PARK HELP", amount: orderDetails.parkHelp },
-      { supplier: "FOSHAN", amount: orderDetails.foshan },
-      { supplier: "KELE", amount: orderDetails.kele },
-      { supplier: "MULTICABLE", amount: orderDetails.multicable },
-      { supplier: "DEYZ", amount: orderDetails.deyz },
-      { supplier: "SIMENS", amount: orderDetails.simens },
-      { supplier: "FLASH TURTLE", amount: orderDetails.flashTurtle },
-      { supplier: "SERVO", amount: orderDetails.servo },
-      { supplier: "HABOO", amount: orderDetails.haboo },
-      { supplier: "OTHERS", amount: orderDetails.others },
-    ]
-      .map((row, index) => ({ ...row, id: index + 1 }))
-      .filter(
-        (row): row is { id: number; supplier: string; amount: string } =>
-          row.amount !== null,
-      );
+    // Restore original amounts/currencies; old orders contain USD amounts only.
+    const savedSuppliers = restoreSupplierRows(orderDetails);
     setSuppliers(
       savedSuppliers.length
         ? savedSuppliers
-        : [{ id: 1, supplier: "", amount: "" }],
+        : [{ id: 1, supplier: "", amount: "", currency: "USD" }],
     );
+    setGbpToUsdRate(orderDetails.gbpToUsdRate ?? DEFAULT_GBP_TO_USD);
+    setEurToUsdRate(orderDetails.eurToUsdRate ?? DEFAULT_EUR_TO_USD);
 
     setIsEditing(false);
   }
@@ -190,6 +171,36 @@ export default function PageBody({
                 type="date"
                 value={felixSoDate}
                 onChange={(e) => setFelixSoDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="projectName">Project name</Label>
+              <Input
+                id="projectName"
+                name="projectName"
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="clientName">Client name</Label>
+              <Input
+                id="clientName"
+                name="clientName"
+                type="text"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="endUser">End user</Label>
+              <Input
+                id="endUser"
+                name="endUser"
+                type="text"
+                value={endUser}
+                onChange={(e) => setEndUser(e.target.value)}
               />
             </div>
             <div>
@@ -284,36 +295,6 @@ export default function PageBody({
                 step="0.01"
                 value={clientOrderValue}
                 onChange={(e) => setClientOrderValue(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="projectName">Project name</Label>
-              <Input
-                id="projectName"
-                name="projectName"
-                type="text"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="clientName">Client name</Label>
-              <Input
-                id="clientName"
-                name="clientName"
-                type="text"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="endUser">End user</Label>
-              <Input
-                id="endUser"
-                name="endUser"
-                type="text"
-                value={endUser}
-                onChange={(e) => setEndUser(e.target.value)}
               />
             </div>
             <div>
@@ -531,14 +512,16 @@ export default function PageBody({
                   <option value="HABOO" />
                   <option value="OTHERS" />
                 </datalist>
+
+                <Label className="text-2xl">SUPPLIERS</Label>
                 {suppliers.map((row, index) => (
                   <div key={row.id} className="flex">
                     <Label>{index + 1}.</Label>
-                    <Label htmlFor={`supplier-${row.id}`}>Supplier</Label>
                     <Input
                       id={`supplier-${row.id}`}
                       name="supplier"
                       placeholder="Supplier"
+                      aria-label={`Supplier ${index + 1}`}
                       list="supplier-options"
                       value={row.supplier}
                       onChange={(e) => {
@@ -560,7 +543,7 @@ export default function PageBody({
                       min="0"
                       step="0.01"
                       value={row.amount}
-                      placeholder="in USD"
+                      placeholder={`in ${row.currency}`}
                       onChange={(e) => {
                         // Update only this row's amount; keep it as a string so it can be cleared.
                         setSuppliers((rows) =>
@@ -572,6 +555,57 @@ export default function PageBody({
                         );
                       }}
                     />
+                    <Label htmlFor={`supplier-currency-${row.id}`}>
+                      CURRENCY
+                    </Label>
+                    <Select
+                      value={row.currency}
+                      onValueChange={(currency) => {
+                        if (!isCurrency(currency)) return;
+                        setSuppliers((rows) =>
+                          rows.map((item) =>
+                            item.id === row.id ? { ...item, currency } : item,
+                          ),
+                        );
+                      }}
+                    >
+                      <SelectTrigger id={`supplier-currency-${row.id}`}>
+                        <SelectValue>
+                          {row.currency === "EUR" ? "Euro" : row.currency}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">Euro</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {/* A hidden field keeps the currency paired with its FormData row. */}
+                    <input
+                      type="hidden"
+                      name="supplierCurrency"
+                      value={row.currency}
+                    />
+                    {row.currency !== "USD" && (
+                      <div>
+                        <Label htmlFor={`supplier-usd-${row.id}`}>
+                          AMOUNT (USD)
+                        </Label>
+                        <Input
+                          id={`supplier-usd-${row.id}`}
+                          value={
+                            convertToUsd(
+                              row.amount,
+                              row.currency,
+                              gbpToUsdRate,
+                              eurToUsdRate,
+                            ) ?? ""
+                          }
+                          placeholder="Enter an amount and valid rate"
+                          readOnly
+                        />
+                      </div>
+                    )}
                     <Button
                       type="button"
                       aria-label={`Remove supplier ${index + 1}`}
@@ -593,7 +627,7 @@ export default function PageBody({
                     const id = nextSupplierId.current++;
                     setSuppliers((rows) => [
                       ...rows,
-                      { id, supplier: "", amount: "" },
+                      { id, supplier: "", amount: "", currency: "USD" },
                     ]);
                   }}
                 >
@@ -657,11 +691,43 @@ export default function PageBody({
                 onChange={(e) => setRemarks(e.target.value)}
               />
             </div>
+            {/* Rates are saved with this order and shared by all its supplier rows. */}
+            <div className="flex gap-10">
+              <div>
+                <Label htmlFor="gbpToUsdRate">GBP TO USD</Label>
+                <Input
+                  id="gbpToUsdRate"
+                  name="gbpToUsdRate"
+                  type="number"
+                  min="0.00000001"
+                  step="0.00000001"
+                  required
+                  value={gbpToUsdRate}
+                  onChange={(e) => setGbpToUsdRate(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="eurToUsdRate">EURO TO USD</Label>
+                <Input
+                  id="eurToUsdRate"
+                  name="eurToUsdRate"
+                  type="number"
+                  min="0.00000001"
+                  step="0.00000001"
+                  required
+                  value={eurToUsdRate}
+                  onChange={(e) => setEurToUsdRate(e.target.value)}
+                />
+              </div>
+            </div>
             <div>
               <Button type="submit">Submit</Button>
               <Button
+                type="button"
                 onClick={() => {
-                  setIsEditing(!isEditing);
+                  // Restore the saved amounts and rates when discarding edits.
+                  if (orderDetails) setLoadedOrderDetails(undefined);
+                  setIsEditing(false);
                 }}
               >
                 Discard Changes
@@ -698,7 +764,20 @@ export default function PageBody({
               <Label>Felix SO date</Label>
               <Label className="font-bold">{felixSoDate}</Label>
             </div>
+            <div>
+              <Label>Project name</Label>
+              <Label className="font-bold">{projectName}</Label>
+            </div>
 
+            <div>
+              <Label>Client name</Label>
+              <Label className="font-bold">{clientName}</Label>
+            </div>
+
+            <div>
+              <Label>End user</Label>
+              <Label className="font-bold">{endUser}</Label>
+            </div>
             <div>
               <Label>EMI order reference</Label>
               <Label className="font-bold">{emiOrderRef}</Label>
@@ -761,21 +840,6 @@ export default function PageBody({
             <div>
               <Label>Client order value (USD)</Label>
               <Label className="font-bold">{clientOrderValue}</Label>
-            </div>
-
-            <div>
-              <Label>Project name</Label>
-              <Label className="font-bold">{projectName}</Label>
-            </div>
-
-            <div>
-              <Label>Client name</Label>
-              <Label className="font-bold">{clientName}</Label>
-            </div>
-
-            <div>
-              <Label>End user</Label>
-              <Label className="font-bold">{endUser}</Label>
             </div>
 
             <div>
@@ -922,17 +986,36 @@ export default function PageBody({
               </div>
 
               <div>
+                <Label className="text-2xl">SUPPLIERS</Label>
                 {suppliers.map((row, index) => (
                   <div key={row.id} className="flex gap-10">
                     <Label>{index + 1}.</Label>
                     <div className="flex gap-3">
-                      <Label>Supplier</Label>
                       <Label className="font-bold">{row.supplier}</Label>
                     </div>
                     <div className="flex gap-3">
-                      <Label>Amount (USD)</Label>
+                      <Label>AMOUNT ({row.currency})</Label>
                       <Label className="font-bold">{row.amount}</Label>
                     </div>
+                    <div className="flex gap-3">
+                      <Label>CURRENCY</Label>
+                      <Label className="font-bold">
+                        {row.currency === "EUR" ? "Euro" : row.currency}
+                      </Label>
+                    </div>
+                    {row.currency !== "USD" && (
+                      <div className="flex gap-3 items-center">
+                        <Label>AMOUNT (USD)</Label>
+                        <Label className="font-bold">
+                          {convertToUsd(
+                            row.amount,
+                            row.currency,
+                            gbpToUsdRate,
+                            eurToUsdRate,
+                          ) ?? "—"}
+                        </Label>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -961,6 +1044,20 @@ export default function PageBody({
             <div>
               <Label>Remarks</Label>
               <Label className="font-bold">{remarks}</Label>
+            </div>
+            <div className="flex gap-10">
+              <div>
+                <Label>GBP TO USD</Label>
+                <Label className="font-bold">
+                  {orderDetails?.gbpToUsdRate ?? "Not recorded"}
+                </Label>
+              </div>
+              <div>
+                <Label>EURO TO USD</Label>
+                <Label className="font-bold">
+                  {orderDetails?.eurToUsdRate ?? "Not recorded"}
+                </Label>
+              </div>
             </div>
           </div>
           <Link href="/home" className={buttonVariants()}>

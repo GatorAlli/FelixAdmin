@@ -1,4 +1,5 @@
 import * as p from "drizzle-orm/pg-core";
+import type { SupplierCurrencyDetail } from "./currency";
 
 export const data = p.pgTable("data", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -27,6 +28,9 @@ export const data = p.pgTable("data", {
   consignee: p.varchar(),
   orderHandledBy: p.varchar(),
   suppliers: p.text(),
+  gbpToUsdRate: p.numeric({ precision: 18, scale: 8 }),
+  eurToUsdRate: p.numeric({ precision: 18, scale: 8 }),
+  supplierCurrencyDetails: p.jsonb().$type<SupplierCurrencyDetail[]>(),
 
   trane: p.numeric({ precision: 18, scale: 2 }),
   belimo: p.numeric({ precision: 18, scale: 2 }),
