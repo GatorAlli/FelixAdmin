@@ -3,14 +3,27 @@
 import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
-import { data } from "@/lib/drizzle/schema";
+import { data, users } from "@/lib/drizzle/schema";
 import { revalidatePath } from "next/cache";
 import { readOrderValues } from "@/lib/drizzle/order-values";
 
 
+// Resolve attribution on every save. Never trust a name sent by the browser.
+async function readAuthenticatedOrderValues(formData: FormData) {
+  const user = await requireUser();
+  const [profile] = user.email
+    ? await db.select({ name: users.name }).from(users)
+        .where(eq(users.email, user.email)).limit(1)
+    : [];
+  const username = profile?.name?.trim();
+  if (!username) {
+    return { ok: false as const, message: "Your account has no username. Please have your user profile name set before saving." };
+  }
+  return readOrderValues(formData, username);
+}
+
 export async function createOrder(formData: FormData) {
-  await requireUser();
-  const parsed = readOrderValues(formData);
+  const parsed = await readAuthenticatedOrderValues(formData);
   if (!parsed.ok) return parsed;
 
   try {
@@ -48,12 +61,12 @@ export async function createOrder(formData: FormData) {
 
 // Update only the existing row identified by its primary key.
 export async function updateOrder(orderId: number, formData: FormData) {
-  await requireUser();
+  // Authentication is checked even when the supplied order ID is invalid.
+  const parsed = await readAuthenticatedOrderValues(formData);
   if (!Number.isInteger(orderId) || orderId < 1) {
     return { ok: false, message: "Invalid order ID." };
   }
 
-  const parsed = readOrderValues(formData);
   if (!parsed.ok) return parsed;
 
   try {

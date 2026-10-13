@@ -66,7 +66,6 @@ export default async function Summary() {
             <th>OTHERS</th>
             <th>EMI COST</th>
             <th>MIS. COST</th>
-            <th>PAY BACK</th>
             <th>TOTAL ORDER COST</th>
             <th>PAYMENT RECEIVED</th>
             <th>FELIX OH & PROFIT</th>
@@ -130,7 +129,6 @@ export default async function Summary() {
               <td>{e.others}</td>
               <td>{e.emiCost}</td>
               <td>{e.misCost}</td>
-              <td>{e.payBack}</td>
               <td>{e.totalOrderCost}</td>
               <td>{e.paymentReceived}</td>
               <td>{e.felixOhAndProfit}</td>

@@ -26,12 +26,13 @@ import {
 export default function PageBody({
   orderDetails,
   isAdmin,
+  username,
 }: {
   orderDetails?: Order;
   isAdmin: boolean;
+  username: string;
 }) {
   // States
-  const [createdBy, setCreatedBy] = useState("");
   const [felixSoNo, setFelixSoNo] = useState("");
   const [felixSoDate, setFelixSoDate] = useState("");
   const [emiOrderRef, setEmiOrderRef] = useState("");
@@ -51,7 +52,6 @@ export default function PageBody({
   const [orderHandledBy, setOrderHandledBy] = useState("");
   const [emiCost, setEmiCost] = useState("");
   const [misCost, setMisCost] = useState("");
-  const [payBack, setPayBack] = useState("");
   const [totalOrderCost, setTotalOrderCost] = useState("");
   const [paymentReceived, setPaymentReceived] = useState("");
   const [felixOhAndProfit, setFelixOhAndProfit] = useState("");
@@ -74,7 +74,6 @@ export default function PageBody({
   if (orderDetails && orderDetails !== loadedOrderDetails) {
     setLoadedOrderDetails(orderDetails);
     // Database nulls become empty strings so the inputs can display them.
-    setCreatedBy(orderDetails.createdBy ?? "");
     setFelixSoNo(orderDetails.felixSoNo ?? "");
     setFelixSoDate(orderDetails.felixSoDate ?? "");
     setEmiOrderRef(orderDetails.emiOrderRef ?? "");
@@ -94,7 +93,6 @@ export default function PageBody({
     setOrderHandledBy(orderDetails.orderHandledBy ?? "");
     setEmiCost(orderDetails.emiCost ?? "");
     setMisCost(orderDetails.misCost ?? "");
-    setPayBack(orderDetails.payBack ?? "");
     setTotalOrderCost(orderDetails.totalOrderCost ?? "");
     setPaymentReceived(orderDetails.paymentReceived ?? "");
     setFelixOhAndProfit(orderDetails.felixOhAndProfit ?? "");
@@ -144,14 +142,7 @@ export default function PageBody({
           >
             <div>
               <Label htmlFor="createdBy">Created by</Label>
-              <Input
-                id="createdBy"
-                name="createdBy"
-                type="text"
-                required
-                value={createdBy}
-                onChange={(e) => setCreatedBy(e.target.value)}
-              />
+              <Label id="createdBy">{username}</Label>
             </div>
             <div>
               <Label htmlFor="felixSoNo">Felix SO number</Label>
@@ -636,17 +627,6 @@ export default function PageBody({
               </div>
             </div>
             <div>
-              <Label htmlFor="payBack">Pay back (USD)</Label>
-              <Input
-                id="payBack"
-                name="payBack"
-                type="number"
-                step="0.01"
-                value={payBack}
-                onChange={(e) => setPayBack(e.target.value)}
-              />
-            </div>
-            <div>
               <Label htmlFor="totalOrderCost">Total order cost (USD)</Label>
               <Input
                 id="totalOrderCost"
@@ -752,7 +732,7 @@ export default function PageBody({
           <div className="p-4 flex flex-col gap-10">
             <div>
               <Label>Created by</Label>
-              <Label className="font-bold">{createdBy}</Label>
+              <Label className="font-bold">{orderDetails?.createdBy ?? username}</Label>
             </div>
 
             <div>
@@ -1021,10 +1001,6 @@ export default function PageBody({
               </div>
             </div>
 
-            <div>
-              <Label>Pay back (USD)</Label>
-              <Label className="font-bold">{payBack}</Label>
-            </div>
 
             <div>
               <Label>Total order cost (USD)</Label>

@@ -12,6 +12,7 @@ export default async function OrderForm({
   const user = await requireUser();
 
   let adminStatus = false;
+  let username = "";
 
   const { edit_slug } = await params;
   const order = await db
@@ -23,15 +24,16 @@ export default async function OrderForm({
   const userArray = await db.select().from(users);
 
   userArray.forEach((e) => {
-    if (e.email === user.email && e.status === "admin") {
-      adminStatus = true;
+    if (e.email === user.email) {
+      username = e.name?.trim() ?? "";
+      adminStatus = e.status === "admin";
       return;
     }
   });
 
   return (
     <div>
-      <PageBody orderDetails={order[0]} isAdmin={adminStatus} />
+      <PageBody orderDetails={order[0]} isAdmin={adminStatus} username={username} />
     </div>
   );
 }

@@ -48,7 +48,7 @@ test("invalid, incomplete and excessive-precision amounts/rates are rejected", (
 test("saving recomputes USD and retains original details for reopening", () => {
   const input = form([["HONEYWELL", "100", "GBP"], ["TRANE", "200", "EUR"], ["BELIMO", "50", "USD"]]);
   input.set("supplierUsd", "999999"); // Forged display totals must be ignored.
-  const result = readOrderValues(input);
+  const result = readOrderValues(input, "Currency test");
   assert.ok(result.ok);
   assert.equal(result.values.honeywell, "132.35");
   assert.equal(result.values.trane, "223.62");
@@ -70,7 +70,7 @@ test("rates are required even for USD-only orders", () => {
   for (const field of ["gbpToUsdRate", "eurToUsdRate"]) {
     const input = form([["TRANE", "1", "USD"]]);
     input.delete(field);
-    assert.equal(readOrderValues(input).ok, false);
+    assert.equal(readOrderValues(input, "Currency test").ok, false);
   }
 });
 
@@ -81,15 +81,15 @@ test("unknown currencies, duplicate suppliers and incomplete rows fail validatio
     [["TRANE", "", "USD"]],
     [["__proto__", "1", "USD"]],
   ] as [string, string, string][][]) {
-    assert.equal(readOrderValues(form(rows)).ok, false);
+    assert.equal(readOrderValues(form(rows), "Currency test").ok, false);
   }
   const missingCurrency = form();
   missingCurrency.delete("supplierCurrency");
-  assert.equal(readOrderValues(missingCurrency).ok, false);
+  assert.equal(readOrderValues(missingCurrency, "Currency test").ok, false);
 });
 
 test("removed suppliers are cleared; a blank optional row is skipped", () => {
-  const result = readOrderValues(form([["", "", "USD"]]));
+  const result = readOrderValues(form([["", "", "USD"]]), "Currency test");
   assert.ok(result.ok);
   assert.equal(result.values.honeywell, null);
   assert.equal(result.values.suppliers, null);
@@ -101,4 +101,18 @@ test("legacy orders reopen as USD, including zero-value suppliers", () => {
     {id: 1, supplier: "TRANE", amount: "1234.00", currency: "USD"},
     {id: 2, supplier: "BELIMO", amount: "0.00", currency: "USD"},
   ]);
+});
+
+
+test("Created By comes only from the authenticated username", () => {
+  const input = form();
+  input.set("createdBy", "Forged name");
+  const result = readOrderValues(input, "Current user");
+  assert.ok(result.ok);
+  assert.equal(result.values.createdBy, "Current user");
+  input.delete("createdBy");
+  const withoutField = readOrderValues(input, "Another user");
+  assert.ok(withoutField.ok);
+  assert.equal(withoutField.values.createdBy, "Another user");
+  assert.equal(readOrderValues(input, "").ok, false);
 });

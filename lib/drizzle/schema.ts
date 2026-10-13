@@ -66,7 +66,6 @@ export const data = p.pgTable("data", {
 
   emiCost: p.numeric({ precision: 18, scale: 2 }),
   misCost: p.numeric({ precision: 18, scale: 2 }),
-  payBack: p.numeric({ precision: 18, scale: 2 }),
   totalOrderCost: p.numeric({ precision: 18, scale: 2 }),
   paymentReceived: p.numeric({ precision: 18, scale: 2 }),
   felixOhAndProfit: p.numeric({ precision: 18, scale: 2 }),

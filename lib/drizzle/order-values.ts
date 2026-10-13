@@ -30,10 +30,11 @@ function readOptionalDate(formData: FormData, name: string) {
 }
 
 // Both creating and editing use the same field validation and conversion.
-export function readOrderValues(formData: FormData):
+export function readOrderValues(formData: FormData, authenticatedUsername: string):
   | { ok: true; values: Omit<NewOrder, "sl" | "felixOrderRef"> }
   | { ok: false; message: string } {
-  const createdBy = readText(formData, "createdBy");
+  // The server supplies this name after authentication; FormData cannot override it.
+  const createdBy = authenticatedUsername.trim();
   if (!createdBy) {
     return { ok: false, message: "Created by is required." };
   }
@@ -48,7 +49,6 @@ export function readOrderValues(formData: FormData):
     clientOrderValue: readOptionalNumber(formData, "clientOrderValue"),
     emiCost: readOptionalNumber(formData, "emiCost"),
     misCost: readOptionalNumber(formData, "misCost"),
-    payBack: readOptionalNumber(formData, "payBack"),
     totalOrderCost: readOptionalNumber(formData, "totalOrderCost"),
     paymentReceived: readOptionalNumber(formData, "paymentReceived"),
     felixOhAndProfit: readOptionalNumber(formData, "felixOhAndProfit"),
@@ -154,7 +154,6 @@ export function readOrderValues(formData: FormData):
     ...supplierValues,
     emiCost: numericFields.emiCost.value,
     misCost: numericFields.misCost.value,
-    payBack: numericFields.payBack.value,
     totalOrderCost: numericFields.totalOrderCost.value,
     paymentReceived: numericFields.paymentReceived.value,
     felixOhAndProfit: numericFields.felixOhAndProfit.value,
