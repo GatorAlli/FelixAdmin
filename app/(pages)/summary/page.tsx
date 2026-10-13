@@ -2,10 +2,14 @@ import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data } from "@/lib/drizzle/schema";
 import { asc } from "drizzle-orm";
+import { expenseColumns, expenseUsdByName } from "@/lib/drizzle/expenses";
 
 export default async function Summary() {
   await requireUser();
   const orders = await db.select().from(data).orderBy(asc(data.sl));
+
+  const expenditureColumns = expenseColumns(orders);
+  const expenditureAmounts = orders.map(expenseUsdByName);
 
   return (
     <div>
@@ -65,7 +69,9 @@ export default async function Summary() {
             <th>HABOO</th>
             <th>OTHERS</th>
             <th>EMI COST</th>
-            <th>MIS. COST</th>
+            {expenditureColumns.map((name) => (
+              <th key={name}>{name} (USD)</th>
+            ))}
             <th>TOTAL ORDER COST</th>
             <th>PAYMENT RECEIVED</th>
             <th>FELIX OH & PROFIT</th>
@@ -73,7 +79,7 @@ export default async function Summary() {
           </tr>
         </thead>
         <tbody>
-          {orders.map((e) => (
+          {orders.map((e, index) => (
             <tr key={e.sl}>
               <td>{e.sl}</td>
               <td>{e.createdBy}</td>
@@ -128,7 +134,9 @@ export default async function Summary() {
               <td>{e.haboo}</td>
               <td>{e.others}</td>
               <td>{e.emiCost}</td>
-              <td>{e.misCost}</td>
+              {expenditureColumns.map((name) => (
+                <td key={name}>{expenditureAmounts[index].get(name) ?? ""}</td>
+              ))}
               <td>{e.totalOrderCost}</td>
               <td>{e.paymentReceived}</td>
               <td>{e.felixOhAndProfit}</td>

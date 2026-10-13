@@ -1,4 +1,5 @@
 import type { NewOrder } from "./schema";
+import { sumUsdAmounts, type MiscellaneousExpense } from "./expenses";
 import { supplierColumns, type SupplierKey, type SupplierCurrencyDetail,
   isCurrency, isValidRate, convertToUsd } from "./currency";
 
@@ -48,7 +49,6 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
   const numericFields = {
     clientOrderValue: readOptionalNumber(formData, "clientOrderValue"),
     emiCost: readOptionalNumber(formData, "emiCost"),
-    misCost: readOptionalNumber(formData, "misCost"),
     totalOrderCost: readOptionalNumber(formData, "totalOrderCost"),
     paymentReceived: readOptionalNumber(formData, "paymentReceived"),
     felixOhAndProfit: readOptionalNumber(formData, "felixOhAndProfit"),
@@ -124,6 +124,45 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     selectedSuppliers.push(name);
   }
 
+  const expenseNames = formData.getAll("expenseName");
+  const expenseAmounts = formData.getAll("expenseAmount");
+  const expenseCurrencies = formData.getAll("expenseCurrency");
+  if (expenseNames.length !== expenseAmounts.length ||
+      expenseNames.length !== expenseCurrencies.length) {
+    return { ok: false, message: "Expenditure rows are incomplete." };
+  }
+  const miscellaneousExpenses: MiscellaneousExpense[] = [];
+  const expenseNameSet = new Set<string>();
+  const usdExpenses: string[] = [];
+  for (let index = 0; index < expenseNames.length; index++) {
+    const rawName = expenseNames[index];
+    const rawAmount = expenseAmounts[index];
+    const name = typeof rawName === "string" ? rawName.trim().toUpperCase() : "";
+    const amount = typeof rawAmount === "string" ? rawAmount.trim() : "";
+    if (!name && !amount) continue;
+    if (!name || !amount) {
+      return { ok: false, message: "Complete both expenditure name and amount for each row." };
+    }
+    if (expenseNameSet.has(name)) {
+      return { ok: false, message: `${name} can only be entered once.` };
+    }
+    const currency = expenseCurrencies[index];
+    if (!isCurrency(currency)) {
+      return { ok: false, message: `Choose a valid currency for ${name}.` };
+    }
+    const usdAmount = convertToUsd(amount, currency, gbpToUsdRate, eurToUsdRate);
+    if (usdAmount === null) {
+      return { ok: false, message: `Enter a valid amount for ${name} (up to 2 decimal places and within the supported range).` };
+    }
+    expenseNameSet.add(name);
+    miscellaneousExpenses.push({ name, amount, currency });
+    usdExpenses.push(usdAmount);
+  }
+  const totalMiscellaneousCost = sumUsdAmounts(usdExpenses);
+  if (totalMiscellaneousCost === null) {
+    return { ok: false, message: "The combined miscellaneous cost exceeds the supported range." };
+  }
+
   const values = {
     createdBy,
     gbpToUsdRate,
@@ -153,7 +192,8 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     ) as Record<SupplierKey, null>),
     ...supplierValues,
     emiCost: numericFields.emiCost.value,
-    misCost: numericFields.misCost.value,
+    misCost: miscellaneousExpenses.length ? totalMiscellaneousCost : null,
+    miscellaneousExpenses,
     totalOrderCost: numericFields.totalOrderCost.value,
     paymentReceived: numericFields.paymentReceived.value,
     felixOhAndProfit: numericFields.felixOhAndProfit.value,

@@ -23,6 +23,8 @@ import {
   type SupplierRow,
 } from "@/lib/drizzle/currency";
 
+import { restoreExpenses, type ExpenseRow } from "@/lib/drizzle/expenses";
+
 export default function PageBody({
   orderDetails,
   isAdmin,
@@ -34,6 +36,8 @@ export default function PageBody({
 }) {
   // States
   const [felixSoNo, setFelixSoNo] = useState("");
+
+  const [felixOrderNo, setFelixOrderNo] = useState("");
   const [felixSoDate, setFelixSoDate] = useState("");
   const [emiOrderRef, setEmiOrderRef] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
@@ -51,7 +55,10 @@ export default function PageBody({
   const [consignee, setConsignee] = useState("");
   const [orderHandledBy, setOrderHandledBy] = useState("");
   const [emiCost, setEmiCost] = useState("");
-  const [misCost, setMisCost] = useState("");
+  const [expenses, setExpenses] = useState<ExpenseRow[]>([
+    { id: 1, name: "", amount: "", currency: "USD" },
+  ]);
+  const nextExpenseId = useRef(2);
   const [totalOrderCost, setTotalOrderCost] = useState("");
   const [paymentReceived, setPaymentReceived] = useState("");
   const [felixOhAndProfit, setFelixOhAndProfit] = useState("");
@@ -73,6 +80,7 @@ export default function PageBody({
   // Only load a new order once. Without this guard, the setters cause a render loop.
   if (orderDetails && orderDetails !== loadedOrderDetails) {
     setLoadedOrderDetails(orderDetails);
+    setFelixOrderNo(orderDetails.felixOrderRef);
     // Database nulls become empty strings so the inputs can display them.
     setFelixSoNo(orderDetails.felixSoNo ?? "");
     setFelixSoDate(orderDetails.felixSoDate ?? "");
@@ -92,7 +100,16 @@ export default function PageBody({
     setConsignee(orderDetails.consignee ?? "");
     setOrderHandledBy(orderDetails.orderHandledBy ?? "");
     setEmiCost(orderDetails.emiCost ?? "");
-    setMisCost(orderDetails.misCost ?? "");
+    const savedExpenses = restoreExpenses(orderDetails);
+    // Negative IDs for restored rows cannot collide with newly added positive IDs.
+    setExpenses(
+      savedExpenses.length
+        ? savedExpenses.map((expense, index) => ({
+            ...expense,
+            id: -(index + 1),
+          }))
+        : [{ id: 1, name: "", amount: "", currency: "USD" }],
+    );
     setTotalOrderCost(orderDetails.totalOrderCost ?? "");
     setPaymentReceived(orderDetails.paymentReceived ?? "");
     setFelixOhAndProfit(orderDetails.felixOhAndProfit ?? "");
@@ -120,6 +137,13 @@ export default function PageBody({
 
   return (
     <div>
+      <div>
+        {felixOrderNo ? (
+          <Label>Purchase Order Number: {felixOrderNo}</Label>
+        ) : (
+          <div></div>
+        )}
+      </div>
       {isEditing ? (
         <div>
           <form
@@ -446,17 +470,134 @@ export default function PageBody({
             {/* Supplier names use inputs, with suggestions for the brands in the schema. */}
             <div className="flex justify-between gap-10">
               <div>
-                <div>
-                  <Label htmlFor="misCost">Miscellaneous cost (USD)</Label>
-                  <Input
-                    id="misCost"
-                    name="misCost"
-                    type="number"
-                    step="0.01"
-                    value={misCost}
-                    onChange={(e) => setMisCost(e.target.value)}
-                  />
-                </div>
+                <datalist id="expense-options">
+                  <option value="FREIGHT: USA TO SINGAPORE" />
+                  <option value="FREIGHT: GERMANY TO SINGAPORE" />
+                  <option value="FREIGHT: CHINA TO SINGAPORE" />
+                  <option value="Bank Fee" />
+                  <option value="DHL Cost" />
+                  <option value="UPS Cost" />
+                </datalist>
+                <Label className="text-2xl">MISCELLANEOUS COSTS</Label>
+                {expenses.map((row, index) => (
+                  <div key={row.id} className="flex">
+                    <Label>{index + 1}.</Label>
+                    <Input
+                      id={`expense-${row.id}`}
+                      name="expenseName"
+                      placeholder="Expenditure name"
+                      aria-label={`Expenditure name ${index + 1}`}
+                      list="expense-options"
+                      value={row.name}
+                      onChange={(e) => {
+                        // Update only this row's expenditure name.
+                        setExpenses((rows) =>
+                          rows.map((item) =>
+                            item.id === row.id
+                              ? { ...item, name: e.target.value }
+                              : item,
+                          ),
+                        );
+                      }}
+                    />
+                    <Label htmlFor={`expense-amount-${row.id}`}>Amount</Label>
+                    <Input
+                      id={`expense-amount-${row.id}`}
+                      name="expenseAmount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={row.amount}
+                      placeholder={`in ${row.currency}`}
+                      onChange={(e) => {
+                        // Update only this row's amount; keep it as a string so it can be cleared.
+                        setExpenses((rows) =>
+                          rows.map((item) =>
+                            item.id === row.id
+                              ? { ...item, amount: e.target.value }
+                              : item,
+                          ),
+                        );
+                      }}
+                    />
+                    <Label htmlFor={`expense-currency-${row.id}`}>
+                      CURRENCY
+                    </Label>
+                    <Select
+                      value={row.currency}
+                      onValueChange={(currency) => {
+                        if (!isCurrency(currency)) return;
+                        setExpenses((rows) =>
+                          rows.map((item) =>
+                            item.id === row.id ? { ...item, currency } : item,
+                          ),
+                        );
+                      }}
+                    >
+                      <SelectTrigger id={`expense-currency-${row.id}`}>
+                        <SelectValue>
+                          {row.currency === "EUR" ? "Euro" : row.currency}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">Euro</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {/* A hidden field keeps the currency paired with its FormData row. */}
+                    <input
+                      type="hidden"
+                      name="expenseCurrency"
+                      value={row.currency}
+                    />
+                    {row.currency !== "USD" && (
+                      <div>
+                        <Label htmlFor={`expense-usd-${row.id}`}>
+                          AMOUNT (USD)
+                        </Label>
+                        <Input
+                          id={`expense-usd-${row.id}`}
+                          value={
+                            convertToUsd(
+                              row.amount,
+                              row.currency,
+                              gbpToUsdRate,
+                              eurToUsdRate,
+                            ) ?? ""
+                          }
+                          placeholder="Enter an amount and valid rate"
+                          readOnly
+                        />
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      aria-label={`Remove expenditure ${index + 1}`}
+                      onClick={() =>
+                        setExpenses((rows) =>
+                          rows.filter((item) => item.id !== row.id),
+                        )
+                      }
+                    >
+                      −
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  aria-label="Add expenditure"
+                  onClick={() => {
+                    // Append a new empty row with an ID that has not been used before.
+                    const id = nextExpenseId.current++;
+                    setExpenses((rows) => [
+                      ...rows,
+                      { id, name: "", amount: "", currency: "USD" },
+                    ]);
+                  }}
+                >
+                  +
+                </Button>
                 <div>
                   <Label htmlFor="emiCost">EMI cost (USD)</Label>
                   <Input
@@ -732,7 +873,9 @@ export default function PageBody({
           <div className="p-4 flex flex-col gap-10">
             <div>
               <Label>Created by</Label>
-              <Label className="font-bold">{orderDetails?.createdBy ?? username}</Label>
+              <Label className="font-bold">
+                {orderDetails?.createdBy ?? username}
+              </Label>
             </div>
 
             <div>
@@ -954,11 +1097,38 @@ export default function PageBody({
 
             <div className="flex justify-between gap-10">
               <div>
-                <div>
-                  <Label>Miscellaneous cost (USD)</Label>
-                  <Label className="font-bold">{misCost}</Label>
-                </div>
-
+                <Label className="text-2xl">MISCELLANEOUS COSTS</Label>
+                {expenses
+                  .filter((row) => row.name || row.amount)
+                  .map((row, index) => (
+                    <div key={row.id} className="flex gap-10">
+                      <Label>{index + 1}.</Label>
+                      <Label className="font-bold">{row.name}</Label>
+                      <div className="flex gap-3">
+                        <Label>AMOUNT ({row.currency})</Label>
+                        <Label className="font-bold">{row.amount}</Label>
+                      </div>
+                      <div className="flex gap-3">
+                        <Label>CURRENCY</Label>
+                        <Label className="font-bold">
+                          {row.currency === "EUR" ? "Euro" : row.currency}
+                        </Label>
+                      </div>
+                      {row.currency !== "USD" && (
+                        <div className="flex gap-3">
+                          <Label>AMOUNT (USD)</Label>
+                          <Label className="font-bold">
+                            {convertToUsd(
+                              row.amount,
+                              row.currency,
+                              gbpToUsdRate,
+                              eurToUsdRate,
+                            ) ?? "—"}
+                          </Label>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 <div>
                   <Label>EMI cost (USD)</Label>
                   <Label className="font-bold">{emiCost}</Label>
@@ -1000,7 +1170,6 @@ export default function PageBody({
                 ))}
               </div>
             </div>
-
 
             <div>
               <Label>Total order cost (USD)</Label>

@@ -1,5 +1,6 @@
 import * as p from "drizzle-orm/pg-core";
 import type { SupplierCurrencyDetail } from "./currency";
+import type { MiscellaneousExpense } from "./expenses";
 
 export const data = p.pgTable("data", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -66,6 +67,7 @@ export const data = p.pgTable("data", {
 
   emiCost: p.numeric({ precision: 18, scale: 2 }),
   misCost: p.numeric({ precision: 18, scale: 2 }),
+  miscellaneousExpenses: p.jsonb().$type<MiscellaneousExpense[]>(),
   totalOrderCost: p.numeric({ precision: 18, scale: 2 }),
   paymentReceived: p.numeric({ precision: 18, scale: 2 }),
   felixOhAndProfit: p.numeric({ precision: 18, scale: 2 }),
