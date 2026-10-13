@@ -7,17 +7,23 @@ import { data, users } from "@/lib/drizzle/schema";
 import { revalidatePath } from "next/cache";
 import { readOrderValues } from "@/lib/drizzle/order-values";
 
-
 // Resolve attribution on every save. Never trust a name sent by the browser.
 async function readAuthenticatedOrderValues(formData: FormData) {
   const user = await requireUser();
   const [profile] = user.email
-    ? await db.select({ name: users.name }).from(users)
-        .where(eq(users.email, user.email)).limit(1)
+    ? await db
+        .select({ name: users.name })
+        .from(users)
+        .where(eq(users.email, user.email))
+        .limit(1)
     : [];
   const username = profile?.name?.trim();
   if (!username) {
-    return { ok: false as const, message: "Your account has no username. Please have your user profile name set before saving." };
+    return {
+      ok: false as const,
+      message:
+        "Your account has no username. Please have your user profile name set before saving.",
+    };
   }
   return readOrderValues(formData, username);
 }
@@ -40,7 +46,7 @@ export async function createOrder(formData: FormData) {
       if (!insertedOrder)
         throw new Error("Order insert returned no primary key.");
 
-      const felixOrderRef = `FCL/FPO/2024/${String(insertedOrder.sl).padStart(3, "0")}`;
+      const felixOrderRef = `FCL/FPO/${String(new Date().getFullYear())}/${String(insertedOrder.sl).padStart(3, "0")}`;
       await transaction
         .update(data)
         .set({ felixOrderRef })
@@ -90,6 +96,9 @@ export async function updateOrder(orderId: number, formData: FormData) {
     };
   } catch (error) {
     console.error("Unable to update order", error);
-    return { ok: false, message: "Could not update the order. Please try again." };
+    return {
+      ok: false,
+      message: "Could not update the order. Please try again.",
+    };
   }
 }
