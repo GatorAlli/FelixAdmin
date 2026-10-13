@@ -1,11 +1,30 @@
 import { requireUser } from "@/lib/supabase/auth";
 import PageBody from "./PageBody";
+import { db } from "@/lib/drizzle/drizzle-index";
+import { users } from "@/lib/drizzle/schema";
+import { redirect } from "next/navigation";
 
 export default async function OrderForm() {
-  await requireUser();
+  const user = await requireUser();
+
+  let adminStatus = false;
+
+  const userArray = await db.select().from(users);
+
+  userArray.forEach((e) => {
+    if (e.email === user.email && e.status === "admin") {
+      adminStatus = true;
+      return;
+    }
+  });
+
+  if (adminStatus === false) {
+    redirect("/home");
+  }
+
   return (
     <div>
-      <PageBody />
+      <PageBody isAdmin={adminStatus} />
     </div>
   );
 }

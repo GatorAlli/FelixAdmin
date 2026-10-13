@@ -71,6 +71,7 @@ export const data = p.pgTable("data", {
 });
 
 export const users = p.pgTable("users", {
+  sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   name: p.varchar(),
   email: p.varchar(),
   status: p.varchar(),
