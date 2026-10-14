@@ -7,39 +7,30 @@ import { clsx } from "clsx";
 import { Sora, Manrope } from "next/font/google";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
-
 const sora = Sora({ 
   subsets: ["latin"], 
   weight: ["600"] 
 });
-
 const manrope = Manrope({ 
   subsets: ["latin"], 
   weight: ["400", "500", "600", "700", "800"] 
 });
-
 export default async function Summary() {
   await requireUser();
   const orders = await db.select().from(data).orderBy(asc(data.sl));
-
   const expenditureColumns = expenseColumns(orders);
   const expenditureAmounts = orders.map(expenseUsdByName);
-
   const headerStyling = clsx(
     "px-4 py-4 text-left text-[13px] font-bold text-black uppercase whitespace-nowrap bg-white border-b border-r border-gray-200 sticky top-0 z-10"
   );
-  
   const cellStyling = clsx(
     "px-4 py-3 text-sm text-black whitespace-nowrap border-b border-r border-gray-200 group-hover:bg-gray-50 transition-colors"
   );
-
   return (
     <div className={`min-h-screen bg-[#F8FAFC] flex flex-col ${manrope.className}`}>
-      
       {/* Navbar */}
       <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
         <div className="flex items-center h-full">
-          
           {/* Logo */}
           <Link href="/home" className="flex items-center gap-3 cursor-pointer mr-12 lg:mr-16">
             <svg className="h-10 w-auto" viewBox="56 18 416 334" fill="none" xmlns="http://www.w3.org/2000/svg">
