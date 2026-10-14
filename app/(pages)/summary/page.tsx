@@ -3,6 +3,7 @@ import { db } from "@/lib/drizzle/drizzle-index";
 import { data } from "@/lib/drizzle/schema";
 import { asc } from "drizzle-orm";
 import { expenseColumns, expenseUsdByName } from "@/lib/drizzle/expenses";
+import { clsx } from "cn";
 
 export default async function Summary() {
   await requireUser();
@@ -11,114 +12,116 @@ export default async function Summary() {
   const expenditureColumns = expenseColumns(orders);
   const expenditureAmounts = orders.map(expenseUsdByName);
 
+  const cellStyling = clsx("p-2");
+
   return (
     <div>
-      <table className="border border-separate border-spacing-4">
+      <table className="border divide-y border-spacing-4">
         <thead className="font-heading text-transform: uppercase">
-          <tr>
-            <th>SL</th>
-            <th>Created by</th>
-            <th>ORDER REF.</th>
-            <th>PAYMENT MODE</th>
-            <th>CLIENT ORDER VALUE (USD)</th>
-            <th>PROJECT NAME</th>
-            <th>PROJECT NOTES</th>
-            <th>CLIENT NAME</th>
-            <th>End User</th>
-            <th>SYSTEM TYPE</th>
-            <th>ORDER HANDLED BY</th>
-            <th>SUPPLIERS</th>
-            <th>TRANE</th>
-            <th>BELIMO</th>
-            <th>DANFOSS</th>
-            <th>HONEYWELL</th>
-            <th>REGELTECHNIK</th>
-            <th>DWYER</th>
-            <th>ALPS</th>
-            <th>CONTROL 4</th>
-            <th>LUTRON</th>
-            <th>LANDIS+GYR</th>
-            <th>RBH</th>
-            <th>PROSTAR</th>
-            <th>GISSMATIC</th>
-            <th>ZKTECO</th>
-            <th>ADTESHIA</th>
-            <th>FIKE</th>
-            <th>TECOFI</th>
-            <th>SEWO</th>
-            <th>EBELCO</th>
-            <th>DOOYA</th>
-            <th>POGO</th>
-            <th>PARK HELP</th>
-            <th>FOSHAN</th>
-            <th>KELE</th>
-            <th>MULTICABLE</th>
-            <th>DEYZ</th>
-            <th>SIMENS</th>
-            <th>FLASH TURTLE</th>
-            <th>SERVO</th>
-            <th>HABOO</th>
-            <th>OTHERS</th>
+          <tr className="divide-x">
+            <th className={cellStyling}>SL</th>
+            <th className={cellStyling}>Created by</th>
+            <th className={cellStyling}>ORDER REF.</th>
+            <th className={cellStyling}>PAYMENT MODE</th>
+            <th className={cellStyling}>CLIENT ORDER VALUE (USD)</th>
+            <th className={cellStyling}>PROJECT NAME</th>
+            <th className={cellStyling}>PROJECT NOTES</th>
+            <th className={cellStyling}>CLIENT NAME</th>
+            <th className={cellStyling}>End User</th>
+            <th className={cellStyling}>SYSTEM TYPE</th>
+            <th className={cellStyling}>ORDER HANDLED BY</th>
+            <th className={cellStyling}>SUPPLIERS</th>
+            <th className={cellStyling}>TRANE</th>
+            <th className={cellStyling}>BELIMO</th>
+            <th className={cellStyling}>DANFOSS</th>
+            <th className={cellStyling}>HONEYWELL</th>
+            <th className={cellStyling}>REGELTECHNIK</th>
+            <th className={cellStyling}>DWYER</th>
+            <th className={cellStyling}>ALPS</th>
+            <th className={cellStyling}>CONTROL 4</th>
+            <th className={cellStyling}>LUTRON</th>
+            <th className={cellStyling}>LANDIS+GYR</th>
+            <th className={cellStyling}>RBH</th>
+            <th className={cellStyling}>PROSTAR</th>
+            <th className={cellStyling}>GISSMATIC</th>
+            <th className={cellStyling}>ZKTECO</th>
+            <th className={cellStyling}>ADTESHIA</th>
+            <th className={cellStyling}>FIKE</th>
+            <th className={cellStyling}>TECOFI</th>
+            <th className={cellStyling}>SEWO</th>
+            <th className={cellStyling}>EBELCO</th>
+            <th className={cellStyling}>DOOYA</th>
+            <th className={cellStyling}>POGO</th>
+            <th className={cellStyling}>PARK HELP</th>
+            <th className={cellStyling}>FOSHAN</th>
+            <th className={cellStyling}>KELE</th>
+            <th className={cellStyling}>MULTICABLE</th>
+            <th className={cellStyling}>DEYZ</th>
+            <th className={cellStyling}>SIMENS</th>
+            <th className={cellStyling}>FLASH TURTLE</th>
+            <th className={cellStyling}>SERVO</th>
+            <th className={cellStyling}>HABOO</th>
+            <th className={cellStyling}>OTHERS</th>
             {expenditureColumns.map((name) => (
-              <th key={name}>{name} (USD)</th>
+              <th className={cellStyling} key={name}>{name} (USD)</th>
             ))}
-            <th>PAYMENT NOTES</th>
-            <th>ORDER HANDLING FEE (%)</th>
-            <th>MISCELLANEOUS HANDLING FEE (%)</th>
+            <th className={cellStyling}>PAYMENT NOTES</th>
+            <th className={cellStyling}>ORDER HANDLING FEE (%)</th>
+            <th className={cellStyling}>MISCELLANEOUS HANDLING FEE (%)</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y">
           {orders.map((e, index) => (
-            <tr key={e.sl}>
-              <td>{e.sl}</td>
-              <td>{e.createdBy}</td>
-              <td>{e.felixOrderRef}</td>
-              <td>{e.paymentMode}</td>
-              <td>{e.clientOrderValue}</td>
-              <td>{e.projectName}</td>
-              <td>{e.projectNotes}</td>
-              <td>{e.clientName}</td>
-              <td>{e.endUser}</td>
-              <td>{e.productSystem}</td>
-              <td>{e.orderHandledBy}</td>
-              <td>{e.suppliers}</td>
-              <td>{e.trane}</td>
-              <td>{e.belimo}</td>
-              <td>{e.danfoss}</td>
-              <td>{e.honeywell}</td>
-              <td>{e.regeltechnik}</td>
-              <td>{e.dwyer}</td>
-              <td>{e.alps}</td>
-              <td>{e.control4}</td>
-              <td>{e.lutron}</td>
-              <td>{e.landisGyr}</td>
-              <td>{e.rbh}</td>
-              <td>{e.prostar}</td>
-              <td>{e.gissmatic}</td>
-              <td>{e.zkteco}</td>
-              <td>{e.adteshia}</td>
-              <td>{e.fike}</td>
-              <td>{e.tecofi}</td>
-              <td>{e.sewo}</td>
-              <td>{e.ebelco}</td>
-              <td>{e.dooya}</td>
-              <td>{e.pogo}</td>
-              <td>{e.parkHelp}</td>
-              <td>{e.foshan}</td>
-              <td>{e.kele}</td>
-              <td>{e.multicable}</td>
-              <td>{e.deyz}</td>
-              <td>{e.simens}</td>
-              <td>{e.flashTurtle}</td>
-              <td>{e.servo}</td>
-              <td>{e.haboo}</td>
-              <td>{e.others}</td>
+            <tr className="divide-x" key={e.sl}>
+              <td className={cellStyling}>{e.sl}</td>
+              <td className={cellStyling}>{e.createdBy}</td>
+              <td className={cellStyling}>{e.felixOrderRef}</td>
+              <td className={cellStyling}>{e.paymentMode}</td>
+              <td className={cellStyling}>{e.clientOrderValue}</td>
+              <td className={cellStyling}>{e.projectName}</td>
+              <td className={cellStyling}>{e.projectNotes}</td>
+              <td className={cellStyling}>{e.clientName}</td>
+              <td className={cellStyling}>{e.endUser}</td>
+              <td className={cellStyling}>{e.productSystem}</td>
+              <td className={cellStyling}>{e.orderHandledBy}</td>
+              <td className={cellStyling}>{e.suppliers}</td>
+              <td className={cellStyling}>{e.trane}</td>
+              <td className={cellStyling}>{e.belimo}</td>
+              <td className={cellStyling}>{e.danfoss}</td>
+              <td className={cellStyling}>{e.honeywell}</td>
+              <td className={cellStyling}>{e.regeltechnik}</td>
+              <td className={cellStyling}>{e.dwyer}</td>
+              <td className={cellStyling}>{e.alps}</td>
+              <td className={cellStyling}>{e.control4}</td>
+              <td className={cellStyling}>{e.lutron}</td>
+              <td className={cellStyling}>{e.landisGyr}</td>
+              <td className={cellStyling}>{e.rbh}</td>
+              <td className={cellStyling}>{e.prostar}</td>
+              <td className={cellStyling}>{e.gissmatic}</td>
+              <td className={cellStyling}>{e.zkteco}</td>
+              <td className={cellStyling}>{e.adteshia}</td>
+              <td className={cellStyling}>{e.fike}</td>
+              <td className={cellStyling}>{e.tecofi}</td>
+              <td className={cellStyling}>{e.sewo}</td>
+              <td className={cellStyling}>{e.ebelco}</td>
+              <td className={cellStyling}>{e.dooya}</td>
+              <td className={cellStyling}>{e.pogo}</td>
+              <td className={cellStyling}>{e.parkHelp}</td>
+              <td className={cellStyling}>{e.foshan}</td>
+              <td className={cellStyling}>{e.kele}</td>
+              <td className={cellStyling}>{e.multicable}</td>
+              <td className={cellStyling}>{e.deyz}</td>
+              <td className={cellStyling}>{e.simens}</td>
+              <td className={cellStyling}>{e.flashTurtle}</td>
+              <td className={cellStyling}>{e.servo}</td>
+              <td className={cellStyling}>{e.haboo}</td>
+              <td className={cellStyling}>{e.others}</td>
               {expenditureColumns.map((name) => (
-                <td key={name}>{expenditureAmounts[index].get(name) ?? ""}</td>
+                <td className={cellStyling} key={name}>{expenditureAmounts[index].get(name) ?? ""}</td>
               ))}
-              <td>{e.paymentNotes}</td>
-              <td>{e.orderHandlingFee}</td>
-              <td>{e.miscellaneousHandlingFee}</td>
+              <td className={cellStyling}>{e.paymentNotes}</td>
+              <td className={cellStyling}>{e.orderHandlingFee}</td>
+              <td className={cellStyling}>{e.miscellaneousHandlingFee}</td>
             </tr>
           ))}
         </tbody>
