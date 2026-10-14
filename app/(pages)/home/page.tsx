@@ -21,6 +21,11 @@ const sora = Sora({
   weight: ["600"] 
 });
 
+const manrope = Manrope({ 
+  subsets: ["latin"], 
+  weight: ["400", "500", "600", "700", "800"] 
+});
+
 export default async function Home() {
   const user = await requireUser();
   let name = "";
@@ -42,7 +47,7 @@ export default async function Home() {
   const tdStyling = clsx("p-4 border");
 
   return (
-    <div className="flex flex-col">
+    <div className={`min-h-screen bg-[#F8FAFC] flex flex-col ${manrope.className}`}>
       <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
         <div className="flex items-center h-full">
           
@@ -99,7 +104,11 @@ export default async function Home() {
         </div>
       </nav>
       <div className="flex-1 p-6 md:p-10">
-       
+        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <h1 className={`text-[32px] text-black pr-4 py-1 ${sora.className}`}>
+            Order Overview
+          </h1>
+        </div>
       </div>
       <div className="p-4">
         <div className="flex gap-3 items-center py-4">
