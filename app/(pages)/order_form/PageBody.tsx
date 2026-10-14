@@ -60,11 +60,16 @@ export default function PageBody({
   const [felixOrderNo, setFelixOrderNo] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
   const [clientOrderValue, setClientOrderValue] = useState("");
-  const [clientOrderCurrency, setClientOrderCurrency] = useState<Currency>("USD");
+  const [clientOrderCurrency, setClientOrderCurrency] =
+    useState<Currency>("USD");
   const [projectName, setProjectName] = useState("");
   const [projectNotes, setProjectNotes] = useState("");
-  const [orderHandlingFee, setOrderHandlingFee] = useState(DEFAULT_ORDER_HANDLING_FEE);
-  const [miscellaneousHandlingFee, setMiscellaneousHandlingFee] = useState(DEFAULT_MISCELLANEOUS_HANDLING_FEE);
+  const [orderHandlingFee, setOrderHandlingFee] = useState(
+    DEFAULT_ORDER_HANDLING_FEE,
+  );
+  const [miscellaneousHandlingFee, setMiscellaneousHandlingFee] = useState(
+    DEFAULT_MISCELLANEOUS_HANDLING_FEE,
+  );
   const [clientName, setClientName] = useState("");
   const [endUser, setEndUser] = useState("");
   const [productSystem, setProductSystem] = useState("");
@@ -97,12 +102,21 @@ export default function PageBody({
     setFelixOrderNo(orderDetails.felixOrderRef);
     // Database nulls become empty strings so the inputs can display them.
     setPaymentMode(orderDetails.paymentMode ?? "");
-    setClientOrderValue(orderDetails.clientOrderOriginalValue ?? orderDetails.clientOrderValue ?? "");
+    setClientOrderValue(
+      orderDetails.clientOrderOriginalValue ??
+        orderDetails.clientOrderValue ??
+        "",
+    );
     setClientOrderCurrency(orderDetails.clientOrderCurrency ?? "USD");
     setProjectName(orderDetails.projectName ?? "");
     setProjectNotes(orderDetails.projectNotes ?? "");
-    setOrderHandlingFee(orderDetails.orderHandlingFee ?? DEFAULT_ORDER_HANDLING_FEE);
-    setMiscellaneousHandlingFee(orderDetails.miscellaneousHandlingFee ?? DEFAULT_MISCELLANEOUS_HANDLING_FEE);
+    setOrderHandlingFee(
+      orderDetails.orderHandlingFee ?? DEFAULT_ORDER_HANDLING_FEE,
+    );
+    setMiscellaneousHandlingFee(
+      orderDetails.miscellaneousHandlingFee ??
+        DEFAULT_MISCELLANEOUS_HANDLING_FEE,
+    );
     setClientName(orderDetails.clientName ?? "");
     setEndUser(orderDetails.endUser ?? "");
     const savedSystem = orderDetails.productSystem ?? "";
@@ -163,7 +177,8 @@ export default function PageBody({
         )}
         <Label>Date Created: {formatOrderDate(createdDate)}</Label>
         <Label>
-          Created by: {isEditing ? username : (orderDetails?.createdBy ?? username)}
+          Created by:{" "}
+          {isEditing ? username : (orderDetails?.createdBy ?? username)}
         </Label>
       </div>
       {isEditing ? (
@@ -273,7 +288,11 @@ export default function PageBody({
                   )}
                 </div>
                 {/* Submit either the selected preset or the custom Other text. */}
-                <input type="hidden" name="productSystem" value={productSystem} />
+                <input
+                  type="hidden"
+                  name="productSystem"
+                  value={productSystem}
+                />
               </div>
               <div>
                 <Label htmlFor="projectName">Project name</Label>
@@ -333,11 +352,16 @@ export default function PageBody({
                   <Select
                     value={clientOrderCurrency}
                     onValueChange={(currency) => {
-                      if (isCurrency(currency)) setClientOrderCurrency(currency);
+                      if (isCurrency(currency))
+                        setClientOrderCurrency(currency);
                     }}
                   >
                     <SelectTrigger id="clientOrderCurrency">
-                      <SelectValue>{clientOrderCurrency === "EUR" ? "Euro" : clientOrderCurrency}</SelectValue>
+                      <SelectValue>
+                        {clientOrderCurrency === "EUR"
+                          ? "Euro"
+                          : clientOrderCurrency}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="USD">USD</SelectItem>
@@ -345,13 +369,26 @@ export default function PageBody({
                       <SelectItem value="GBP">GBP</SelectItem>
                     </SelectContent>
                   </Select>
-                  <input type="hidden" name="clientOrderCurrency" value={clientOrderCurrency} />
+                  <Input
+                    type="hidden"
+                    name="clientOrderCurrency"
+                    value={clientOrderCurrency}
+                  />
                   {clientOrderCurrency !== "USD" && (
-                    <div>
-                      <Label htmlFor="clientOrderUsdValue">ORDER VALUE (USD)</Label>
+                    <div className="flex">
+                      <Label htmlFor="clientOrderUsdValue">
+                        ORDER VALUE (USD)
+                      </Label>
                       <Input
                         id="clientOrderUsdValue"
-                        value={convertToUsd(clientOrderValue, clientOrderCurrency, gbpToUsdRate, eurToUsdRate) ?? ""}
+                        value={
+                          convertToUsd(
+                            clientOrderValue,
+                            clientOrderCurrency,
+                            gbpToUsdRate,
+                            eurToUsdRate,
+                          ) ?? ""
+                        }
                         placeholder="Enter an amount and valid rate"
                         readOnly
                       />
@@ -368,7 +405,9 @@ export default function PageBody({
                     name="paymentMode"
                     type="radio"
                     value={paymentMode}
-                    checked={paymentMode === "LC" && paymentModeOther !== "Other"}
+                    checked={
+                      paymentMode === "LC" && paymentModeOther !== "Other"
+                    }
                     onChange={() => {
                       setPaymentMode("LC");
 
@@ -383,7 +422,9 @@ export default function PageBody({
                     name="paymentMode"
                     type="radio"
                     value={paymentMode}
-                    checked={paymentMode === "TT" && paymentModeOther !== "Other"}
+                    checked={
+                      paymentMode === "TT" && paymentModeOther !== "Other"
+                    }
                     onChange={() => {
                       setPaymentMode("TT");
                       setPaymentModeOther("");
@@ -532,23 +573,18 @@ export default function PageBody({
                       value={row.currency}
                     />
                     {row.currency !== "USD" && (
-                      <div>
+                      <div className="flex">
                         <Label htmlFor={`supplier-usd-${row.id}`}>
                           AMOUNT (USD)
                         </Label>
-                        <Input
-                          id={`supplier-usd-${row.id}`}
-                          value={
-                            convertToUsd(
-                              row.amount,
-                              row.currency,
-                              gbpToUsdRate,
-                              eurToUsdRate,
-                            ) ?? ""
-                          }
-                          placeholder="Enter an amount and valid rate"
-                          readOnly
-                        />
+                        <Label id={`supplier-usd-${row.id}`} className="px-2">
+                          {convertToUsd(
+                            row.amount,
+                            row.currency,
+                            gbpToUsdRate,
+                            eurToUsdRate,
+                          ) ?? ""}
+                        </Label>
                       </div>
                     )}
                     <Button
@@ -662,23 +698,18 @@ export default function PageBody({
                       value={row.currency}
                     />
                     {row.currency !== "USD" && (
-                      <div>
+                      <div className="flex">
                         <Label htmlFor={`expense-usd-${row.id}`}>
                           AMOUNT (USD)
                         </Label>
-                        <Input
-                          id={`expense-usd-${row.id}`}
-                          value={
-                            convertToUsd(
-                              row.amount,
-                              row.currency,
-                              gbpToUsdRate,
-                              eurToUsdRate,
-                            ) ?? ""
-                          }
-                          placeholder="Enter an amount and valid rate"
-                          readOnly
-                        />
+                        <Label id={`expense-usd-${row.id}`}>
+                          {convertToUsd(
+                            row.amount,
+                            row.currency,
+                            gbpToUsdRate,
+                            eurToUsdRate,
+                          ) ?? ""}
+                        </Label>
                       </div>
                     )}
                     <Button
@@ -744,7 +775,9 @@ export default function PageBody({
               {/* Percentage settings are stored on this order; 5 means 5%. */}
               <div className="flex gap-10">
                 <div>
-                  <Label htmlFor="orderHandlingFee">ORDER HANDLING FEE (%)</Label>
+                  <Label htmlFor="orderHandlingFee">
+                    ORDER HANDLING FEE (%)
+                  </Label>
                   <Input
                     id="orderHandlingFee"
                     name="orderHandlingFee"
@@ -756,7 +789,9 @@ export default function PageBody({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="miscellaneousHandlingFee">MISCELLANEOUS HANDLING FEE (%)</Label>
+                  <Label htmlFor="miscellaneousHandlingFee">
+                    MISCELLANEOUS HANDLING FEE (%)
+                  </Label>
                   <Input
                     id="miscellaneousHandlingFee"
                     name="miscellaneousHandlingFee"
@@ -764,7 +799,9 @@ export default function PageBody({
                     min="0"
                     step="0.0001"
                     value={miscellaneousHandlingFee}
-                    onChange={(e) => setMiscellaneousHandlingFee(e.target.value)}
+                    onChange={(e) =>
+                      setMiscellaneousHandlingFee(e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -823,7 +860,9 @@ export default function PageBody({
               </div>
               <div>
                 <Label>PROJECT NOTES</Label>
-                <Label className="font-bold whitespace-pre-wrap">{projectNotes}</Label>
+                <Label className="font-bold whitespace-pre-wrap">
+                  {projectNotes}
+                </Label>
               </div>
             </div>
             {/* Order value, payment and costs */}
@@ -834,7 +873,14 @@ export default function PageBody({
                 {clientOrderCurrency !== "USD" && (
                   <div>
                     <Label>ORDER VALUE (USD)</Label>
-                    <Label className="font-bold">{convertToUsd(clientOrderValue, clientOrderCurrency, gbpToUsdRate, eurToUsdRate) ?? "—"}</Label>
+                    <Label className="font-bold">
+                      {convertToUsd(
+                        clientOrderValue,
+                        clientOrderCurrency,
+                        gbpToUsdRate,
+                        eurToUsdRate,
+                      ) ?? "—"}
+                    </Label>
                   </div>
                 )}
               </div>
@@ -848,7 +894,9 @@ export default function PageBody({
                     name="paymentMode"
                     type="radio"
                     value="LC"
-                    checked={paymentMode === "LC" && paymentModeOther !== "Other"}
+                    checked={
+                      paymentMode === "LC" && paymentModeOther !== "Other"
+                    }
                     disabled
                   />
                 </div>
@@ -860,7 +908,9 @@ export default function PageBody({
                     name="paymentMode"
                     type="radio"
                     value="TT"
-                    checked={paymentMode === "TT" && paymentModeOther !== "Other"}
+                    checked={
+                      paymentMode === "TT" && paymentModeOther !== "Other"
+                    }
                     disabled
                   />
                 </div>
@@ -977,7 +1027,9 @@ export default function PageBody({
                 </div>
                 <div>
                   <Label>MISCELLANEOUS HANDLING FEE (%)</Label>
-                  <Label className="font-bold">{miscellaneousHandlingFee}</Label>
+                  <Label className="font-bold">
+                    {miscellaneousHandlingFee}
+                  </Label>
                 </div>
               </div>
             </div>
