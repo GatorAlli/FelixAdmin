@@ -1,4 +1,5 @@
 import type { NewOrder } from "./schema";
+import { DEFAULT_PANEL_CURRENCIES, panelFields } from "./order-calculations";
 import { sumUsdAmounts, type MiscellaneousExpense } from "./expenses";
 import { supplierColumns, type SupplierKey, type SupplierCurrencyDetail,
   isCurrency, isValidRate, convertToUsd } from "./currency";
@@ -144,8 +145,22 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     return { ok: false, message: "The combined miscellaneous cost exceeds the supported range." };
   }
 
+  const materialTotal = sumUsdAmounts(Object.values(supplierValues));
+  if (materialTotal === null) {
+    return { ok: false, message: "The combined material cost exceeds the supported range." };
+  }
+  const calculationCurrencies = { ...DEFAULT_PANEL_CURRENCIES };
+  for (const [key] of panelFields) {
+    const currency = formData.get(`panelCurrency-${key}`) ?? "USD";
+    if (!isCurrency(currency)) {
+      return { ok: false, message: "Choose a valid currency for each calculation-panel value." };
+    }
+    calculationCurrencies[key] = currency;
+  }
+
   const values = {
     createdBy,
+    calculationCurrencies,
     gbpToUsdRate,
     eurToUsdRate,
     supplierCurrencyDetails,

@@ -1,6 +1,7 @@
 import * as p from "drizzle-orm/pg-core";
 import type { Currency, SupplierCurrencyDetail } from "./currency";
 import type { MiscellaneousExpense } from "./expenses";
+import type { PanelCurrencies } from "./order-calculations";
 
 export const data = p.pgTable("data", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -63,6 +64,7 @@ export const data = p.pgTable("data", {
   miscellaneousExpenses: p.jsonb().$type<MiscellaneousExpense[]>(),
 
   paymentNotes: p.text(),
+  calculationCurrencies: p.jsonb().$type<PanelCurrencies>(),
   // Fee settings are percentages: 5 means 5%, not 0.05.
   orderHandlingFee: p.numeric({ precision: 18, scale: 4 }),
   miscellaneousHandlingFee: p.numeric({ precision: 18, scale: 4 }),

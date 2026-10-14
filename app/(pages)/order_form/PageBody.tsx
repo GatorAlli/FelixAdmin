@@ -19,6 +19,7 @@ import {
   DEFAULT_GBP_TO_USD,
   DEFAULT_EUR_TO_USD,
   convertToUsd,
+  convertFromUsd,
   isCurrency,
   restoreSupplierRows,
   type SupplierRow,
@@ -27,6 +28,11 @@ import {
 
 import { restoreExpenses, type ExpenseRow } from "@/lib/drizzle/expenses";
 import { formatOrderDate } from "@/lib/drizzle/order-date";
+import {
+  calculateOrderTotals,
+  DEFAULT_PANEL_CURRENCIES,
+  panelFields,
+} from "@/lib/drizzle/order-calculations";
 
 const systemTypes = [
   "BMS",
@@ -82,6 +88,9 @@ export default function PageBody({
   const nextExpenseId = useRef(2);
   const [paymentNotes, setPaymentNotes] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState("");
+  const [panelCurrencies, setPanelCurrencies] = useState({
+    ...DEFAULT_PANEL_CURRENCIES,
+  });
 
   const [paymentModeOther, setPaymentModeOther] = useState("");
   const [suppliers, setSuppliers] = useState<SupplierRow[]>([
@@ -99,6 +108,10 @@ export default function PageBody({
   if (orderDetails && orderDetails !== loadedOrderDetails) {
     setLoadedOrderDetails(orderDetails);
     setCreatedDate(orderDetails.createdDate);
+    setPanelCurrencies({
+      ...DEFAULT_PANEL_CURRENCIES,
+      ...orderDetails.calculationCurrencies,
+    });
     setFelixOrderNo(orderDetails.felixOrderRef);
     // Database nulls become empty strings so the inputs can display them.
     setPaymentMode(orderDetails.paymentMode ?? "");
@@ -167,6 +180,18 @@ export default function PageBody({
     setIsEditing(false);
   }
 
+  // Derived values recalculate whenever an input changes; no duplicate total state.
+  const totals = calculateOrderTotals({
+    projectValue: clientOrderValue,
+    projectCurrency: clientOrderCurrency,
+    suppliers,
+    expenses,
+    gbpToUsdRate,
+    eurToUsdRate,
+    orderHandlingFee,
+    miscellaneousHandlingFee,
+  });
+
   return (
     <div>
       <div className="flex justify-between">
@@ -181,785 +206,720 @@ export default function PageBody({
           {isEditing ? username : (orderDetails?.createdBy ?? username)}
         </Label>
       </div>
-      {isEditing ? (
-        <div>
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-
-              setSubmissionMessage("");
-              if (orderDetails) {
-                const result = await updateOrder(
-                  orderDetails.sl,
-                  new FormData(e.currentTarget),
-                );
-                setSubmissionMessage(result.message);
-              } else {
-                const result = await createOrder(new FormData(e.currentTarget));
-                if (result.ok && result.createdDate)
-                  setCreatedDate(result.createdDate);
-                setSubmissionMessage(result.message);
-              }
-            }}
-            className="p-4 flex flex-col gap-10"
-          >
+      <div>
+        <div className="flex">
+          {isEditing ? (
             <div>
-              <Label htmlFor="orderHandlerChoice">ORDER HANDLED BY</Label>
-              <div className="flex gap-3">
-                <Select
-                  value={orderHandlerChoice}
-                  onValueChange={(value) => {
-                    if (typeof value !== "string") return;
-                    setOrderHandlerChoice(value);
-                    setOrderHandledBy(value === "OTHERS" ? "" : value);
-                  }}
-                >
-                  <SelectTrigger id="orderHandlerChoice">
-                    <SelectValue placeholder="Select order handler" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {orderHandlers.map((handler) => (
-                      <SelectItem key={handler} value={handler}>
-                        {handler}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="OTHERS">OTHERS</SelectItem>
-                  </SelectContent>
-                </Select>
-                {orderHandlerChoice === "OTHERS" && (
-                  <div>
-                    <Label htmlFor="otherOrderHandler">
-                      OTHER ORDER HANDLER
-                    </Label>
-                    <Input
-                      id="otherOrderHandler"
-                      placeholder="Specify order handler"
-                      value={orderHandledBy}
-                      onChange={(e) => setOrderHandledBy(e.target.value)}
-                      required
-                    />
-                  </div>
-                )}
-              </div>
-              <input
-                type="hidden"
-                name="orderHandledBy"
-                value={orderHandledBy}
-              />
-            </div>
-            {/* Project information */}
-            <div className="flex flex-col gap-10">
-              <div>
-                <Label htmlFor="systemTypeChoice" className="text-2xl">
-                  SYSTEM TYPE
-                </Label>
-                <div className="flex gap-3">
-                  <Select
-                    value={systemTypeChoice}
-                    onValueChange={(value) => {
-                      if (typeof value !== "string") return;
-                      setSystemTypeChoice(value);
-                      setProductSystem(value === "OTHER" ? "" : value);
-                    }}
-                  >
-                    <SelectTrigger id="systemTypeChoice">
-                      <SelectValue placeholder="Select system type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {systemTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="OTHER">OTHER</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {systemTypeChoice === "OTHER" && (
-                    <div>
-                      <Label htmlFor="otherSystemType">OTHER SYSTEM TYPE</Label>
-                      <Input
-                        id="otherSystemType"
-                        placeholder="Specify system type"
-                        value={productSystem}
-                        onChange={(e) => setProductSystem(e.target.value)}
-                        required
-                      />
-                    </div>
-                  )}
-                </div>
-                {/* Submit either the selected preset or the custom Other text. */}
-                <input
-                  type="hidden"
-                  name="productSystem"
-                  value={productSystem}
-                />
-              </div>
-              <div>
-                <Label htmlFor="projectName">Project name</Label>
-                <Input
-                  id="projectName"
-                  name="projectName"
-                  type="text"
-                  value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="clientName">CUSTOMER</Label>
-                <Input
-                  id="clientName"
-                  name="clientName"
-                  type="text"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="endUser">End user</Label>
-                <Input
-                  id="endUser"
-                  name="endUser"
-                  type="text"
-                  value={endUser}
-                  onChange={(e) => setEndUser(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="projectNotes">PROJECT NOTES</Label>
-                <Textarea
-                  id="projectNotes"
-                  name="projectNotes"
-                  value={projectNotes}
-                  onChange={(e) => setProjectNotes(e.target.value)}
-                />
-              </div>
-            </div>
-            {/* Order value, payment and costs */}
-            <div className="flex flex-col gap-10">
-              <div>
-                <Label htmlFor="clientOrderValue">CLIENT ORDER VALUE</Label>
-                <div className="flex gap-3">
-                  <Input
-                    id="clientOrderValue"
-                    name="clientOrderValue"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={clientOrderValue}
-                    onChange={(e) => setClientOrderValue(e.target.value)}
-                  />
-                  <Label htmlFor="clientOrderCurrency">CURRENCY</Label>
-                  <Select
-                    value={clientOrderCurrency}
-                    onValueChange={(currency) => {
-                      if (isCurrency(currency))
-                        setClientOrderCurrency(currency);
-                    }}
-                  >
-                    <SelectTrigger id="clientOrderCurrency">
-                      <SelectValue>
-                        {clientOrderCurrency === "EUR"
-                          ? "Euro"
-                          : clientOrderCurrency}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="EUR">Euro</SelectItem>
-                      <SelectItem value="GBP">GBP</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    type="hidden"
-                    name="clientOrderCurrency"
-                    value={clientOrderCurrency}
-                  />
-                  {clientOrderCurrency !== "USD" && (
-                    <div className="flex">
-                      <Label htmlFor="clientOrderUsdValue">
-                        ORDER VALUE (USD)
-                      </Label>
-                      <Input
-                        id="clientOrderUsdValue"
-                        value={
-                          convertToUsd(
-                            clientOrderValue,
-                            clientOrderCurrency,
-                            gbpToUsdRate,
-                            eurToUsdRate,
-                          ) ?? ""
-                        }
-                        placeholder="Enter an amount and valid rate"
-                        readOnly
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div>
-                <Label className="text-2xl">Payment Mode</Label>
-                <div className="flex justify-between">
-                  <Label htmlFor="paymentMode">LC</Label>
-                  <Input
-                    id="paymentMode"
-                    name="paymentMode"
-                    type="radio"
-                    value={paymentMode}
-                    checked={
-                      paymentMode === "LC" && paymentModeOther !== "Other"
-                    }
-                    onChange={() => {
-                      setPaymentMode("LC");
+              <form
+                id="order-form"
+                onSubmit={async (e) => {
+                  e.preventDefault();
 
-                      setPaymentModeOther("");
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between">
-                  <Label htmlFor="paymentMode">TT</Label>
-                  <Input
-                    id="paymentMode"
-                    name="paymentMode"
-                    type="radio"
-                    value={paymentMode}
-                    checked={
-                      paymentMode === "TT" && paymentModeOther !== "Other"
-                    }
-                    onChange={() => {
-                      setPaymentMode("TT");
-                      setPaymentModeOther("");
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between">
-                  <Label htmlFor="paymentMode">Other</Label>
-                  <Input
-                    id="paymentMode"
-                    name="paymentMode"
-                    type="radio"
-                    value={paymentMode}
-                    checked={paymentModeOther === "Other"}
-                    onChange={() => {
-                      setPaymentModeOther("Other");
-                    }}
-                  />
-                  {paymentModeOther === "Other" && (
-                    <Input
-                      value={paymentMode}
-                      onChange={(e) => {
-                        setPaymentMode(e.target.value);
-                      }}
-                    />
-                  )}
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="paymentNotes">Payment Notes</Label>
-                <Input
-                  id="paymentNotes"
-                  name="paymentNotes"
-                  type="text"
-                  value={paymentNotes}
-                  onChange={(e) => setPaymentNotes(e.target.value)}
-                />
-              </div>
-              {/* Supplier names use inputs, with suggestions for the brands in the schema. */}
-              <div>
-                <datalist id="supplier-options">
-                  <option value="TRANE" />
-                  <option value="BELIMO" />
-                  <option value="DANFOSS" />
-                  <option value="HONEYWELL" />
-                  <option value="REGELTECHNIK" />
-                  <option value="DWYER" />
-                  <option value="ALPS" />
-                  <option value="CONTROL 4" />
-                  <option value="LUTRON" />
-                  <option value="LANDIS+GYR" />
-                  <option value="RBH" />
-                  <option value="PROSTAR" />
-                  <option value="GISSMATIC" />
-                  <option value="ZKTECO" />
-                  <option value="ADTESHIA" />
-                  <option value="FIKE" />
-                  <option value="TECOFI" />
-                  <option value="SEWO" />
-                  <option value="EBELCO" />
-                  <option value="DOOYA" />
-                  <option value="POGO" />
-                  <option value="PARK HELP" />
-                  <option value="FOSHAN" />
-                  <option value="KELE" />
-                  <option value="MULTICABLE" />
-                  <option value="DEYZ" />
-                  <option value="SIEMENS" />
-                  <option value="FLASH TURTLE" />
-                  <option value="SERVO" />
-                  <option value="HABOO" />
-                  <option value="OTHERS" />
-                </datalist>
-
-                <Label className="text-2xl">MATERIAL COST</Label>
-                {suppliers.map((row, index) => (
-                  <div key={row.id} className="flex">
-                    <Label>{index + 1}.</Label>
-                    <Input
-                      id={`supplier-${row.id}`}
-                      name="supplier"
-                      placeholder="Supplier"
-                      aria-label={`Supplier ${index + 1}`}
-                      list="supplier-options"
-                      value={row.supplier}
-                      onChange={(e) => {
-                        // Update only this row's supplier name.
-                        setSuppliers((rows) =>
-                          rows.map((item) =>
-                            item.id === row.id
-                              ? { ...item, supplier: e.target.value }
-                              : item,
-                          ),
-                        );
-                      }}
-                    />
-                    <Label htmlFor={`supplier-amount-${row.id}`}>Amount</Label>
-                    <Input
-                      id={`supplier-amount-${row.id}`}
-                      name="supplierAmount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={row.amount}
-                      placeholder={`in ${row.currency}`}
-                      onChange={(e) => {
-                        // Update only this row's amount; keep it as a string so it can be cleared.
-                        setSuppliers((rows) =>
-                          rows.map((item) =>
-                            item.id === row.id
-                              ? { ...item, amount: e.target.value }
-                              : item,
-                          ),
-                        );
-                      }}
-                    />
-                    <Label htmlFor={`supplier-currency-${row.id}`}>
-                      CURRENCY
-                    </Label>
-                    <Select
-                      value={row.currency}
-                      onValueChange={(currency) => {
-                        if (!isCurrency(currency)) return;
-                        setSuppliers((rows) =>
-                          rows.map((item) =>
-                            item.id === row.id ? { ...item, currency } : item,
-                          ),
-                        );
-                      }}
-                    >
-                      <SelectTrigger id={`supplier-currency-${row.id}`}>
-                        <SelectValue>
-                          {row.currency === "EUR" ? "Euro" : row.currency}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">Euro</SelectItem>
-                        <SelectItem value="GBP">GBP</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {/* A hidden field keeps the currency paired with its FormData row. */}
-                    <input
-                      type="hidden"
-                      name="supplierCurrency"
-                      value={row.currency}
-                    />
-                    {row.currency !== "USD" && (
-                      <div className="flex">
-                        <Label htmlFor={`supplier-usd-${row.id}`}>
-                          AMOUNT (USD)
-                        </Label>
-                        <Label id={`supplier-usd-${row.id}`} className="px-2">
-                          {convertToUsd(
-                            row.amount,
-                            row.currency,
-                            gbpToUsdRate,
-                            eurToUsdRate,
-                          ) ?? ""}
-                        </Label>
-                      </div>
-                    )}
-                    <Button
-                      type="button"
-                      aria-label={`Remove supplier ${index + 1}`}
-                      onClick={() =>
-                        setSuppliers((rows) =>
-                          rows.filter((item) => item.id !== row.id),
-                        )
-                      }
-                    >
-                      −
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  aria-label="Add supplier"
-                  onClick={() => {
-                    // Append a new empty row with an ID that has not been used before.
-                    const id = nextSupplierId.current++;
-                    setSuppliers((rows) => [
-                      ...rows,
-                      { id, supplier: "", amount: "", currency: "USD" },
-                    ]);
-                  }}
-                >
-                  +
-                </Button>
-              </div>
-              <div>
-                <datalist id="expense-options">
-                  <option value="FREIGHT: USA TO SINGAPORE" />
-                  <option value="FREIGHT: GERMANY TO SINGAPORE" />
-                  <option value="FREIGHT: CHINA TO SINGAPORE" />
-                  <option value="Bank Fee" />
-                  <option value="DHL Cost" />
-                  <option value="UPS Cost" />
-                </datalist>
-                <Label className="text-2xl">MISCELLANEOUS COSTS</Label>
-                {expenses.map((row, index) => (
-                  <div key={row.id} className="flex">
-                    <Label>{index + 1}.</Label>
-                    <Input
-                      id={`expense-${row.id}`}
-                      name="expenseName"
-                      placeholder="Expenditure name"
-                      aria-label={`Expenditure name ${index + 1}`}
-                      list="expense-options"
-                      value={row.name}
-                      onChange={(e) => {
-                        // Update only this row's expenditure name.
-                        setExpenses((rows) =>
-                          rows.map((item) =>
-                            item.id === row.id
-                              ? { ...item, name: e.target.value }
-                              : item,
-                          ),
-                        );
-                      }}
-                    />
-                    <Label htmlFor={`expense-amount-${row.id}`}>Amount</Label>
-                    <Input
-                      id={`expense-amount-${row.id}`}
-                      name="expenseAmount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={row.amount}
-                      placeholder={`in ${row.currency}`}
-                      onChange={(e) => {
-                        // Update only this row's amount; keep it as a string so it can be cleared.
-                        setExpenses((rows) =>
-                          rows.map((item) =>
-                            item.id === row.id
-                              ? { ...item, amount: e.target.value }
-                              : item,
-                          ),
-                        );
-                      }}
-                    />
-                    <Label htmlFor={`expense-currency-${row.id}`}>
-                      CURRENCY
-                    </Label>
-                    <Select
-                      value={row.currency}
-                      onValueChange={(currency) => {
-                        if (!isCurrency(currency)) return;
-                        setExpenses((rows) =>
-                          rows.map((item) =>
-                            item.id === row.id ? { ...item, currency } : item,
-                          ),
-                        );
-                      }}
-                    >
-                      <SelectTrigger id={`expense-currency-${row.id}`}>
-                        <SelectValue>
-                          {row.currency === "EUR" ? "Euro" : row.currency}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">Euro</SelectItem>
-                        <SelectItem value="GBP">GBP</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {/* A hidden field keeps the currency paired with its FormData row. */}
-                    <input
-                      type="hidden"
-                      name="expenseCurrency"
-                      value={row.currency}
-                    />
-                    {row.currency !== "USD" && (
-                      <div className="flex">
-                        <Label htmlFor={`expense-usd-${row.id}`}>
-                          AMOUNT (USD)
-                        </Label>
-                        <Label id={`expense-usd-${row.id}`}>
-                          {convertToUsd(
-                            row.amount,
-                            row.currency,
-                            gbpToUsdRate,
-                            eurToUsdRate,
-                          ) ?? ""}
-                        </Label>
-                      </div>
-                    )}
-                    <Button
-                      type="button"
-                      aria-label={`Remove expenditure ${index + 1}`}
-                      onClick={() =>
-                        setExpenses((rows) =>
-                          rows.filter((item) => item.id !== row.id),
-                        )
-                      }
-                    >
-                      −
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  aria-label="Add expenditure"
-                  onClick={() => {
-                    // Append a new empty row with an ID that has not been used before.
-                    const id = nextExpenseId.current++;
-                    setExpenses((rows) => [
-                      ...rows,
-                      { id, name: "", amount: "", currency: "USD" },
-                    ]);
-                  }}
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-            {/* Order settings */}
-            <div className="flex flex-col gap-10">
-              {/* Rates are saved with this order and shared by all its supplier rows. */}
-              <div className="flex gap-10">
-                <div>
-                  <Label htmlFor="gbpToUsdRate">GBP TO USD</Label>
-                  <Input
-                    id="gbpToUsdRate"
-                    name="gbpToUsdRate"
-                    type="number"
-                    min="0.00000001"
-                    step="0.00000001"
-                    required
-                    value={gbpToUsdRate}
-                    onChange={(e) => setGbpToUsdRate(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="eurToUsdRate">EURO TO USD</Label>
-                  <Input
-                    id="eurToUsdRate"
-                    name="eurToUsdRate"
-                    type="number"
-                    min="0.00000001"
-                    step="0.00000001"
-                    required
-                    value={eurToUsdRate}
-                    onChange={(e) => setEurToUsdRate(e.target.value)}
-                  />
-                </div>
-              </div>
-              {/* Percentage settings are stored on this order; 5 means 5%. */}
-              <div className="flex gap-10">
-                <div>
-                  <Label htmlFor="orderHandlingFee">
-                    ORDER HANDLING FEE (%)
-                  </Label>
-                  <Input
-                    id="orderHandlingFee"
-                    name="orderHandlingFee"
-                    type="number"
-                    min="0"
-                    step="0.0001"
-                    value={orderHandlingFee}
-                    onChange={(e) => setOrderHandlingFee(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="miscellaneousHandlingFee">
-                    MISCELLANEOUS HANDLING FEE (%)
-                  </Label>
-                  <Input
-                    id="miscellaneousHandlingFee"
-                    name="miscellaneousHandlingFee"
-                    type="number"
-                    min="0"
-                    step="0.0001"
-                    value={miscellaneousHandlingFee}
-                    onChange={(e) =>
-                      setMiscellaneousHandlingFee(e.target.value)
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-            <div>
-              <Button type="submit">Submit</Button>
-              <Button
-                type="button"
-                onClick={() => {
-                  // Restore the saved amounts and rates when discarding edits.
-                  if (orderDetails) setLoadedOrderDetails(undefined);
-                  setIsEditing(false);
+                  setSubmissionMessage("");
+                  if (orderDetails) {
+                    const result = await updateOrder(
+                      orderDetails.sl,
+                      new FormData(e.currentTarget),
+                    );
+                    setSubmissionMessage(result.message);
+                  } else {
+                    const result = await createOrder(
+                      new FormData(e.currentTarget),
+                    );
+                    if (result.ok && result.createdDate)
+                      setCreatedDate(result.createdDate);
+                    setSubmissionMessage(result.message);
+                  }
                 }}
+                className="p-4 flex flex-col gap-10"
               >
-                Discard Changes
-              </Button>
-            </div>
-            {submissionMessage && <p role="status">{submissionMessage}</p>}
-          </form>
-        </div>
-      ) : (
-        <div>
-          {isAdmin ? (
-            <Button
-              onClick={() => {
-                setIsEditing(!isEditing);
-              }}
-            >
-              Edit
-            </Button>
-          ) : (
-            <div></div>
-          )}
-          <div className="p-4 flex flex-col gap-10">
-            <div>
-              <Label>Order handled by</Label>
-              <Label className="font-bold">{orderHandledBy}</Label>
-            </div>
-            {/* Project information */}
-            <div className="flex flex-col gap-10">
-              <div>
-                <Label className="text-2xl">SYSTEM TYPE</Label>
-                <Label className="font-bold">{productSystem}</Label>
-              </div>
-              <div>
-                <Label>Project name</Label>
-                <Label className="font-bold">{projectName}</Label>
-              </div>
-              <div>
-                <Label>CUSTOMER</Label>
-                <Label className="font-bold">{clientName}</Label>
-              </div>
-              <div>
-                <Label>End user</Label>
-                <Label className="font-bold">{endUser}</Label>
-              </div>
-              <div>
-                <Label>PROJECT NOTES</Label>
-                <Label className="font-bold whitespace-pre-wrap">
-                  {projectNotes}
-                </Label>
-              </div>
-            </div>
-            {/* Order value, payment and costs */}
-            <div className="flex flex-col gap-10">
-              <div>
-                <Label>CLIENT ORDER VALUE ({clientOrderCurrency})</Label>
-                <Label className="font-bold">{clientOrderValue}</Label>
-                {clientOrderCurrency !== "USD" && (
+                <div className="">
+                  <Label htmlFor="orderHandlerChoice">ORDER HANDLED BY</Label>
+                  <div className="flex gap-3">
+                    <Select
+                      value={orderHandlerChoice}
+                      onValueChange={(value) => {
+                        if (typeof value !== "string") return;
+                        setOrderHandlerChoice(value);
+                        setOrderHandledBy(value === "OTHERS" ? "" : value);
+                      }}
+                    >
+                      <SelectTrigger id="orderHandlerChoice">
+                        <SelectValue placeholder="Select order handler" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {orderHandlers.map((handler) => (
+                          <SelectItem key={handler} value={handler}>
+                            {handler}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="OTHERS">OTHERS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {orderHandlerChoice === "OTHERS" && (
+                      <div className="flex">
+                        <Label htmlFor="otherOrderHandler">
+                          OTHER ORDER HANDLER
+                        </Label>
+                        <Input
+                          id="otherOrderHandler"
+                          placeholder="Specify order handler"
+                          value={orderHandledBy}
+                          onChange={(e) => setOrderHandledBy(e.target.value)}
+                          required
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="hidden"
+                    name="orderHandledBy"
+                    value={orderHandledBy}
+                  />
+                </div>
+                {/* Project information */}
+                <div className="flex flex-col gap-10">
                   <div>
-                    <Label>ORDER VALUE (USD)</Label>
-                    <Label className="font-bold">
-                      {convertToUsd(
-                        clientOrderValue,
-                        clientOrderCurrency,
-                        gbpToUsdRate,
-                        eurToUsdRate,
-                      ) ?? "—"}
+                    <Label htmlFor="systemTypeChoice" className="text-2xl">
+                      SYSTEM TYPE
+                    </Label>
+                    <div className="flex gap-3">
+                      <Select
+                        value={systemTypeChoice}
+                        onValueChange={(value) => {
+                          if (typeof value !== "string") return;
+                          setSystemTypeChoice(value);
+                          setProductSystem(value === "OTHER" ? "" : value);
+                        }}
+                      >
+                        <SelectTrigger id="systemTypeChoice">
+                          <SelectValue placeholder="Select system type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {systemTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="OTHER">OTHER</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {systemTypeChoice === "OTHER" && (
+                        <div>
+                          <Label htmlFor="otherSystemType">
+                            OTHER SYSTEM TYPE
+                          </Label>
+                          <Input
+                            id="otherSystemType"
+                            placeholder="Specify system type"
+                            value={productSystem}
+                            onChange={(e) => setProductSystem(e.target.value)}
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
+                    {/* Submit either the selected preset or the custom Other text. */}
+                    <input
+                      type="hidden"
+                      name="productSystem"
+                      value={productSystem}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="projectName">Project name</Label>
+                    <Input
+                      id="projectName"
+                      name="projectName"
+                      type="text"
+                      value={projectName}
+                      onChange={(e) => setProjectName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="clientName">CUSTOMER</Label>
+                    <Input
+                      id="clientName"
+                      name="clientName"
+                      type="text"
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="endUser">End user</Label>
+                    <Input
+                      id="endUser"
+                      name="endUser"
+                      type="text"
+                      value={endUser}
+                      onChange={(e) => setEndUser(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="projectNotes">PROJECT NOTES</Label>
+                    <Textarea
+                      id="projectNotes"
+                      name="projectNotes"
+                      value={projectNotes}
+                      onChange={(e) => setProjectNotes(e.target.value)}
+                    />
+                  </div>
+                </div>
+                {/* Order value, payment and costs */}
+                <div className="flex flex-col gap-10">
+                  <div>
+                    <Label htmlFor="clientOrderValue">CLIENT ORDER VALUE</Label>
+                    <div className="flex gap-3">
+                      <Input
+                        id="clientOrderValue"
+                        name="clientOrderValue"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={clientOrderValue}
+                        onChange={(e) => setClientOrderValue(e.target.value)}
+                      />
+                      <Label htmlFor="clientOrderCurrency">CURRENCY</Label>
+                      <Select
+                        value={clientOrderCurrency}
+                        onValueChange={(currency) => {
+                          if (isCurrency(currency))
+                            setClientOrderCurrency(currency);
+                        }}
+                      >
+                        <SelectTrigger id="clientOrderCurrency">
+                          <SelectValue>
+                            {clientOrderCurrency === "EUR"
+                              ? "Euro"
+                              : clientOrderCurrency}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">Euro</SelectItem>
+                          <SelectItem value="GBP">GBP</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="hidden"
+                        name="clientOrderCurrency"
+                        value={clientOrderCurrency}
+                      />
+                      {clientOrderCurrency !== "USD" && (
+                        <div className="flex">
+                          <Label htmlFor="clientOrderUsdValue">
+                            ORDER VALUE (USD)
+                          </Label>
+                          <Input
+                            id="clientOrderUsdValue"
+                            value={
+                              convertToUsd(
+                                clientOrderValue,
+                                clientOrderCurrency,
+                                gbpToUsdRate,
+                                eurToUsdRate,
+                              ) ?? ""
+                            }
+                            placeholder="Enter an amount and valid rate"
+                            readOnly
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-2xl">Payment Mode</Label>
+                    <div className="flex justify-between">
+                      <Label htmlFor="paymentMode">LC</Label>
+                      <Input
+                        id="paymentMode"
+                        name="paymentMode"
+                        type="radio"
+                        value={paymentMode}
+                        checked={
+                          paymentMode === "LC" && paymentModeOther !== "Other"
+                        }
+                        onChange={() => {
+                          setPaymentMode("LC");
+
+                          setPaymentModeOther("");
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between">
+                      <Label htmlFor="paymentMode">TT</Label>
+                      <Input
+                        id="paymentMode"
+                        name="paymentMode"
+                        type="radio"
+                        value={paymentMode}
+                        checked={
+                          paymentMode === "TT" && paymentModeOther !== "Other"
+                        }
+                        onChange={() => {
+                          setPaymentMode("TT");
+                          setPaymentModeOther("");
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between">
+                      <Label htmlFor="paymentMode">Other</Label>
+                      <Input
+                        id="paymentMode"
+                        name="paymentMode"
+                        type="radio"
+                        value={paymentMode}
+                        checked={paymentModeOther === "Other"}
+                        onChange={() => {
+                          setPaymentModeOther("Other");
+                        }}
+                      />
+                      {paymentModeOther === "Other" && (
+                        <Input
+                          value={paymentMode}
+                          onChange={(e) => {
+                            setPaymentMode(e.target.value);
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="paymentNotes">Payment Notes</Label>
+                    <Input
+                      id="paymentNotes"
+                      name="paymentNotes"
+                      type="text"
+                      value={paymentNotes}
+                      onChange={(e) => setPaymentNotes(e.target.value)}
+                    />
+                  </div>
+                  {/* Supplier names use inputs, with suggestions for the brands in the schema. */}
+                  <div>
+                    <datalist id="supplier-options">
+                      <option value="TRANE" />
+                      <option value="BELIMO" />
+                      <option value="DANFOSS" />
+                      <option value="HONEYWELL" />
+                      <option value="REGELTECHNIK" />
+                      <option value="DWYER" />
+                      <option value="ALPS" />
+                      <option value="CONTROL 4" />
+                      <option value="LUTRON" />
+                      <option value="LANDIS+GYR" />
+                      <option value="RBH" />
+                      <option value="PROSTAR" />
+                      <option value="GISSMATIC" />
+                      <option value="ZKTECO" />
+                      <option value="ADTESHIA" />
+                      <option value="FIKE" />
+                      <option value="TECOFI" />
+                      <option value="SEWO" />
+                      <option value="EBELCO" />
+                      <option value="DOOYA" />
+                      <option value="POGO" />
+                      <option value="PARK HELP" />
+                      <option value="FOSHAN" />
+                      <option value="KELE" />
+                      <option value="MULTICABLE" />
+                      <option value="DEYZ" />
+                      <option value="SIEMENS" />
+                      <option value="FLASH TURTLE" />
+                      <option value="SERVO" />
+                      <option value="HABOO" />
+                      <option value="OTHERS" />
+                    </datalist>
+
+                    <Label className="text-2xl">MATERIAL COST</Label>
+                    {suppliers.map((row, index) => (
+                      <div key={row.id} className="flex">
+                        <Label>{index + 1}.</Label>
+                        <Input
+                          id={`supplier-${row.id}`}
+                          name="supplier"
+                          placeholder="Supplier"
+                          aria-label={`Supplier ${index + 1}`}
+                          list="supplier-options"
+                          value={row.supplier}
+                          onChange={(e) => {
+                            // Update only this row's supplier name.
+                            setSuppliers((rows) =>
+                              rows.map((item) =>
+                                item.id === row.id
+                                  ? { ...item, supplier: e.target.value }
+                                  : item,
+                              ),
+                            );
+                          }}
+                        />
+                        <Label htmlFor={`supplier-amount-${row.id}`}>
+                          Amount
+                        </Label>
+                        <Input
+                          id={`supplier-amount-${row.id}`}
+                          name="supplierAmount"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={row.amount}
+                          placeholder={`in ${row.currency}`}
+                          onChange={(e) => {
+                            // Update only this row's amount; keep it as a string so it can be cleared.
+                            setSuppliers((rows) =>
+                              rows.map((item) =>
+                                item.id === row.id
+                                  ? { ...item, amount: e.target.value }
+                                  : item,
+                              ),
+                            );
+                          }}
+                        />
+                        <Label htmlFor={`supplier-currency-${row.id}`}>
+                          CURRENCY
+                        </Label>
+                        <Select
+                          value={row.currency}
+                          onValueChange={(currency) => {
+                            if (!isCurrency(currency)) return;
+                            setSuppliers((rows) =>
+                              rows.map((item) =>
+                                item.id === row.id
+                                  ? { ...item, currency }
+                                  : item,
+                              ),
+                            );
+                          }}
+                        >
+                          <SelectTrigger id={`supplier-currency-${row.id}`}>
+                            <SelectValue>
+                              {row.currency === "EUR" ? "Euro" : row.currency}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="USD">USD</SelectItem>
+                            <SelectItem value="EUR">Euro</SelectItem>
+                            <SelectItem value="GBP">GBP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {/* A hidden field keeps the currency paired with its FormData row. */}
+                        <input
+                          type="hidden"
+                          name="supplierCurrency"
+                          value={row.currency}
+                        />
+                        {row.currency !== "USD" && (
+                          <div className="flex">
+                            <Label htmlFor={`supplier-usd-${row.id}`}>
+                              AMOUNT (USD)
+                            </Label>
+                            <Label
+                              id={`supplier-usd-${row.id}`}
+                              className="px-2"
+                            >
+                              {convertToUsd(
+                                row.amount,
+                                row.currency,
+                                gbpToUsdRate,
+                                eurToUsdRate,
+                              ) ?? ""}
+                            </Label>
+                          </div>
+                        )}
+                        <Button
+                          type="button"
+                          aria-label={`Remove supplier ${index + 1}`}
+                          onClick={() =>
+                            setSuppliers((rows) =>
+                              rows.filter((item) => item.id !== row.id),
+                            )
+                          }
+                        >
+                          −
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      aria-label="Add supplier"
+                      onClick={() => {
+                        // Append a new empty row with an ID that has not been used before.
+                        const id = nextSupplierId.current++;
+                        setSuppliers((rows) => [
+                          ...rows,
+                          { id, supplier: "", amount: "", currency: "USD" },
+                        ]);
+                      }}
+                    >
+                      +
+                    </Button>
+                  </div>
+                  <div>
+                    <datalist id="expense-options">
+                      <option value="FREIGHT: USA TO SINGAPORE" />
+                      <option value="FREIGHT: GERMANY TO SINGAPORE" />
+                      <option value="FREIGHT: CHINA TO SINGAPORE" />
+                      <option value="Bank Fee" />
+                      <option value="DHL Cost" />
+                      <option value="UPS Cost" />
+                    </datalist>
+                    <Label className="text-2xl">MISCELLANEOUS COSTS</Label>
+                    {expenses.map((row, index) => (
+                      <div key={row.id} className="flex">
+                        <Label>{index + 1}.</Label>
+                        <Input
+                          id={`expense-${row.id}`}
+                          name="expenseName"
+                          placeholder="Expenditure name"
+                          aria-label={`Expenditure name ${index + 1}`}
+                          list="expense-options"
+                          value={row.name}
+                          onChange={(e) => {
+                            // Update only this row's expenditure name.
+                            setExpenses((rows) =>
+                              rows.map((item) =>
+                                item.id === row.id
+                                  ? { ...item, name: e.target.value }
+                                  : item,
+                              ),
+                            );
+                          }}
+                        />
+                        <Label htmlFor={`expense-amount-${row.id}`}>
+                          Amount
+                        </Label>
+                        <Input
+                          id={`expense-amount-${row.id}`}
+                          name="expenseAmount"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={row.amount}
+                          placeholder={`in ${row.currency}`}
+                          onChange={(e) => {
+                            // Update only this row's amount; keep it as a string so it can be cleared.
+                            setExpenses((rows) =>
+                              rows.map((item) =>
+                                item.id === row.id
+                                  ? { ...item, amount: e.target.value }
+                                  : item,
+                              ),
+                            );
+                          }}
+                        />
+                        <Label htmlFor={`expense-currency-${row.id}`}>
+                          CURRENCY
+                        </Label>
+                        <Select
+                          value={row.currency}
+                          onValueChange={(currency) => {
+                            if (!isCurrency(currency)) return;
+                            setExpenses((rows) =>
+                              rows.map((item) =>
+                                item.id === row.id
+                                  ? { ...item, currency }
+                                  : item,
+                              ),
+                            );
+                          }}
+                        >
+                          <SelectTrigger id={`expense-currency-${row.id}`}>
+                            <SelectValue>
+                              {row.currency === "EUR" ? "Euro" : row.currency}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="USD">USD</SelectItem>
+                            <SelectItem value="EUR">Euro</SelectItem>
+                            <SelectItem value="GBP">GBP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {/* A hidden field keeps the currency paired with its FormData row. */}
+                        <input
+                          type="hidden"
+                          name="expenseCurrency"
+                          value={row.currency}
+                        />
+                        {row.currency !== "USD" && (
+                          <div className="flex">
+                            <Label htmlFor={`expense-usd-${row.id}`}>
+                              AMOUNT (USD)
+                            </Label>
+                            <Label id={`expense-usd-${row.id}`}>
+                              {convertToUsd(
+                                row.amount,
+                                row.currency,
+                                gbpToUsdRate,
+                                eurToUsdRate,
+                              ) ?? ""}
+                            </Label>
+                          </div>
+                        )}
+                        <Button
+                          type="button"
+                          aria-label={`Remove expenditure ${index + 1}`}
+                          onClick={() =>
+                            setExpenses((rows) =>
+                              rows.filter((item) => item.id !== row.id),
+                            )
+                          }
+                        >
+                          −
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      aria-label="Add expenditure"
+                      onClick={() => {
+                        // Append a new empty row with an ID that has not been used before.
+                        const id = nextExpenseId.current++;
+                        setExpenses((rows) => [
+                          ...rows,
+                          { id, name: "", amount: "", currency: "USD" },
+                        ]);
+                      }}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+                {/* Order settings */}
+                <div className="flex flex-col gap-10">
+                  {/* Rates are saved with this order and shared by all its supplier rows. */}
+                  <div className="flex gap-10">
+                    <div>
+                      <Label htmlFor="gbpToUsdRate">GBP TO USD</Label>
+                      <Input
+                        id="gbpToUsdRate"
+                        name="gbpToUsdRate"
+                        type="number"
+                        min="0.00000001"
+                        step="0.00000001"
+                        required
+                        value={gbpToUsdRate}
+                        onChange={(e) => setGbpToUsdRate(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="eurToUsdRate">EURO TO USD</Label>
+                      <Input
+                        id="eurToUsdRate"
+                        name="eurToUsdRate"
+                        type="number"
+                        min="0.00000001"
+                        step="0.00000001"
+                        required
+                        value={eurToUsdRate}
+                        onChange={(e) => setEurToUsdRate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  {/* Percentage settings are stored on this order; 5 means 5%. */}
+                  <div className="flex gap-10">
+                    <div>
+                      <Label htmlFor="orderHandlingFee">
+                        ORDER HANDLING FEE (%)
+                      </Label>
+                      <Input
+                        id="orderHandlingFee"
+                        name="orderHandlingFee"
+                        type="number"
+                        min="0"
+                        step="0.0001"
+                        value={orderHandlingFee}
+                        onChange={(e) => setOrderHandlingFee(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="miscellaneousHandlingFee">
+                        MISCELLANEOUS HANDLING FEE (%)
+                      </Label>
+                      <Input
+                        id="miscellaneousHandlingFee"
+                        name="miscellaneousHandlingFee"
+                        type="number"
+                        min="0"
+                        step="0.0001"
+                        value={miscellaneousHandlingFee}
+                        onChange={(e) =>
+                          setMiscellaneousHandlingFee(e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <Button type="submit">Submit</Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      // Restore the saved amounts and rates when discarding edits.
+                      if (orderDetails) setLoadedOrderDetails(undefined);
+                      setIsEditing(false);
+                    }}
+                  >
+                    Discard Changes
+                  </Button>
+                </div>
+                {submissionMessage && <p role="status">{submissionMessage}</p>}
+              </form>
+            </div>
+          ) : (
+            <div>
+              {isAdmin ? (
+                <Button
+                  onClick={() => {
+                    setIsEditing(!isEditing);
+                  }}
+                >
+                  Edit
+                </Button>
+              ) : (
+                <div></div>
+              )}
+              <div className="p-4 flex flex-col gap-10">
+                <div>
+                  <Label>Order handled by</Label>
+                  <Label className="font-bold">{orderHandledBy}</Label>
+                </div>
+                {/* Project information */}
+                <div className="flex flex-col gap-10">
+                  <div>
+                    <Label className="text-2xl">SYSTEM TYPE</Label>
+                    <Label className="font-bold">{productSystem}</Label>
+                  </div>
+                  <div>
+                    <Label>Project name</Label>
+                    <Label className="font-bold">{projectName}</Label>
+                  </div>
+                  <div>
+                    <Label>CUSTOMER</Label>
+                    <Label className="font-bold">{clientName}</Label>
+                  </div>
+                  <div>
+                    <Label>End user</Label>
+                    <Label className="font-bold">{endUser}</Label>
+                  </div>
+                  <div>
+                    <Label>PROJECT NOTES</Label>
+                    <Label className="font-bold whitespace-pre-wrap">
+                      {projectNotes}
                     </Label>
                   </div>
-                )}
-              </div>
-              <div>
-                <Label className="text-2xl">Payment Mode</Label>
-
-                <div className="flex justify-between">
-                  <Label htmlFor="paymentModeLC">LC</Label>
-                  <Input
-                    id="paymentModeLC"
-                    name="paymentMode"
-                    type="radio"
-                    value="LC"
-                    checked={
-                      paymentMode === "LC" && paymentModeOther !== "Other"
-                    }
-                    disabled
-                  />
                 </div>
-
-                <div className="flex justify-between">
-                  <Label htmlFor="paymentModeTT">TT</Label>
-                  <Input
-                    id="paymentModeTT"
-                    name="paymentMode"
-                    type="radio"
-                    value="TT"
-                    checked={
-                      paymentMode === "TT" && paymentModeOther !== "Other"
-                    }
-                    disabled
-                  />
-                </div>
-
-                <div className="flex justify-between">
-                  <Label htmlFor="paymentModeOther">Other</Label>
-                  <Input
-                    id="paymentModeOther"
-                    name="paymentMode"
-                    type="radio"
-                    value="Other"
-                    checked={paymentModeOther === "Other"}
-                    disabled
-                  />
-
-                  {paymentModeOther === "Other" && (
-                    <Label className="font-bold">{paymentMode}</Label>
-                  )}
-                </div>
-              </div>
-              <div>
-                <Label>Payment Notes</Label>
-                <Label className="font-bold">{paymentNotes}</Label>
-              </div>
-              <div>
-                <Label className="text-2xl">MATERIAL COST</Label>
-                {suppliers.map((row, index) => (
-                  <div key={row.id} className="flex gap-10">
-                    <Label>{index + 1}.</Label>
-                    <div className="flex gap-3">
-                      <Label className="font-bold">{row.supplier}</Label>
-                    </div>
-                    <div className="flex gap-3">
-                      <Label>AMOUNT ({row.currency})</Label>
-                      <Label className="font-bold">{row.amount}</Label>
-                    </div>
-                    <div className="flex gap-3">
-                      <Label>CURRENCY</Label>
-                      <Label className="font-bold">
-                        {row.currency === "EUR" ? "Euro" : row.currency}
-                      </Label>
-                    </div>
-                    {row.currency !== "USD" && (
-                      <div className="flex gap-3 items-center">
-                        <Label>AMOUNT (USD)</Label>
+                {/* Order value, payment and costs */}
+                <div className="flex flex-col gap-10">
+                  <div>
+                    <Label>CLIENT ORDER VALUE ({clientOrderCurrency})</Label>
+                    <Label className="font-bold">{clientOrderValue}</Label>
+                    {clientOrderCurrency !== "USD" && (
+                      <div>
+                        <Label>ORDER VALUE (USD)</Label>
                         <Label className="font-bold">
                           {convertToUsd(
-                            row.amount,
-                            row.currency,
+                            clientOrderValue,
+                            clientOrderCurrency,
                             gbpToUsdRate,
                             eurToUsdRate,
                           ) ?? "—"}
@@ -967,78 +927,224 @@ export default function PageBody({
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
-              <div>
-                <Label className="text-2xl">MISCELLANEOUS COSTS</Label>
-                {expenses
-                  .filter((row) => row.name || row.amount)
-                  .map((row, index) => (
-                    <div key={row.id} className="flex gap-10">
-                      <Label>{index + 1}.</Label>
-                      <Label className="font-bold">{row.name}</Label>
-                      <div className="flex gap-3">
-                        <Label>AMOUNT ({row.currency})</Label>
-                        <Label className="font-bold">{row.amount}</Label>
-                      </div>
-                      <div className="flex gap-3">
-                        <Label>CURRENCY</Label>
-                        <Label className="font-bold">
-                          {row.currency === "EUR" ? "Euro" : row.currency}
-                        </Label>
-                      </div>
-                      {row.currency !== "USD" && (
-                        <div className="flex gap-3">
-                          <Label>AMOUNT (USD)</Label>
-                          <Label className="font-bold">
-                            {convertToUsd(
-                              row.amount,
-                              row.currency,
-                              gbpToUsdRate,
-                              eurToUsdRate,
-                            ) ?? "—"}
-                          </Label>
-                        </div>
+                  <div>
+                    <Label className="text-2xl">Payment Mode</Label>
+
+                    <div className="flex justify-between">
+                      <Label htmlFor="paymentModeLC">LC</Label>
+                      <Input
+                        id="paymentModeLC"
+                        name="paymentMode"
+                        type="radio"
+                        value="LC"
+                        checked={
+                          paymentMode === "LC" && paymentModeOther !== "Other"
+                        }
+                        disabled
+                      />
+                    </div>
+
+                    <div className="flex justify-between">
+                      <Label htmlFor="paymentModeTT">TT</Label>
+                      <Input
+                        id="paymentModeTT"
+                        name="paymentMode"
+                        type="radio"
+                        value="TT"
+                        checked={
+                          paymentMode === "TT" && paymentModeOther !== "Other"
+                        }
+                        disabled
+                      />
+                    </div>
+
+                    <div className="flex justify-between">
+                      <Label htmlFor="paymentModeOther">Other</Label>
+                      <Input
+                        id="paymentModeOther"
+                        name="paymentMode"
+                        type="radio"
+                        value="Other"
+                        checked={paymentModeOther === "Other"}
+                        disabled
+                      />
+
+                      {paymentModeOther === "Other" && (
+                        <Label className="font-bold">{paymentMode}</Label>
                       )}
                     </div>
-                  ))}
+                  </div>
+                  <div>
+                    <Label>Payment Notes</Label>
+                    <Label className="font-bold">{paymentNotes}</Label>
+                  </div>
+                  <div>
+                    <Label className="text-2xl">MATERIAL COST</Label>
+                    {suppliers.map((row, index) => (
+                      <div key={row.id} className="flex gap-10">
+                        <Label>{index + 1}.</Label>
+                        <div className="flex gap-3">
+                          <Label className="font-bold">{row.supplier}</Label>
+                        </div>
+                        <div className="flex gap-3">
+                          <Label>AMOUNT ({row.currency})</Label>
+                          <Label className="font-bold">{row.amount}</Label>
+                        </div>
+                        <div className="flex gap-3">
+                          <Label>CURRENCY</Label>
+                          <Label className="font-bold">
+                            {row.currency === "EUR" ? "Euro" : row.currency}
+                          </Label>
+                        </div>
+                        {row.currency !== "USD" && (
+                          <div className="flex gap-3 items-center">
+                            <Label>AMOUNT (USD)</Label>
+                            <Label className="font-bold">
+                              {convertToUsd(
+                                row.amount,
+                                row.currency,
+                                gbpToUsdRate,
+                                eurToUsdRate,
+                              ) ?? "—"}
+                            </Label>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <Label className="text-2xl">MISCELLANEOUS COSTS</Label>
+                    {expenses
+                      .filter((row) => row.name || row.amount)
+                      .map((row, index) => (
+                        <div key={row.id} className="flex gap-10">
+                          <Label>{index + 1}.</Label>
+                          <Label className="font-bold">{row.name}</Label>
+                          <div className="flex gap-3">
+                            <Label>AMOUNT ({row.currency})</Label>
+                            <Label className="font-bold">{row.amount}</Label>
+                          </div>
+                          <div className="flex gap-3">
+                            <Label>CURRENCY</Label>
+                            <Label className="font-bold">
+                              {row.currency === "EUR" ? "Euro" : row.currency}
+                            </Label>
+                          </div>
+                          {row.currency !== "USD" && (
+                            <div className="flex gap-3">
+                              <Label>AMOUNT (USD)</Label>
+                              <Label className="font-bold">
+                                {convertToUsd(
+                                  row.amount,
+                                  row.currency,
+                                  gbpToUsdRate,
+                                  eurToUsdRate,
+                                ) ?? "—"}
+                              </Label>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+                {/* Order settings */}
+                <div className="flex flex-col gap-10">
+                  <div className="flex gap-10">
+                    <div>
+                      <Label>GBP TO USD</Label>
+                      <Label className="font-bold">
+                        {orderDetails?.gbpToUsdRate ?? "Not recorded"}
+                      </Label>
+                    </div>
+                    <div>
+                      <Label>EURO TO USD</Label>
+                      <Label className="font-bold">
+                        {orderDetails?.eurToUsdRate ?? "Not recorded"}
+                      </Label>
+                    </div>
+                  </div>
+                  <div className="flex gap-10">
+                    <div>
+                      <Label>ORDER HANDLING FEE (%)</Label>
+                      <Label className="font-bold">{orderHandlingFee}</Label>
+                    </div>
+                    <div>
+                      <Label>MISCELLANEOUS HANDLING FEE (%)</Label>
+                      <Label className="font-bold">
+                        {miscellaneousHandlingFee}
+                      </Label>
+                    </div>
+                  </div>
+                </div>
               </div>
+              <Link href="/home" className={buttonVariants()}>
+                Back
+              </Link>
             </div>
-            {/* Order settings */}
-            <div className="flex flex-col gap-10">
-              <div className="flex gap-10">
-                <div>
-                  <Label>GBP TO USD</Label>
-                  <Label className="font-bold">
-                    {orderDetails?.gbpToUsdRate ?? "Not recorded"}
-                  </Label>
-                </div>
-                <div>
-                  <Label>EURO TO USD</Label>
-                  <Label className="font-bold">
-                    {orderDetails?.eurToUsdRate ?? "Not recorded"}
-                  </Label>
-                </div>
-              </div>
-              <div className="flex gap-10">
-                <div>
-                  <Label>ORDER HANDLING FEE (%)</Label>
-                  <Label className="font-bold">{orderHandlingFee}</Label>
-                </div>
-                <div>
-                  <Label>MISCELLANEOUS HANDLING FEE (%)</Label>
-                  <Label className="font-bold">
-                    {miscellaneousHandlingFee}
-                  </Label>
-                </div>
-              </div>
+          )}
+          <div className="px-4 py-8">
+            <div className="flex flex-col gap-3">
+              {panelFields.map(([key, label]) => {
+                const amount = totals[key];
+                const displayed =
+                  amount === null
+                    ? null
+                    : convertFromUsd(
+                        amount,
+                        panelCurrencies[key],
+                        gbpToUsdRate,
+                        eurToUsdRate,
+                      );
+                return (
+                  <div key={key} className="flex items-center gap-3">
+                    <Label htmlFor={`panel-currency-${key}`}>{label}:</Label>
+                    <Label className="font-bold" aria-live="polite">
+                      {displayed ?? "—"}
+                    </Label>
+                    <Select
+                      value={panelCurrencies[key]}
+                      disabled={!isEditing}
+                      onValueChange={(currency) => {
+                        if (isCurrency(currency)) {
+                          setPanelCurrencies((values) => ({
+                            ...values,
+                            [key]: currency,
+                          }));
+                        }
+                      }}
+                    >
+                      <SelectTrigger
+                        id={`panel-currency-${key}`}
+                        aria-label={`${label} currency`}
+                      >
+                        <SelectValue>
+                          {panelCurrencies[key] === "EUR"
+                            ? "Euro"
+                            : panelCurrencies[key]}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">Euro</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {isEditing && (
+                      // The panel sits outside the form, so associate its hidden fields explicitly.
+                      <input
+                        type="hidden"
+                        form="order-form"
+                        name={`panelCurrency-${key}`}
+                        value={panelCurrencies[key]}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-          <Link href="/home" className={buttonVariants()}>
-            Back
-          </Link>
         </div>
-      )}
+      </div>
     </div>
   );
 }

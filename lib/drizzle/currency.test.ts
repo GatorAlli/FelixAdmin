@@ -116,3 +116,13 @@ test("Created By comes only from the authenticated username", () => {
   assert.equal(withoutField.values.createdBy, "Another user");
   assert.equal(readOrderValues(input, "").ok, false);
 });
+
+test("panel currency conversion divides USD by the rate and supports negative commission", async () => {
+  const { convertFromUsd } = await import("./currency");
+  assert.equal(convertFromUsd("130.00", "GBP", "1.3", "1.1"), "100.00");
+  assert.equal(convertFromUsd("110.00", "EUR", "1.3", "1.1"), "100.00");
+  assert.equal(convertFromUsd("-130.00", "GBP", "1.3", "1.1"), "-100.00");
+  assert.equal(convertFromUsd("0.01", "EUR", "1", "2"), "0.01");
+  assert.equal(convertFromUsd("1.00", "EUR", "1", "0"), null);
+  assert.equal(convertFromUsd("-0.01", "EUR", "1", "3"), "0.00");
+});

@@ -108,3 +108,25 @@ export function restoreSupplierRows(order: {
     }];
   });
 }
+
+// Panel values are calculated in USD first, then divided by the chosen rate.
+// Signed amounts are supported because commission may be negative.
+export function convertFromUsd(
+  amount: string,
+  currency: Currency,
+  gbpToUsdRate: string,
+  eurToUsdRate: string,
+): string | null {
+  const negative = amount.startsWith("-");
+  const cents = scaledDecimal(negative ? amount.slice(1) : amount, 2, 16);
+  if (cents === null) return null;
+  const rateText = currency === "GBP" ? gbpToUsdRate :
+    currency === "EUR" ? eurToUsdRate : "1";
+  const rate = scaledDecimal(rateText, 8, 10);
+  if (rate === null || rate <= BigInt(0)) return null;
+  const convertedCents = (cents * BigInt(100000000) + rate / BigInt(2)) / rate;
+  if (convertedCents >= BigInt("1000000000000000000")) return null;
+  const text = convertedCents.toString().padStart(3, "0");
+  const sign = negative && convertedCents !== BigInt(0) ? "-" : "";
+  return `${sign}${text.slice(0, -2)}.${text.slice(-2)}`;
+}
