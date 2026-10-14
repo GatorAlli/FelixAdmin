@@ -77,8 +77,7 @@ export default async function Summary() {
             </Link>
           </div>
         </div>
-
-        {/* User Actions */}
+        {/* User */}
         <div className="flex items-center gap-5">
           <div className="w-9 h-9 rounded-full bg-[#E8F0EA] text-[#186636] flex items-center justify-center font-bold text-sm">
             A
