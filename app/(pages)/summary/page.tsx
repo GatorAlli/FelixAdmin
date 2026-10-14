@@ -77,8 +77,7 @@ export default async function Summary() {
             </Link>
           </div>
         </div>
-
-        {/* User Actions */}
+        {/* User */}
         <div className="flex items-center gap-5">
           <div className="w-9 h-9 rounded-full bg-[#E8F0EA] text-[#186636] flex items-center justify-center font-bold text-sm">
             A
@@ -101,8 +100,7 @@ export default async function Summary() {
               Order Workspace
             </h1>
             <p className="text-black mt-1 text-[15px] font-medium">
-              Comprehensive overview of all engineering orders and supplier costs.
-            </p>
+              Comprehensive overview of all engineering orders and supplier costs.</p>
           </div>
         </div>
         {/* Table */}
