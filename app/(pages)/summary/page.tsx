@@ -92,7 +92,7 @@ export default async function Summary() {
           </form>
         </div>
       </nav>
-      {/* Main Content Area */}
+      {/* Main */}
       <div className="flex-1 p-6 md:p-10">
         {/* Header */}
         <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
