@@ -34,8 +34,18 @@ export default async function Home() {
   const tdStyling = clsx("p-4 border");
 
   return (
-    <div className="p-4 flex flex-col">
-      <div>
+    <div className="flex flex-col">
+       <div className="bg-gray-50 p-3 flex items-center border-1 border-gray-200">
+       <img src="/logo.svg" 
+       alt="Felix Controls Limited"
+       width={60}
+       height={60}
+       className="mx-4" />
+       <h1 className="font-sans font-medium">
+        Felix Controls 
+       </h1>
+       </div>
+      <div className="p-4">
         <div className="flex gap-3 items-center py-4">
           {adminStatus ? (
             <Link href="/order_form" className={buttonVariants({})}>
