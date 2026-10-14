@@ -100,8 +100,7 @@ export default async function Summary() {
               Order Workspace
             </h1>
             <p className="text-black mt-1 text-[15px] font-medium">
-              Comprehensive overview of all engineering orders and supplier costs.
-            </p>
+              Comprehensive overview of all engineering orders and supplier costs.</p>
           </div>
         </div>
         {/* Table */}
