@@ -41,8 +41,11 @@ export default async function Home() {
        width={60}
        height={60}
        className="mx-4" />
-       <h1 className="font-sans font-medium">
-        Felix Controls 
+       <h1 className="font-sans font-medium text-md">
+        Felix Controls
+        <p className="font-sans font-light text-xs">
+          Order Workspace
+        </p>
        </h1>
        </div>
       <div className="p-4">
