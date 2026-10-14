@@ -278,92 +278,95 @@ export default function PageBody({
                   />
                 </div>
                 {/* Project information */}
-                <div className="flex flex-col gap-10">
-                  <div>
-                    <Label htmlFor="systemTypeChoice" className="text-2xl">
-                      SYSTEM TYPE
-                    </Label>
-                    <div className="flex gap-3">
-                      <Select
-                        value={systemTypeChoice}
-                        onValueChange={(value) => {
-                          if (typeof value !== "string") return;
-                          setSystemTypeChoice(value);
-                          setProductSystem(value === "OTHER" ? "" : value);
-                        }}
-                      >
-                        <SelectTrigger id="systemTypeChoice">
-                          <SelectValue placeholder="Select system type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {systemTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="OTHER">OTHER</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {systemTypeChoice === "OTHER" && (
-                        <div>
-                          <Label htmlFor="otherSystemType">
-                            OTHER SYSTEM TYPE
-                          </Label>
-                          <Input
-                            id="otherSystemType"
-                            placeholder="Specify system type"
-                            value={productSystem}
-                            onChange={(e) => setProductSystem(e.target.value)}
-                            required
-                          />
-                        </div>
-                      )}
+                <div>
+                  <Label className="text-2xl">Project Information</Label>
+                  <div className="flex flex-col gap-10">
+                    <div>
+                      <Label htmlFor="systemTypeChoice" className="font-bold">
+                        SYSTEM TYPE
+                      </Label>
+                      <div className="flex gap-3">
+                        <Select
+                          value={systemTypeChoice}
+                          onValueChange={(value) => {
+                            if (typeof value !== "string") return;
+                            setSystemTypeChoice(value);
+                            setProductSystem(value === "OTHER" ? "" : value);
+                          }}
+                        >
+                          <SelectTrigger id="systemTypeChoice">
+                            <SelectValue placeholder="Select system type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {systemTypes.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="OTHER">OTHER</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {systemTypeChoice === "OTHER" && (
+                          <div>
+                            <Label htmlFor="otherSystemType">
+                              OTHER SYSTEM TYPE
+                            </Label>
+                            <Input
+                              id="otherSystemType"
+                              placeholder="Specify system type"
+                              value={productSystem}
+                              onChange={(e) => setProductSystem(e.target.value)}
+                              required
+                            />
+                          </div>
+                        )}
+                      </div>
+                      {/* Submit either the selected preset or the custom Other text. */}
+                      <input
+                        type="hidden"
+                        name="productSystem"
+                        value={productSystem}
+                      />
                     </div>
-                    {/* Submit either the selected preset or the custom Other text. */}
-                    <input
-                      type="hidden"
-                      name="productSystem"
-                      value={productSystem}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="projectName">Project name</Label>
-                    <Input
-                      id="projectName"
-                      name="projectName"
-                      type="text"
-                      value={projectName}
-                      onChange={(e) => setProjectName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="clientName">CUSTOMER</Label>
-                    <Input
-                      id="clientName"
-                      name="clientName"
-                      type="text"
-                      value={clientName}
-                      onChange={(e) => setClientName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="endUser">End user</Label>
-                    <Input
-                      id="endUser"
-                      name="endUser"
-                      type="text"
-                      value={endUser}
-                      onChange={(e) => setEndUser(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="projectNotes">PROJECT NOTES</Label>
-                    <Textarea
-                      id="projectNotes"
-                      name="projectNotes"
-                      value={projectNotes}
-                      onChange={(e) => setProjectNotes(e.target.value)}
-                    />
+                    <div>
+                      <Label htmlFor="projectName">Project name</Label>
+                      <Input
+                        id="projectName"
+                        name="projectName"
+                        type="text"
+                        value={projectName}
+                        onChange={(e) => setProjectName(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="clientName">CUSTOMER</Label>
+                      <Input
+                        id="clientName"
+                        name="clientName"
+                        type="text"
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="endUser">End user</Label>
+                      <Input
+                        id="endUser"
+                        name="endUser"
+                        type="text"
+                        value={endUser}
+                        onChange={(e) => setEndUser(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="projectNotes">PROJECT NOTES</Label>
+                      <Textarea
+                        id="projectNotes"
+                        name="projectNotes"
+                        value={projectNotes}
+                        onChange={(e) => setProjectNotes(e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
                 {/* Order value, payment and costs */}
@@ -429,7 +432,7 @@ export default function PageBody({
                     </div>
                   </div>
                   <div>
-                    <Label className="text-2xl">Payment Mode</Label>
+                    <Label className="font-bold">Payment Mode</Label>
                     <div className="flex justify-between">
                       <Label htmlFor="paymentMode">LC</Label>
                       <Input
@@ -531,7 +534,7 @@ export default function PageBody({
                       <option value="OTHERS" />
                     </datalist>
 
-                    <Label className="text-2xl">MATERIAL COST</Label>
+                    <Label className="font-bold">MATERIAL COST</Label>
                     {suppliers.map((row, index) => (
                       <div key={row.id} className="flex">
                         <Label>{index + 1}.</Label>
@@ -663,7 +666,7 @@ export default function PageBody({
                       <option value="DHL Cost" />
                       <option value="UPS Cost" />
                     </datalist>
-                    <Label className="text-2xl">MISCELLANEOUS COSTS</Label>
+                    <Label className="font-bold">MISCELLANEOUS COSTS</Label>
                     {expenses.map((row, index) => (
                       <div key={row.id} className="flex">
                         <Label>{index + 1}.</Label>
@@ -886,7 +889,7 @@ export default function PageBody({
                 {/* Project information */}
                 <div className="flex flex-col gap-10">
                   <div>
-                    <Label className="text-2xl">SYSTEM TYPE</Label>
+                    <Label className="font-bold">SYSTEM TYPE</Label>
                     <Label className="font-bold">{productSystem}</Label>
                   </div>
                   <div>
@@ -928,7 +931,7 @@ export default function PageBody({
                     )}
                   </div>
                   <div>
-                    <Label className="text-2xl">Payment Mode</Label>
+                    <Label className="font-bold">Payment Mode</Label>
 
                     <div className="flex justify-between">
                       <Label htmlFor="paymentModeLC">LC</Label>
@@ -979,7 +982,7 @@ export default function PageBody({
                     <Label className="font-bold">{paymentNotes}</Label>
                   </div>
                   <div>
-                    <Label className="text-2xl">MATERIAL COST</Label>
+                    <Label className="font-bold">MATERIAL COST</Label>
                     {suppliers.map((row, index) => (
                       <div key={row.id} className="flex gap-10">
                         <Label>{index + 1}.</Label>
@@ -1013,7 +1016,7 @@ export default function PageBody({
                     ))}
                   </div>
                   <div>
-                    <Label className="text-2xl">MISCELLANEOUS COSTS</Label>
+                    <Label className="font-bold">MISCELLANEOUS COSTS</Label>
                     {expenses
                       .filter((row) => row.name || row.amount)
                       .map((row, index) => (
