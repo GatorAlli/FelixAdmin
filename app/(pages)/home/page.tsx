@@ -6,8 +6,6 @@ import { clsx } from "clsx";
 import { Sora, Manrope } from "next/font/google";
 import Link from "next/link";
 import { LogOut, Plus } from "lucide-react";
-
-// Restored strictly to 600 to match the exact rendering of the Summary page
 const sora = Sora({
   subsets: ["latin"],
   weight: ["600"],
@@ -48,7 +46,7 @@ export default async function Home() {
   return (
     <div className={`min-h-screen bg-[#F8FAFC] flex flex-col ${manrope.className}`}>
       
-      {/* 1:1 Navbar exactly matched with Summary */}
+      {/* Navbar */}
       <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
         <div className="flex items-center h-full">
           {/* Logo */}
@@ -98,9 +96,9 @@ export default async function Home() {
             </div>
           </Link>
           
-          {/* Navbar animations */}
+          {/* Navbar */}
           <div className="hidden md:flex items-center h-full gap-8 text-[15px] font-medium text-gray-600">
-            {/* Active Tab */}
+            {/* actions */}
             <Link
               href="/home"
               className="relative h-full flex items-center text-[#186636] font-semibold"
@@ -153,10 +151,10 @@ export default async function Home() {
         </div>
       </nav>
 
-      {/* Main Content Area */}
+      {/* Content  */}
       <div className="flex-1 p-6 md:p-10 max-w-[1600px] mx-auto w-full">
         
-        {/* Dashboard Header & Actions */}
+        {/* header */}
         <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h1 className={`text-[18px] text-black font-extrabold uppercase tracking-wide ${sora.className}`}>
@@ -177,7 +175,7 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Table Container Card */}
+        {/* Table*/}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse">
