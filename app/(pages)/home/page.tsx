@@ -7,9 +7,10 @@ import { Sora, Manrope } from "next/font/google";
 import Link from "next/link";
 import { LogOut, Plus } from "lucide-react";
 
+// Restored strictly to 600 to match the exact rendering of the Summary page
 const sora = Sora({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["600"],
 });
 
 const manrope = Manrope({
@@ -47,7 +48,7 @@ export default async function Home() {
   return (
     <div className={`min-h-screen bg-[#F8FAFC] flex flex-col ${manrope.className}`}>
       
-      {/* 1:1 Navbar copied from Summary Page (with Home Active) */}
+      {/* 1:1 Navbar exactly matched with Summary */}
       <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
         <div className="flex items-center h-full">
           {/* Logo */}
@@ -96,6 +97,7 @@ export default async function Home() {
               </span>
             </div>
           </Link>
+          
           {/* Navbar animations */}
           <div className="hidden md:flex items-center h-full gap-8 text-[15px] font-medium text-gray-600">
             {/* Active Tab */}
@@ -132,6 +134,7 @@ export default async function Home() {
             </Link>
           </div>
         </div>
+        
         {/* User */}
         <div className="flex items-center gap-5">
           <div className="w-9 h-9 rounded-full bg-[#E8F0EA] text-[#186636] flex items-center justify-center font-bold text-sm">
@@ -159,9 +162,6 @@ export default async function Home() {
             <h1 className={`text-[18px] text-black font-extrabold uppercase tracking-wide ${sora.className}`}>
               HELLO {name || "USER"}
             </h1>
-            <p className="text-gray-600 mt-1 text-[15px] font-medium">
-              Manage and view all your engineering orders.
-            </p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -177,7 +177,7 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Table Card */}
+        {/* Table Container Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse">
@@ -186,7 +186,7 @@ export default async function Home() {
                   <th className={headerStyling}>SL</th>
                   <th className={headerStyling}>CREATED BY</th>
                   <th className={headerStyling}>ORDER NO.</th>
-                  <th className={headerStyling}>CLIENT ORDER VALUE (USD)</th>
+                  <th className={headerStyling}>CLIENT ORDER VALUE</th>
                   <th className={headerStyling}>PROJECT NAME</th>
                   <th className={headerStyling}>CLIENT NAME</th>
                   <th className={headerStyling}>END USER</th>
