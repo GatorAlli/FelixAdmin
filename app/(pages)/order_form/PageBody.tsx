@@ -37,7 +37,6 @@ import {
   panelFields,
 } from "@/lib/drizzle/order-calculations";
 
-
 const sora = Sora({
   subsets: ["latin"],
   weight: ["600"],
@@ -208,7 +207,7 @@ export default function PageBody({
 
   return (
     <div>
-       <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
+      <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
         <div className="flex items-center h-full">
           {/* Logo */}
           <Link
@@ -308,17 +307,19 @@ export default function PageBody({
           </form>
         </div>
       </nav>
-      <div className="flex justify-between">
-        {felixOrderNo ? (
-          <Label>Purchase Order Number: {felixOrderNo}</Label>
-        ) : (
-          <div></div>
-        )}
-        <Label>Date Created: {formatOrderDate(createdDate)}</Label>
+      <div className="flex justify-between ">
         <Label>
           Created by:{" "}
           {isEditing ? username : (orderDetails?.createdBy ?? username)}
         </Label>
+        <div>
+          {felixOrderNo ? (
+            <Label>Purchase Order Number: {felixOrderNo}</Label>
+          ) : (
+            <div></div>
+          )}
+        </div>
+        <Label>Date Created: {formatOrderDate(createdDate)}</Label>
       </div>
       <div>
         <div className="flex">
@@ -1200,7 +1201,7 @@ export default function PageBody({
             </div>
           )}
           <div className="px-4 py-8">
-            <div className="flex flex-col gap-3">
+            <div className="flex p-4 text-white flex-col gap-3 bg-[#123c26]">
               {panelFields.map(([key, label]) => {
                 const amount = totals[key];
                 const displayed =
