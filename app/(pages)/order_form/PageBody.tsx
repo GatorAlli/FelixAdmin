@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sora, Manrope } from "next/font/google";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { createOrder, updateOrder } from "./actions";
 import { type Order } from "@/lib/drizzle/schema";
@@ -58,6 +59,10 @@ const orderHandlers = ["EMI ENGINEERING", "TAXILA IMPEX"];
 // SETTINGS sheet: G = 5%, H = 2%. Inputs store percentages, not fractions.
 const DEFAULT_ORDER_HANDLING_FEE = "5";
 const DEFAULT_MISCELLANEOUS_HANDLING_FEE = "2";
+
+// Shared by Edit, Submit and Discard; preserve the current panel button colors.
+const actionButtonStyling =
+  "rounded bg-white text-[#123c26] hover:bg-[#dfdfdf]";
 
 export default function PageBody({
   orderDetails,
@@ -307,7 +312,7 @@ export default function PageBody({
           </form>
         </div>
       </nav>
-      <div className="flex justify-between ">
+      <div className="flex justify-between p-4">
         <Label>
           Created by:{" "}
           {isEditing ? username : (orderDetails?.createdBy ?? username)}
@@ -322,9 +327,9 @@ export default function PageBody({
         <Label>Date Created: {formatOrderDate(createdDate)}</Label>
       </div>
       <div>
-        <div className="flex">
+        <div className="flex items-start p-4">
           {isEditing ? (
-            <div>
+            <div className="p-4 border rounded">
               <form
                 id="order-form"
                 onSubmit={async (e) => {
@@ -967,35 +972,10 @@ export default function PageBody({
                     </div>
                   </div>
                 </div>
-                <div>
-                  <Button type="submit">Submit</Button>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      // Restore the saved amounts and rates when discarding edits.
-                      if (orderDetails) setLoadedOrderDetails(undefined);
-                      setIsEditing(false);
-                    }}
-                  >
-                    Discard Changes
-                  </Button>
-                </div>
-                {submissionMessage && <p role="status">{submissionMessage}</p>}
               </form>
             </div>
           ) : (
-            <div>
-              {isAdmin ? (
-                <Button
-                  onClick={() => {
-                    setIsEditing(!isEditing);
-                  }}
-                >
-                  Edit
-                </Button>
-              ) : (
-                <div></div>
-              )}
+            <div className="border rounded p-4">
               <div className="p-4 flex flex-col gap-10">
                 <div>
                   <Label>Order handled by</Label>
@@ -1195,13 +1175,16 @@ export default function PageBody({
                   </div>
                 </div>
               </div>
-              <Link href="/home" className={buttonVariants()}>
+              <Link
+                href="/home"
+                className={cn(`${buttonVariants()}`, "rounded")}
+              >
                 Back
               </Link>
             </div>
           )}
-          <div className="px-4 py-8">
-            <div className="flex p-4 text-white flex-col gap-3 bg-[#123c26]">
+          <div className="px-4">
+            <div className="flex p-4 text-white flex-col gap-3 rounded bg-[#123c26]">
               {panelFields.map(([key, label]) => {
                 const amount = totals[key];
                 const displayed =
@@ -1214,39 +1197,44 @@ export default function PageBody({
                         eurToUsdRate,
                       );
                 return (
-                  <div key={key} className="flex items-center gap-3">
+                  <div
+                    key={key}
+                    className="flex items-center justify-between gap-10"
+                  >
                     <Label htmlFor={`panel-currency-${key}`}>{label}:</Label>
-                    <Label className="font-bold" aria-live="polite">
-                      {displayed ?? "—"}
-                    </Label>
-                    <Select
-                      value={panelCurrencies[key]}
-                      disabled={!isEditing}
-                      onValueChange={(currency) => {
-                        if (isCurrency(currency)) {
-                          setPanelCurrencies((values) => ({
-                            ...values,
-                            [key]: currency,
-                          }));
-                        }
-                      }}
-                    >
-                      <SelectTrigger
-                        id={`panel-currency-${key}`}
-                        aria-label={`${label} currency`}
+                    <div className="flex gap-4">
+                      <Label className="font-bold" aria-live="polite">
+                        {displayed ?? "—"}
+                      </Label>
+                      <Select
+                        value={panelCurrencies[key]}
+                        disabled={!isEditing}
+                        onValueChange={(currency) => {
+                          if (isCurrency(currency)) {
+                            setPanelCurrencies((values) => ({
+                              ...values,
+                              [key]: currency,
+                            }));
+                          }
+                        }}
                       >
-                        <SelectValue>
-                          {panelCurrencies[key] === "EUR"
-                            ? "Euro"
-                            : panelCurrencies[key]}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">Euro</SelectItem>
-                        <SelectItem value="GBP">GBP</SelectItem>
-                      </SelectContent>
-                    </Select>
+                        <SelectTrigger
+                          id={`panel-currency-${key}`}
+                          aria-label={`${label} currency`}
+                        >
+                          <SelectValue>
+                            {panelCurrencies[key] === "EUR"
+                              ? "Euro"
+                              : panelCurrencies[key]}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">Euro</SelectItem>
+                          <SelectItem value="GBP">GBP</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     {isEditing && (
                       // The panel sits outside the form, so associate its hidden fields explicitly.
                       <input
@@ -1259,7 +1247,44 @@ export default function PageBody({
                   </div>
                 );
               })}
+              <div className="flex flex-wrap gap-3 pt-4">
+                {isEditing ? (
+                  <>
+                    <Button
+                      type="submit"
+                      form="order-form"
+                      className={actionButtonStyling}
+                    >
+                      Submit
+                    </Button>
+                    <Button
+                      type="button"
+                      className={actionButtonStyling}
+                      onClick={() => {
+                        // Restore saved fields and currencies before leaving edit mode.
+                        if (orderDetails) setLoadedOrderDetails(undefined);
+                        setIsEditing(false);
+                      }}
+                    >
+                      Discard Changes
+                    </Button>
+                  </>
+                ) : isAdmin ? (
+                  <Button
+                    type="button"
+                    className={actionButtonStyling}
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Edit
+                  </Button>
+                ) : null}
+              </div>
             </div>
+            {submissionMessage && (
+              <p role="status" className="mt-3 text-black">
+                {submissionMessage}
+              </p>
+            )}
           </div>
         </div>
       </div>
