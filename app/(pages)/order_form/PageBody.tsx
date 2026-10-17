@@ -345,12 +345,12 @@ export default function PageBody({
 
   return (
     <div className={manrope.className}>
-      <nav className="w-full bg-card border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
+      <nav className="w-full bg-card border-b border-gray-200 px-4 sm:px-6 md:px-8 flex items-center justify-between gap-3 sticky top-0 z-50 shadow-sm h-[68px]">
         <div className="flex items-center h-full">
           {/* Logo */}
           <Link
             href="/home"
-            className="flex items-center gap-3 cursor-pointer mr-12 lg:mr-16"
+            className="flex items-center gap-3 cursor-pointer min-w-0 md:mr-8 lg:mr-12"
           >
             <svg
               className="h-10 w-auto"
@@ -384,7 +384,7 @@ export default function PageBody({
             </svg>
             <div className="flex flex-col border-l border-gray-200 pl-3 py-0.5 justify-center">
               <span
-                className={`text-[15px] font-extrabold leading-none text-gray-900 mb-1 ${sora.className}`}
+                className={`text-[13px] sm:text-[15px] font-extrabold leading-none text-gray-900 mb-1 ${sora.className}`}
               >
                 Felix Controls Limited
               </span>
@@ -413,23 +413,24 @@ export default function PageBody({
           </div>
         </div>
         {/* User */}
-        <div className="flex items-center gap-5">
-          <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+        <div className="flex shrink-0 items-center gap-3 sm:gap-5">
+          <div className="hidden sm:flex w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
             A
           </div>
-          <div className="h-6 w-px bg-gray-200" />
+          <div className="hidden sm:block h-6 w-px bg-gray-200" />
           <form action="/auth/signout" method="post">
             <button
               type="submit"
+              aria-label="Sign out"
               className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors text-[15px] font-medium"
             >
               <LogOut className="h-4 w-4" strokeWidth={2} />
-              Sign out
+              <span className="hidden sm:inline">Sign out</span>
             </button>
           </form>
         </div>
       </nav>
-      <div className="px-4 pt-4 flex gap-4 items-center">
+      <div className="px-4 pt-4 flex flex-wrap gap-4 items-center">
         <Label className="text-2xl">{orderDetails?.projectName}</Label>
         <Label className="text-4xl font-thin">|</Label>
         <Label className="text-2xl">{orderDetails?.clientName}</Label>
@@ -531,7 +532,7 @@ export default function PageBody({
                 <div className="space-y-4">
                   <Label className={headingStyling}>Project Information</Label>
                   <div className="flex flex-col gap-8">
-                    <div className="space-y-4 flex flex-col">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label
                         htmlFor="systemTypeChoice"
                         className={headingStyling}
@@ -560,7 +561,7 @@ export default function PageBody({
                           </SelectContent>
                         </Select>
                         {systemTypeChoice === "OTHER" && (
-                          <div className="space-y-4">
+                          <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                             <Label
                               className={headingStyling}
                               htmlFor="otherSystemType"
@@ -585,7 +586,7 @@ export default function PageBody({
                         value={productSystem}
                       />
                     </div>
-                    <div className="space-y-4">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling} htmlFor="projectName">
                         Project Name
                       </Label>
@@ -598,7 +599,7 @@ export default function PageBody({
                         onChange={(e) => setProjectName(e.target.value)}
                       />
                     </div>
-                    <div className="space-y-4">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling} htmlFor="clientName">
                         Customer
                       </Label>
@@ -611,7 +612,7 @@ export default function PageBody({
                         onChange={(e) => setClientName(e.target.value)}
                       />
                     </div>
-                    <div className="space-y-4">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling} htmlFor="endUser">
                         End User
                       </Label>
@@ -624,12 +625,12 @@ export default function PageBody({
                         onChange={(e) => setEndUser(e.target.value)}
                       />
                     </div>
-                    <div className="space-y-4">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling} htmlFor="projectNotes">
                         Project Notes
                       </Label>
-                      <Textarea
-                        className={inputStyling}
+                      <textarea
+                        className={`border rounded p-2`}
                         id="projectNotes"
                         name="projectNotes"
                         value={projectNotes}
@@ -641,24 +642,26 @@ export default function PageBody({
                 {/* Order value, payment and costs */}
                 <div className="flex flex-col gap-8">
                   <div className="space-y-4">
-                    <Label
-                      className={headingStyling}
-                      htmlFor="clientOrderValue"
-                    >
-                      Client Order Value
-                    </Label>
                     <div className="grid grid-cols-1 items-end gap-4 @xl:grid-cols-[minmax(0,1fr)_8rem]">
-                      <Input
-                        className={inputStyling}
-                        id="clientOrderValue"
-                        name="clientOrderValue"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={clientOrderValue}
-                        onChange={(e) => setClientOrderValue(e.target.value)}
-                      />
-                      <div className="space-y-2 [&_[data-slot=select-trigger]]:w-full">
+                      <div className="flex min-w-0 flex-col gap-2 [&>label]:min-h-6">
+                        <Label
+                          className={headingStyling}
+                          htmlFor="clientOrderValue"
+                        >
+                          Client Order Value
+                        </Label>
+                        <Input
+                          className={inputStyling}
+                          id="clientOrderValue"
+                          name="clientOrderValue"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={clientOrderValue}
+                          onChange={(e) => setClientOrderValue(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex min-w-0 flex-col gap-2 [&>label]:min-h-6 [&_[data-slot=select-trigger]]:w-full">
                         <Label
                           className={headingStyling}
                           htmlFor="clientOrderCurrency"
@@ -691,8 +694,8 @@ export default function PageBody({
                         name="clientOrderCurrency"
                         value={clientOrderCurrency}
                       />
-                      <div className="min-w-0 @xl:col-span-2">
-                        {clientOrderCurrency !== "USD" && (
+                      {clientOrderCurrency !== "USD" && (
+                        <div className="min-w-0 @xl:col-span-2">
                           <div className="flex min-w-0 flex-wrap items-center gap-3">
                             <Label
                               className={headingStyling}
@@ -715,8 +718,8 @@ export default function PageBody({
                               readOnly
                             />
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <PaymentModeField
@@ -734,7 +737,7 @@ export default function PageBody({
                     }}
                     onOtherChange={setPaymentMode}
                   />
-                  <div className="space-y-4">
+                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                     <Label className={headingStyling} htmlFor="paymentNotes">
                       Payment Notes
                     </Label>
@@ -789,9 +792,11 @@ export default function PageBody({
                         key={row.id}
                         className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 rounded-lg border border-border p-4 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_auto]"
                       >
-                        <Label>{index + 1}.</Label>
-                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto">
-                          <Label>Supplier</Label>
+                        <Label className="h-10 self-end justify-center">
+                          {index + 1}.
+                        </Label>
+                        <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
+                          <Label className={headingStyling}>Supplier</Label>
                           <Input
                             className={inputStyling}
                             id={`supplier-${row.id}`}
@@ -812,7 +817,7 @@ export default function PageBody({
                             }}
                           />
                         </div>
-                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto">
+                        <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
                           <Label
                             className={headingStyling}
                             htmlFor={`supplier-amount-${row.id}`}
@@ -840,7 +845,7 @@ export default function PageBody({
                             }}
                           />
                         </div>
-                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto [&_[data-slot=select-trigger]]:w-full">
+                        <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto [&_[data-slot=select-trigger]]:w-full">
                           <Label
                             className={headingStyling}
                             htmlFor={`supplier-currency-${row.id}`}
@@ -947,9 +952,11 @@ export default function PageBody({
                         key={row.id}
                         className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 rounded-lg border border-border p-4 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_auto]"
                       >
-                        <Label>{index + 1}.</Label>
-                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto">
-                          <Label>Expenditure</Label>
+                        <Label className="h-10 self-end justify-center">
+                          {index + 1}.
+                        </Label>
+                        <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
+                          <Label className={headingStyling}>Expenditure</Label>
                           <Input
                             className={inputStyling}
                             id={`expense-${row.id}`}
@@ -970,7 +977,7 @@ export default function PageBody({
                             }}
                           />
                         </div>
-                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto">
+                        <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
                           <Label
                             className={headingStyling}
                             htmlFor={`expense-amount-${row.id}`}
@@ -998,7 +1005,7 @@ export default function PageBody({
                             }}
                           />
                         </div>
-                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto [&_[data-slot=select-trigger]]:w-full">
+                        <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto [&_[data-slot=select-trigger]]:w-full">
                           <Label
                             className={headingStyling}
                             htmlFor={`expense-currency-${row.id}`}
@@ -1089,8 +1096,8 @@ export default function PageBody({
                 {/* Order settings */}
                 <div className="flex flex-col gap-8">
                   {/* Rates are saved with this order and shared by all its supplier rows. */}
-                  <div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
-                    <div className="space-y-4">
+                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling} htmlFor="gbpToUsdRate">
                         GBP To USD
                       </Label>
@@ -1106,7 +1113,7 @@ export default function PageBody({
                         onChange={(e) => setGbpToUsdRate(e.target.value)}
                       />
                     </div>
-                    <div className="space-y-4">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling} htmlFor="eurToUsdRate">
                         Euro To USD
                       </Label>
@@ -1124,8 +1131,8 @@ export default function PageBody({
                     </div>
                   </div>
                   {/* Percentage settings are stored on this order; 5 means 5%. */}
-                  <div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
-                    <div className="space-y-4">
+                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label
                         className={headingStyling}
                         htmlFor="orderHandlingFee"
@@ -1143,7 +1150,7 @@ export default function PageBody({
                         onChange={(e) => setOrderHandlingFee(e.target.value)}
                       />
                     </div>
-                    <div className="space-y-4">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label
                         className={headingStyling}
                         htmlFor="miscellaneousHandlingFee"
@@ -1170,29 +1177,29 @@ export default function PageBody({
           ) : (
             <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
               <div className="flex flex-col gap-8">
-                <div className="space-y-4">
+                <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                   <Label className={headingStyling}>Order Handled By</Label>
                   <Label className="font-bold">{orderHandledBy}</Label>
                 </div>
                 {/* Project information */}
                 <div className="flex flex-col gap-8">
-                  <div className="space-y-4">
+                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                     <Label className={headingStyling}>System Type</Label>
                     <Label className="font-bold">{productSystem}</Label>
                   </div>
-                  <div className="space-y-4">
+                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                     <Label className={headingStyling}>Project Name</Label>
                     <Label className="font-bold">{projectName}</Label>
                   </div>
-                  <div className="space-y-4">
+                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                     <Label className={headingStyling}>Customer</Label>
                     <Label className="font-bold">{clientName}</Label>
                   </div>
-                  <div className="space-y-4">
+                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                     <Label className={headingStyling}>End User</Label>
                     <Label className="font-bold">{endUser}</Label>
                   </div>
-                  <div className="space-y-4">
+                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                     <Label className={headingStyling}>Project Notes</Label>
                     <Label className="font-bold whitespace-pre-wrap">
                       {projectNotes}
@@ -1201,13 +1208,13 @@ export default function PageBody({
                 </div>
                 {/* Order value, payment and costs */}
                 <div className="flex flex-col gap-8">
-                  <div className="space-y-4">
+                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                     <Label className={headingStyling}>
                       Client Order Value ({clientOrderCurrency})
                     </Label>
                     <Label className="font-bold">{clientOrderValue}</Label>
                     {clientOrderCurrency !== "USD" && (
-                      <div className="space-y-4">
+                      <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                         <Label className={headingStyling}>
                           Order Value (USD)
                         </Label>
@@ -1227,7 +1234,7 @@ export default function PageBody({
                     isOther={paymentModeOther === "Other"}
                     readOnly
                   />
-                  <div className="space-y-4">
+                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                     <Label className={headingStyling}>Payment Notes</Label>
                     <Label className="font-bold">{paymentNotes}</Label>
                   </div>
@@ -1237,7 +1244,7 @@ export default function PageBody({
                       {suppliers.map((row, index) => (
                         <div
                           key={row.id}
-                          className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-start gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
+                          className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
                         >
                           <Label>{index + 1}.</Label>
                           <div className="col-start-2 min-w-0 @2xl:col-start-auto">
@@ -1294,7 +1301,7 @@ export default function PageBody({
                         .map((row, index) => (
                           <div
                             key={row.id}
-                            className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-start gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
+                            className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
                           >
                             <Label>{index + 1}.</Label>
                             <div className="col-start-2 min-w-0 @2xl:col-start-auto">
@@ -1346,28 +1353,28 @@ export default function PageBody({
                 </div>
                 {/* Order settings */}
                 <div className="flex flex-col gap-8">
-                  <div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
-                    <div className="space-y-4">
+                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling}>GBP To USD</Label>
                       <Label className="font-bold">
                         {orderDetails?.gbpToUsdRate ?? "Not recorded"}
                       </Label>
                     </div>
-                    <div className="space-y-4">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling}>Euro To USD</Label>
                       <Label className="font-bold">
                         {orderDetails?.eurToUsdRate ?? "Not recorded"}
                       </Label>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
-                    <div className="space-y-4">
+                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling}>
                         Order Handling Fee (%)
                       </Label>
                       <Label className="font-bold">{orderHandlingFee}</Label>
                     </div>
-                    <div className="space-y-4">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling}>
                         Miscellaneous Handling Fee (%)
                       </Label>
@@ -1426,7 +1433,7 @@ export default function PageBody({
                     >
                       {titleCaseLabel(label)}:
                     </Label>
-                    <div className="flex gap-4">
+                    <div className="flex items-center gap-4">
                       <Label className="font-bold" aria-live="polite">
                         {displayed ?? "—"}
                       </Label>
@@ -1471,7 +1478,7 @@ export default function PageBody({
                   </div>
                 );
               })}
-              <div className="flex flex-wrap gap-3 pt-4">
+              <div className="flex flex-wrap items-center gap-3 pt-4">
                 {isEditing ? (
                   <>
                     <Button
