@@ -90,27 +90,11 @@ export default async function Summary() {
             </Link>
 
             <Link
-              href="/orders"
-              className="relative h-full flex items-center hover:text-[#186636] transition-colors group"
-            >
-              Orders
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
-            </Link>
-
-            <Link
               href="/summary"
               className="relative h-full flex items-center text-[#186636] font-semibold"
             >
               Summary
               <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636]" />
-            </Link>
-
-            <Link
-              href="/about"
-              className="relative h-full flex items-center hover:text-[#186636] transition-colors group"
-            >
-              About Company
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
             </Link>
           </div>
         </div>

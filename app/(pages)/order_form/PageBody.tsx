@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Label } from "@/components/ui/label";
+import { Label as FormLabel } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -48,6 +48,21 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+// Override the shared uppercase label style only within this form.
+function Label(props: React.ComponentProps<typeof FormLabel>) {
+  return <FormLabel {...props} className={cn(props.className, "normal-case")} />;
+}
+
+// Format interface labels without changing stored values or acronyms.
+function titleCaseLabel(text: string) {
+  const acronyms = new Set(["USD", "GBP", "EUR", "BMS", "FDAS", "CCTV", "LC", "TT", "EMI"]);
+  return text.replace(/[A-Za-z]+/g, (word) =>
+    acronyms.has(word.toUpperCase())
+      ? word.toUpperCase()
+      : word[0].toUpperCase() + word.slice(1).toLowerCase(),
+  );
+}
+
 const systemTypes = [
   "BMS",
   "FDAS",
@@ -60,9 +75,9 @@ const orderHandlers = ["EMI ENGINEERING", "TAXILA IMPEX"];
 const DEFAULT_ORDER_HANDLING_FEE = "5";
 const DEFAULT_MISCELLANEOUS_HANDLING_FEE = "2";
 
-// Shared by Edit, Submit and Discard; preserve the current panel button colors.
+// Shared by all panel actions, including the Back link.
 const actionButtonStyling =
-  "rounded bg-white text-[#123c26] hover:bg-[#dfdfdf]";
+  "rounded normal-case bg-white text-[#123c26] hover:bg-[#dfdfdf]";
 
 export default function PageBody({
   orderDetails,
@@ -211,7 +226,7 @@ export default function PageBody({
   });
 
   return (
-    <div>
+    <div className={manrope.className}>
       <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
         <div className="flex items-center h-full">
           {/* Logo */}
@@ -253,10 +268,10 @@ export default function PageBody({
               <span
                 className={`text-[15px] font-extrabold leading-none text-gray-900 mb-1 ${sora.className}`}
               >
-                FELIX CONTROLS LIMITED
+                Felix Controls Limited
               </span>
-              <span className="text-[10px] text-gray-500 font-semibold tracking-wide uppercase leading-none">
-                ORDER WORKSPACE
+              <span className="text-[10px] text-gray-500 font-semibold tracking-wide leading-none">
+                Order Workspace
               </span>
             </div>
           </Link>
@@ -264,17 +279,9 @@ export default function PageBody({
           <div className="hidden md:flex items-center h-full gap-8 text-[15px] font-medium text-gray-600">
             <Link
               href="/home"
-              className="relative h-full flex items-center text-[#186636] font-semibold"
-            >
-              Home
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636]" />
-            </Link>
-
-            <Link
-              href="/orders"
               className="relative h-full flex items-center hover:text-[#186636] transition-colors group"
             >
-              Orders
+              Home
               <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
             </Link>
 
@@ -283,14 +290,6 @@ export default function PageBody({
               className="relative h-full flex items-center hover:text-[#186636] transition-colors group"
             >
               Summary
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
-            </Link>
-
-            <Link
-              href="/about"
-              className="relative h-full flex items-center hover:text-[#186636] transition-colors group"
-            >
-              About Company
               <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
             </Link>
           </div>
@@ -314,7 +313,7 @@ export default function PageBody({
       </nav>
       <div className="flex justify-between p-4">
         <Label>
-          Created by:{" "}
+          Created By:{" "}
           {isEditing ? username : (orderDetails?.createdBy ?? username)}
         </Label>
         <div>
@@ -354,7 +353,7 @@ export default function PageBody({
                 className="p-4 flex flex-col gap-10"
               >
                 <div className="">
-                  <Label htmlFor="orderHandlerChoice">ORDER HANDLED BY</Label>
+                  <Label htmlFor="orderHandlerChoice">Order Handled By</Label>
                   <div className="flex gap-3">
                     <Select
                       value={orderHandlerChoice}
@@ -370,16 +369,16 @@ export default function PageBody({
                       <SelectContent>
                         {orderHandlers.map((handler) => (
                           <SelectItem key={handler} value={handler}>
-                            {handler}
+                            {titleCaseLabel(handler)}
                           </SelectItem>
                         ))}
-                        <SelectItem value="OTHERS">OTHERS</SelectItem>
+                        <SelectItem value="OTHERS">Others</SelectItem>
                       </SelectContent>
                     </Select>
                     {orderHandlerChoice === "OTHERS" && (
                       <div className="flex">
                         <Label htmlFor="otherOrderHandler">
-                          OTHER ORDER HANDLER
+                          Other Order Handler
                         </Label>
                         <Input
                           id="otherOrderHandler"
@@ -403,7 +402,7 @@ export default function PageBody({
                   <div className="flex flex-col gap-10">
                     <div>
                       <Label htmlFor="systemTypeChoice" className="font-bold">
-                        SYSTEM TYPE
+                        System Type
                       </Label>
                       <div className="flex gap-3">
                         <Select
@@ -420,16 +419,16 @@ export default function PageBody({
                           <SelectContent>
                             {systemTypes.map((type) => (
                               <SelectItem key={type} value={type}>
-                                {type}
+                                {titleCaseLabel(type)}
                               </SelectItem>
                             ))}
-                            <SelectItem value="OTHER">OTHER</SelectItem>
+                            <SelectItem value="OTHER">Other</SelectItem>
                           </SelectContent>
                         </Select>
                         {systemTypeChoice === "OTHER" && (
                           <div>
                             <Label htmlFor="otherSystemType">
-                              OTHER SYSTEM TYPE
+                              Other System Type
                             </Label>
                             <Input
                               id="otherSystemType"
@@ -449,7 +448,7 @@ export default function PageBody({
                       />
                     </div>
                     <div>
-                      <Label htmlFor="projectName">Project name</Label>
+                      <Label htmlFor="projectName">Project Name</Label>
                       <Input
                         id="projectName"
                         name="projectName"
@@ -459,7 +458,7 @@ export default function PageBody({
                       />
                     </div>
                     <div>
-                      <Label htmlFor="clientName">CUSTOMER</Label>
+                      <Label htmlFor="clientName">Customer</Label>
                       <Input
                         id="clientName"
                         name="clientName"
@@ -469,7 +468,7 @@ export default function PageBody({
                       />
                     </div>
                     <div>
-                      <Label htmlFor="endUser">End user</Label>
+                      <Label htmlFor="endUser">End User</Label>
                       <Input
                         id="endUser"
                         name="endUser"
@@ -479,7 +478,7 @@ export default function PageBody({
                       />
                     </div>
                     <div>
-                      <Label htmlFor="projectNotes">PROJECT NOTES</Label>
+                      <Label htmlFor="projectNotes">Project Notes</Label>
                       <Textarea
                         id="projectNotes"
                         name="projectNotes"
@@ -492,7 +491,7 @@ export default function PageBody({
                 {/* Order value, payment and costs */}
                 <div className="flex flex-col gap-10">
                   <div>
-                    <Label htmlFor="clientOrderValue">CLIENT ORDER VALUE</Label>
+                    <Label htmlFor="clientOrderValue">Client Order Value</Label>
                     <div className="flex gap-3">
                       <Input
                         id="clientOrderValue"
@@ -503,7 +502,7 @@ export default function PageBody({
                         value={clientOrderValue}
                         onChange={(e) => setClientOrderValue(e.target.value)}
                       />
-                      <Label htmlFor="clientOrderCurrency">CURRENCY</Label>
+                      <Label htmlFor="clientOrderCurrency">Currency</Label>
                       <Select
                         value={clientOrderCurrency}
                         onValueChange={(currency) => {
@@ -532,7 +531,7 @@ export default function PageBody({
                       {clientOrderCurrency !== "USD" && (
                         <div className="flex">
                           <Label htmlFor="clientOrderUsdValue">
-                            ORDER VALUE (USD)
+                            Order Value (USD)
                           </Label>
                           <Input
                             id="clientOrderUsdValue"
@@ -654,7 +653,7 @@ export default function PageBody({
                       <option value="OTHERS" />
                     </datalist>
 
-                    <Label className="font-bold">MATERIAL COST</Label>
+                    <Label className="font-bold">Material Cost</Label>
                     {suppliers.map((row, index) => (
                       <div key={row.id} className="flex">
                         <Label>{index + 1}.</Label>
@@ -699,7 +698,7 @@ export default function PageBody({
                           }}
                         />
                         <Label htmlFor={`supplier-currency-${row.id}`}>
-                          CURRENCY
+                          Currency
                         </Label>
                         <Select
                           value={row.currency}
@@ -734,7 +733,7 @@ export default function PageBody({
                         {row.currency !== "USD" && (
                           <div className="flex">
                             <Label htmlFor={`supplier-usd-${row.id}`}>
-                              AMOUNT (USD)
+                              Amount (USD)
                             </Label>
                             <Label
                               id={`supplier-usd-${row.id}`}
@@ -786,7 +785,7 @@ export default function PageBody({
                       <option value="DHL Cost" />
                       <option value="UPS Cost" />
                     </datalist>
-                    <Label className="font-bold">MISCELLANEOUS COSTS</Label>
+                    <Label className="font-bold">Miscellaneous Costs</Label>
                     {expenses.map((row, index) => (
                       <div key={row.id} className="flex">
                         <Label>{index + 1}.</Label>
@@ -831,7 +830,7 @@ export default function PageBody({
                           }}
                         />
                         <Label htmlFor={`expense-currency-${row.id}`}>
-                          CURRENCY
+                          Currency
                         </Label>
                         <Select
                           value={row.currency}
@@ -866,7 +865,7 @@ export default function PageBody({
                         {row.currency !== "USD" && (
                           <div className="flex">
                             <Label htmlFor={`expense-usd-${row.id}`}>
-                              AMOUNT (USD)
+                              Amount (USD)
                             </Label>
                             <Label id={`expense-usd-${row.id}`}>
                               {convertToUsd(
@@ -912,7 +911,7 @@ export default function PageBody({
                   {/* Rates are saved with this order and shared by all its supplier rows. */}
                   <div className="flex gap-10">
                     <div>
-                      <Label htmlFor="gbpToUsdRate">GBP TO USD</Label>
+                      <Label htmlFor="gbpToUsdRate">GBP To USD</Label>
                       <Input
                         id="gbpToUsdRate"
                         name="gbpToUsdRate"
@@ -925,7 +924,7 @@ export default function PageBody({
                       />
                     </div>
                     <div>
-                      <Label htmlFor="eurToUsdRate">EURO TO USD</Label>
+                      <Label htmlFor="eurToUsdRate">Euro To USD</Label>
                       <Input
                         id="eurToUsdRate"
                         name="eurToUsdRate"
@@ -942,7 +941,7 @@ export default function PageBody({
                   <div className="flex gap-10">
                     <div>
                       <Label htmlFor="orderHandlingFee">
-                        ORDER HANDLING FEE (%)
+                        Order Handling Fee (%)
                       </Label>
                       <Input
                         id="orderHandlingFee"
@@ -956,7 +955,7 @@ export default function PageBody({
                     </div>
                     <div>
                       <Label htmlFor="miscellaneousHandlingFee">
-                        MISCELLANEOUS HANDLING FEE (%)
+                        Miscellaneous Handling Fee (%)
                       </Label>
                       <Input
                         id="miscellaneousHandlingFee"
@@ -978,29 +977,29 @@ export default function PageBody({
             <div className="border rounded p-4">
               <div className="p-4 flex flex-col gap-10">
                 <div>
-                  <Label>Order handled by</Label>
+                  <Label>Order Handled By</Label>
                   <Label className="font-bold">{orderHandledBy}</Label>
                 </div>
                 {/* Project information */}
                 <div className="flex flex-col gap-10">
                   <div>
-                    <Label className="font-bold">SYSTEM TYPE</Label>
+                    <Label className="font-bold">System Type</Label>
                     <Label className="font-bold">{productSystem}</Label>
                   </div>
                   <div>
-                    <Label>Project name</Label>
+                    <Label>Project Name</Label>
                     <Label className="font-bold">{projectName}</Label>
                   </div>
                   <div>
-                    <Label>CUSTOMER</Label>
+                    <Label>Customer</Label>
                     <Label className="font-bold">{clientName}</Label>
                   </div>
                   <div>
-                    <Label>End user</Label>
+                    <Label>End User</Label>
                     <Label className="font-bold">{endUser}</Label>
                   </div>
                   <div>
-                    <Label>PROJECT NOTES</Label>
+                    <Label>Project Notes</Label>
                     <Label className="font-bold whitespace-pre-wrap">
                       {projectNotes}
                     </Label>
@@ -1009,11 +1008,11 @@ export default function PageBody({
                 {/* Order value, payment and costs */}
                 <div className="flex flex-col gap-10">
                   <div>
-                    <Label>CLIENT ORDER VALUE ({clientOrderCurrency})</Label>
+                    <Label>Client Order Value ({clientOrderCurrency})</Label>
                     <Label className="font-bold">{clientOrderValue}</Label>
                     {clientOrderCurrency !== "USD" && (
                       <div>
-                        <Label>ORDER VALUE (USD)</Label>
+                        <Label>Order Value (USD)</Label>
                         <Label className="font-bold">
                           {convertToUsd(
                             clientOrderValue,
@@ -1077,7 +1076,7 @@ export default function PageBody({
                     <Label className="font-bold">{paymentNotes}</Label>
                   </div>
                   <div>
-                    <Label className="font-bold">MATERIAL COST</Label>
+                    <Label className="font-bold">Material Cost</Label>
                     {suppliers.map((row, index) => (
                       <div key={row.id} className="flex gap-10">
                         <Label>{index + 1}.</Label>
@@ -1085,18 +1084,18 @@ export default function PageBody({
                           <Label className="font-bold">{row.supplier}</Label>
                         </div>
                         <div className="flex gap-3">
-                          <Label>AMOUNT ({row.currency})</Label>
+                          <Label>Amount ({row.currency})</Label>
                           <Label className="font-bold">{row.amount}</Label>
                         </div>
                         <div className="flex gap-3">
-                          <Label>CURRENCY</Label>
+                          <Label>Currency</Label>
                           <Label className="font-bold">
                             {row.currency === "EUR" ? "Euro" : row.currency}
                           </Label>
                         </div>
                         {row.currency !== "USD" && (
                           <div className="flex gap-3 items-center">
-                            <Label>AMOUNT (USD)</Label>
+                            <Label>Amount (USD)</Label>
                             <Label className="font-bold">
                               {convertToUsd(
                                 row.amount,
@@ -1111,7 +1110,7 @@ export default function PageBody({
                     ))}
                   </div>
                   <div>
-                    <Label className="font-bold">MISCELLANEOUS COSTS</Label>
+                    <Label className="font-bold">Miscellaneous Costs</Label>
                     {expenses
                       .filter((row) => row.name || row.amount)
                       .map((row, index) => (
@@ -1119,18 +1118,18 @@ export default function PageBody({
                           <Label>{index + 1}.</Label>
                           <Label className="font-bold">{row.name}</Label>
                           <div className="flex gap-3">
-                            <Label>AMOUNT ({row.currency})</Label>
+                            <Label>Amount ({row.currency})</Label>
                             <Label className="font-bold">{row.amount}</Label>
                           </div>
                           <div className="flex gap-3">
-                            <Label>CURRENCY</Label>
+                            <Label>Currency</Label>
                             <Label className="font-bold">
                               {row.currency === "EUR" ? "Euro" : row.currency}
                             </Label>
                           </div>
                           {row.currency !== "USD" && (
                             <div className="flex gap-3">
-                              <Label>AMOUNT (USD)</Label>
+                              <Label>Amount (USD)</Label>
                               <Label className="font-bold">
                                 {convertToUsd(
                                   row.amount,
@@ -1149,13 +1148,13 @@ export default function PageBody({
                 <div className="flex flex-col gap-10">
                   <div className="flex gap-10">
                     <div>
-                      <Label>GBP TO USD</Label>
+                      <Label>GBP To USD</Label>
                       <Label className="font-bold">
                         {orderDetails?.gbpToUsdRate ?? "Not recorded"}
                       </Label>
                     </div>
                     <div>
-                      <Label>EURO TO USD</Label>
+                      <Label>Euro To USD</Label>
                       <Label className="font-bold">
                         {orderDetails?.eurToUsdRate ?? "Not recorded"}
                       </Label>
@@ -1163,11 +1162,11 @@ export default function PageBody({
                   </div>
                   <div className="flex gap-10">
                     <div>
-                      <Label>ORDER HANDLING FEE (%)</Label>
+                      <Label>Order Handling Fee (%)</Label>
                       <Label className="font-bold">{orderHandlingFee}</Label>
                     </div>
                     <div>
-                      <Label>MISCELLANEOUS HANDLING FEE (%)</Label>
+                      <Label>Miscellaneous Handling Fee (%)</Label>
                       <Label className="font-bold">
                         {miscellaneousHandlingFee}
                       </Label>
@@ -1175,12 +1174,6 @@ export default function PageBody({
                   </div>
                 </div>
               </div>
-              <Link
-                href="/home"
-                className={cn(`${buttonVariants()}`, "rounded")}
-              >
-                Back
-              </Link>
             </div>
           )}
           <div className="px-4">
@@ -1201,14 +1194,13 @@ export default function PageBody({
                     key={key}
                     className="flex items-center justify-between gap-10"
                   >
-                    <Label htmlFor={`panel-currency-${key}`}>{label}:</Label>
+                    <Label htmlFor={`panel-currency-${key}`}>{titleCaseLabel(label)}:</Label>
                     <div className="flex gap-4">
                       <Label className="font-bold" aria-live="polite">
                         {displayed ?? "—"}
                       </Label>
                       <Select
                         value={panelCurrencies[key]}
-                        disabled={!isEditing}
                         onValueChange={(currency) => {
                           if (isCurrency(currency)) {
                             setPanelCurrencies((values) => ({
@@ -1278,6 +1270,12 @@ export default function PageBody({
                     Edit
                   </Button>
                 ) : null}
+                <Link
+                  href="/home"
+                  className={cn(buttonVariants(), actionButtonStyling)}
+                >
+                  Back
+                </Link>
               </div>
             </div>
             {submissionMessage && (
