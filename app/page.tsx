@@ -71,9 +71,9 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen flex w-full bg-[#F8FAFC] ${manrope.className}`}
+      className={`min-h-screen flex w-full bg-muted ${manrope.className}`}
     >
-      <div className="relative hidden md:flex md:w-1/2 bg-[#186636] items-center justify-center overflow-hidden">
+      <div className="relative hidden md:flex md:w-1/2 bg-primary items-center justify-center overflow-hidden">
         <FallingParticles />
         <div className="relative z-10 w-[70%] max-w-lg">
           <Image
@@ -86,7 +86,7 @@ export default function App() {
           />
         </div>
       </div>
-      <div className="w-full md:w-1/2 flex flex-col relative bg-[#F8FAFC]">
+      <div className="w-full md:w-1/2 flex flex-col relative bg-muted">
         <div className="absolute top-6 right-8 z-20"></div>
         {/* Content */}
         <div className="flex-1 flex flex-col justify-center px-8 sm:px-16 lg:px-24 max-w-2xl mx-auto w-full mt-12 md:mt-0">
@@ -101,7 +101,7 @@ export default function App() {
             />
             {/* animated line */}
             <div className="w-full h-px bg-gray-200 relative flex items-center">
-              <Plus className="absolute -right-3 h-4 w-4 text-[#186636] opacity-50" />
+              <Plus className="absolute -right-3 h-4 w-4 text-primary opacity-50" />
             </div>
           </div>
           {/* Header part */}
@@ -154,7 +154,7 @@ export default function App() {
                 onChange={(e) => {
                   setEmail(e.target.value);
                 }}
-                className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-[#186636] focus-visible:border-[#186636] placeholder:text-gray-400"
+                className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-primary focus-visible:border-primary placeholder:text-gray-400"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -172,13 +172,13 @@ export default function App() {
                 onChange={(e) => {
                   setPassword(e.target.value);
                 }}
-                className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-[#186636] focus-visible:border-[#186636] placeholder:text-gray-400"
+                className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-primary focus-visible:border-primary placeholder:text-gray-400"
               />
             </div>
             {/* animated button */}
             <Button
               type="submit"
-              className="w-full normal-case bg-[#186636] hover:bg-[#124f2a] text-white mt-4 py-7 px-6 text-[17px] font-semibold rounded-lg transition-colors group"
+              className="w-full normal-case bg-primary hover:bg-primary/90 text-white mt-4 py-7 px-6 text-[17px] font-semibold rounded-lg transition-colors group"
             >
               <div className="relative flex w-full items-center justify-between">
                 <span className="relative z-10">Sign In</span>

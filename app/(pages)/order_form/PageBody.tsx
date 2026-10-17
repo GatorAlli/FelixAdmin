@@ -50,12 +50,24 @@ const manrope = Manrope({
 
 // Override the shared uppercase label style only within this form.
 function Label(props: React.ComponentProps<typeof FormLabel>) {
-  return <FormLabel {...props} className={cn(props.className, "normal-case")} />;
+  return (
+    <FormLabel {...props} className={cn(props.className, "normal-case")} />
+  );
 }
 
 // Format interface labels without changing stored values or acronyms.
 function titleCaseLabel(text: string) {
-  const acronyms = new Set(["USD", "GBP", "EUR", "BMS", "FDAS", "CCTV", "LC", "TT", "EMI"]);
+  const acronyms = new Set([
+    "USD",
+    "GBP",
+    "EUR",
+    "BMS",
+    "FDAS",
+    "CCTV",
+    "LC",
+    "TT",
+    "EMI",
+  ]);
   return text.replace(/[A-Za-z]+/g, (word) =>
     acronyms.has(word.toUpperCase())
       ? word.toUpperCase()
@@ -77,7 +89,7 @@ const DEFAULT_MISCELLANEOUS_HANDLING_FEE = "2";
 
 // Shared by all panel actions, including the Back link.
 const actionButtonStyling =
-  "rounded normal-case bg-white text-[#123c26] hover:bg-[#dfdfdf]";
+  "rounded normal-case bg-white text-primary hover:bg-border";
 
 export default function PageBody({
   orderDetails,
@@ -121,6 +133,9 @@ export default function PageBody({
   const nextExpenseId = useRef(2);
   const [paymentNotes, setPaymentNotes] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // A ref blocks a second submit immediately, before React renders disabled buttons.
+  const submissionInProgress = useRef(false);
   const [panelCurrencies, setPanelCurrencies] = useState({
     ...DEFAULT_PANEL_CURRENCIES,
   });
@@ -279,24 +294,24 @@ export default function PageBody({
           <div className="hidden md:flex items-center h-full gap-8 text-[15px] font-medium text-gray-600">
             <Link
               href="/home"
-              className="relative h-full flex items-center hover:text-[#186636] transition-colors group"
+              className="relative h-full flex items-center hover:text-primary transition-colors group"
             >
               Home
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
+              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
             </Link>
 
             <Link
               href="/summary"
-              className="relative h-full flex items-center hover:text-[#186636] transition-colors group"
+              className="relative h-full flex items-center hover:text-primary transition-colors group"
             >
               Summary
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
+              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
             </Link>
           </div>
         </div>
         {/* User */}
         <div className="flex items-center gap-5">
-          <div className="w-9 h-9 rounded-full bg-[#E8F0EA] text-[#186636] flex items-center justify-center font-bold text-sm">
+          <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
             A
           </div>
           <div className="h-6 w-px bg-gray-200" />
@@ -334,20 +349,33 @@ export default function PageBody({
                 onSubmit={async (e) => {
                   e.preventDefault();
 
+                  if (submissionInProgress.current) return;
+                  submissionInProgress.current = true;
+                  setIsSubmitting(true);
                   setSubmissionMessage("");
-                  if (orderDetails) {
-                    const result = await updateOrder(
-                      orderDetails.sl,
-                      new FormData(e.currentTarget),
+                  const formData = new FormData(e.currentTarget);
+                  try {
+                    if (orderDetails) {
+                      const result = await updateOrder(
+                        orderDetails.sl,
+                        formData,
+                      );
+                      setSubmissionMessage(result.message);
+                      // Validation failures must leave the user's edits on screen.
+                      if (result.ok) setIsEditing(false);
+                    } else {
+                      const result = await createOrder(formData);
+                      if (result.ok && result.createdDate)
+                        setCreatedDate(result.createdDate);
+                      setSubmissionMessage(result.message);
+                    }
+                  } catch {
+                    setSubmissionMessage(
+                      "Could not save the order. Please try again.",
                     );
-                    setSubmissionMessage(result.message);
-                  } else {
-                    const result = await createOrder(
-                      new FormData(e.currentTarget),
-                    );
-                    if (result.ok && result.createdDate)
-                      setCreatedDate(result.createdDate);
-                    setSubmissionMessage(result.message);
+                  } finally {
+                    submissionInProgress.current = false;
+                    setIsSubmitting(false);
                   }
                 }}
                 className="p-4 flex flex-col gap-10"
@@ -551,14 +579,19 @@ export default function PageBody({
                     </div>
                   </div>
                   <div>
+                    <input
+                      type="hidden"
+                      name="paymentMode"
+                      value={paymentMode}
+                    />
                     <Label className="font-bold">Payment Mode</Label>
                     <div className="flex justify-between">
-                      <Label htmlFor="paymentMode">LC</Label>
+                      <Label htmlFor="paymentModeLC">LC</Label>
                       <Input
-                        id="paymentMode"
-                        name="paymentMode"
+                        id="paymentModeLC"
+                        name="paymentModeChoice"
                         type="radio"
-                        value={paymentMode}
+                        value="LC"
                         checked={
                           paymentMode === "LC" && paymentModeOther !== "Other"
                         }
@@ -570,12 +603,12 @@ export default function PageBody({
                       />
                     </div>
                     <div className="flex justify-between">
-                      <Label htmlFor="paymentMode">TT</Label>
+                      <Label htmlFor="paymentModeTT">TT</Label>
                       <Input
-                        id="paymentMode"
-                        name="paymentMode"
+                        id="paymentModeTT"
+                        name="paymentModeChoice"
                         type="radio"
-                        value={paymentMode}
+                        value="TT"
                         checked={
                           paymentMode === "TT" && paymentModeOther !== "Other"
                         }
@@ -585,16 +618,17 @@ export default function PageBody({
                         }}
                       />
                     </div>
-                    <div className="flex justify-between">
-                      <Label htmlFor="paymentMode">Other</Label>
+                    <div className="flex flex-col justify-between">
+                      <Label htmlFor="paymentModeOther">Other</Label>
                       <Input
-                        id="paymentMode"
-                        name="paymentMode"
+                        id="paymentModeOther"
+                        name="paymentModeChoice"
                         type="radio"
-                        value={paymentMode}
+                        value="Other"
                         checked={paymentModeOther === "Other"}
                         onChange={() => {
                           setPaymentModeOther("Other");
+                          setPaymentMode("");
                         }}
                       />
                       {paymentModeOther === "Other" && (
@@ -1177,7 +1211,7 @@ export default function PageBody({
             </div>
           )}
           <div className="px-4">
-            <div className="flex p-4 text-white flex-col gap-3 rounded bg-[#123c26]">
+            <div className="flex p-4 text-white flex-col gap-3 rounded bg-primary">
               {panelFields.map(([key, label]) => {
                 const amount = totals[key];
                 const displayed =
@@ -1194,12 +1228,15 @@ export default function PageBody({
                     key={key}
                     className="flex items-center justify-between gap-10"
                   >
-                    <Label htmlFor={`panel-currency-${key}`}>{titleCaseLabel(label)}:</Label>
+                    <Label htmlFor={`panel-currency-${key}`}>
+                      {titleCaseLabel(label)}:
+                    </Label>
                     <div className="flex gap-4">
                       <Label className="font-bold" aria-live="polite">
                         {displayed ?? "—"}
                       </Label>
                       <Select
+                        disabled={isSubmitting}
                         value={panelCurrencies[key]}
                         onValueChange={(currency) => {
                           if (isCurrency(currency)) {
@@ -1243,16 +1280,21 @@ export default function PageBody({
                 {isEditing ? (
                   <>
                     <Button
+                      key="submit-order"
                       type="submit"
+                      disabled={isSubmitting}
                       form="order-form"
                       className={actionButtonStyling}
                     >
-                      Submit
+                      {isSubmitting ? "Saving…" : "Submit"}
                     </Button>
                     <Button
                       type="button"
                       className={actionButtonStyling}
+                      key="discard-order"
+                      disabled={isSubmitting}
                       onClick={() => {
+                        setSubmissionMessage("");
                         // Restore saved fields and currencies before leaving edit mode.
                         if (orderDetails) setLoadedOrderDetails(undefined);
                         setIsEditing(false);
@@ -1262,20 +1304,27 @@ export default function PageBody({
                     </Button>
                   </>
                 ) : isAdmin ? (
-                  <Button
-                    type="button"
-                    className={actionButtonStyling}
-                    onClick={() => setIsEditing(true)}
-                  >
-                    Edit
-                  </Button>
+                  <>
+                    <Button
+                      type="button"
+                      className={actionButtonStyling}
+                      key="edit-order"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setSubmissionMessage("");
+                        setIsEditing(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Link
+                      href="/home"
+                      className={cn(buttonVariants(), actionButtonStyling)}
+                    >
+                      Back
+                    </Link>
+                  </>
                 ) : null}
-                <Link
-                  href="/home"
-                  className={cn(buttonVariants(), actionButtonStyling)}
-                >
-                  Back
-                </Link>
               </div>
             </div>
             {submissionMessage && (

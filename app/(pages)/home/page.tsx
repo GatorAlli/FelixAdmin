@@ -44,7 +44,7 @@ export default async function Home() {
   const userInitial = name ? name.charAt(0).toUpperCase() : "U";
 
   return (
-    <div className={`min-h-screen bg-[#F8FAFC] flex flex-col ${manrope.className}`}>
+    <div className={`min-h-screen bg-muted flex flex-col ${manrope.className}`}>
       
       {/* Navbar */}
       <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
@@ -101,25 +101,25 @@ export default async function Home() {
             {/* actions */}
             <Link
               href="/home"
-              className="relative h-full flex items-center text-[#186636] font-semibold"
+              className="relative h-full flex items-center text-primary font-semibold"
             >
               Home
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636]" />
+              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary" />
             </Link>
 
             <Link
               href="/summary"
-              className="relative h-full flex items-center hover:text-[#186636] transition-colors group"
+              className="relative h-full flex items-center hover:text-primary transition-colors group"
             >
               Summary
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
+              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
             </Link>
           </div>
         </div>
         
         {/* User */}
         <div className="flex items-center gap-5">
-          <div className="w-9 h-9 rounded-full bg-[#E8F0EA] text-[#186636] flex items-center justify-center font-bold text-sm">
+          <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
             {userInitial}
           </div>
           <div className="h-6 w-px bg-gray-200" />
@@ -150,7 +150,7 @@ export default async function Home() {
             {adminStatus && (
               <Link 
                 href="/order_form" 
-                className="bg-[#186636] hover:bg-[#124f2a] text-white px-5 py-2.5 rounded text-[13px] font-bold uppercase tracking-wide flex items-center gap-2 transition-colors shadow-sm"
+                className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded text-[13px] font-bold uppercase tracking-wide flex items-center gap-2 transition-colors shadow-sm"
               >
                 <Plus className="h-[18px] w-[18px]" strokeWidth={2.5} />
                 CREATE NEW ORDER
@@ -192,7 +192,7 @@ export default async function Home() {
                     <td className={`${cellStyling} text-right pr-6`}>
                       <Link
                         href={`/order_form/${e.sl}`}
-                        className="bg-[#186636] hover:bg-[#124f2a] text-white px-6 py-2 rounded text-[13px] font-bold uppercase tracking-wide transition-colors inline-block"
+                        className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded text-[13px] font-bold uppercase tracking-wide transition-colors inline-block"
                       >
                         VIEW
                       </Link>

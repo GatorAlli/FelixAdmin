@@ -28,7 +28,7 @@ export default async function Summary() {
   );
   return (
     <div
-      className={`min-h-screen bg-[#F8FAFC] flex flex-col ${manrope.className}`}
+      className={`min-h-screen bg-muted flex flex-col ${manrope.className}`}
     >
       {/* Navbar */}
       <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
@@ -83,24 +83,24 @@ export default async function Summary() {
           <div className="hidden md:flex items-center h-full gap-8 text-[15px] font-medium text-gray-600">
             <Link
               href="/home"
-              className="relative h-full flex items-center hover:text-[#186636] transition-colors group"
+              className="relative h-full flex items-center hover:text-primary transition-colors group"
             >
               Home
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
+              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
             </Link>
 
             <Link
               href="/summary"
-              className="relative h-full flex items-center text-[#186636] font-semibold"
+              className="relative h-full flex items-center text-primary font-semibold"
             >
               Summary
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-[#186636]" />
+              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary" />
             </Link>
           </div>
         </div>
         {/* User */}
         <div className="flex items-center gap-5">
-          <div className="w-9 h-9 rounded-full bg-[#E8F0EA] text-[#186636] flex items-center justify-center font-bold text-sm">
+          <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
             A
           </div>
           <div className="h-6 w-px bg-gray-200" />
@@ -133,7 +133,7 @@ export default async function Summary() {
         </div>
         {/* Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden flex flex-col">
-          <div className="h-1.5 w-full bg-[#186636]" />
+          <div className="h-1.5 w-full bg-primary" />
 
           <div className="overflow-x-auto w-full max-h-[75vh]">
             <table className="w-full text-left border-collapse">
