@@ -326,24 +326,11 @@ export default function PageBody({
           </form>
         </div>
       </nav>
-      <div className="flex justify-between p-4">
-        <Label>
-          Created By:{" "}
-          {isEditing ? username : (orderDetails?.createdBy ?? username)}
-        </Label>
-        <div>
-          {felixOrderNo ? (
-            <Label>Purchase Order Number: {felixOrderNo}</Label>
-          ) : (
-            <div></div>
-          )}
-        </div>
-        <Label>Date Created: {formatOrderDate(createdDate)}</Label>
-      </div>
+
       <div>
-        <div className="flex items-start p-4">
+        <div className="grid grid-cols-1 items-start gap-4 p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           {isEditing ? (
-            <div className="p-4 border rounded">
+            <div className="min-w-0 w-full overflow-x-auto p-4 border rounded ">
               <form
                 id="order-form"
                 onSubmit={async (e) => {
@@ -378,11 +365,11 @@ export default function PageBody({
                     setIsSubmitting(false);
                   }
                 }}
-                className="p-4 flex flex-col gap-10"
+                className="p-4 flex flex-col gap-10 "
               >
                 <div className="">
                   <Label htmlFor="orderHandlerChoice">Order Handled By</Label>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col gap-3">
                     <Select
                       value={orderHandlerChoice}
                       onValueChange={(value) => {
@@ -482,6 +469,7 @@ export default function PageBody({
                         name="projectName"
                         type="text"
                         value={projectName}
+                        className="rounded"
                         onChange={(e) => setProjectName(e.target.value)}
                       />
                     </div>
@@ -1008,7 +996,7 @@ export default function PageBody({
               </form>
             </div>
           ) : (
-            <div className="border rounded p-4">
+            <div className="min-w-0 w-full overflow-x-auto border rounded p-4">
               <div className="p-4 flex flex-col gap-10">
                 <div>
                   <Label>Order Handled By</Label>
@@ -1210,7 +1198,27 @@ export default function PageBody({
               </div>
             </div>
           )}
-          <div className="px-4">
+          <div className="min-w-0 flex flex-col gap-4">
+            <div className="flex p-4 text-white flex-col gap-3 rounded bg-primary">
+              <div className="flex min-h-10 items-center justify-between gap-10">
+                <Label>Created By:</Label>
+                <Label className="font-bold">
+                  {isEditing ? username : (orderDetails?.createdBy ?? username)}
+                </Label>
+              </div>
+              {felixOrderNo && (
+                <div className="flex min-h-10 items-center justify-between gap-10">
+                  <Label>Purchase Order Number:</Label>
+                  <Label className="font-bold">{felixOrderNo}</Label>
+                </div>
+              )}
+              <div className="flex min-h-10 items-center justify-between gap-10">
+                <Label>Date Created:</Label>
+                <Label className="font-bold">
+                  {formatOrderDate(createdDate)}
+                </Label>
+              </div>
+            </div>
             <div className="flex p-4 text-white flex-col gap-3 rounded bg-primary">
               {panelFields.map(([key, label]) => {
                 const amount = totals[key];
@@ -1327,6 +1335,7 @@ export default function PageBody({
                 ) : null}
               </div>
             </div>
+
             {submissionMessage && (
               <p role="status" className="mt-3 text-black">
                 {submissionMessage}
