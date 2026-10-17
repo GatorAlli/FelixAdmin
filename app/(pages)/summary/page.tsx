@@ -1,8 +1,9 @@
 import Navbar from "@/components/view/navbar/navbar";
 import { requireUser } from "@/lib/supabase/auth";
+import YearSelect from "./SelectYear";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data } from "@/lib/drizzle/schema";
-import { asc } from "drizzle-orm";
+import { asc, like } from "drizzle-orm";
 import { expenseColumns, expenseUsdByName } from "@/lib/drizzle/expenses";
 import { clsx } from "clsx";
 import { Sora, Manrope } from "next/font/google";
@@ -14,9 +15,30 @@ const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
 });
-export default async function Summary() {
+
+export default async function Summary({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string | string[] }>;
+}) {
   await requireUser();
-  const orders = await db.select().from(data).orderBy(asc(data.sl));
+  const currentYear = new Date().getFullYear();
+  const { year } = await searchParams;
+  const requestedYear =
+    typeof year === "string" && /^\d{4}$/.test(year) ? Number(year) : NaN;
+  // Missing or invalid URL years fall back to the current year.
+  const selectedYear =
+    Number.isInteger(requestedYear) &&
+    requestedYear >= 2024 &&
+    requestedYear <= currentYear
+      ? requestedYear
+      : currentYear;
+
+  const orders = await db
+    .select()
+    .from(data)
+    .where(like(data.felixOrderRef, `FCL/FPO/${selectedYear}/%`))
+    .orderBy(asc(data.sl));
   const expenditureColumns = expenseColumns(orders);
   const expenditureAmounts = orders.map(expenseUsdByName);
   const headerStyling = clsx(
@@ -25,6 +47,13 @@ export default async function Summary() {
   const cellStyling = clsx(
     "px-4 py-3 text-sm text-black whitespace-nowrap border-b border-r border-gray-200 group-hover:bg-gray-50 transition-colors",
   );
+
+  const yearsArray: number[] = [];
+
+  for (let index = 2024; index <= currentYear; index++) {
+    yearsArray.push(index);
+  }
+
   return (
     <div
       className={`h-dvh min-h-0 overflow-hidden bg-muted flex flex-col [&>nav]:shrink-0 ${manrope.className}`}
@@ -182,6 +211,9 @@ export default async function Summary() {
               </tbody>
             </table>
           </div>
+        </div>
+        <div className="shrink-0 pt-4">
+          <YearSelect years={yearsArray} selectedYear={selectedYear} />
         </div>
       </div>
     </div>

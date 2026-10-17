@@ -450,7 +450,7 @@ export default function PageBody({
                       >
                         System Type
                       </Label>
-                      <div className="flex min-w-0 flex-col  gap-3">
+                      <div className="flex min-w-0 flex-col gap-3">
                         <Select
                           value={systemTypeChoice}
                           onValueChange={(value) => {
@@ -916,7 +916,7 @@ export default function PageBody({
                             }}
                           />
                         </div>
-                        <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto [&_[data-slot=select-trigger]]:w-full">
+                        <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto **:data-[slot=select-trigger]:w-full">
                           <Label
                             className={headingStyling}
                             htmlFor={`expense-currency-${row.id}`}
@@ -1002,85 +1002,6 @@ export default function PageBody({
                     >
                       +
                     </Button>
-                  </div>
-                </div>
-                {/* Order settings */}
-                <div className="flex flex-col gap-8">
-                  {/* Rates are saved with this order and shared by all its supplier rows. */}
-                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling} htmlFor="gbpToUsdRate">
-                        GBP To USD
-                      </Label>
-                      <Input
-                        className={inputStyling}
-                        id="gbpToUsdRate"
-                        name="gbpToUsdRate"
-                        type="number"
-                        min="0.00000001"
-                        step="0.00000001"
-                        required
-                        value={gbpToUsdRate}
-                        onChange={(e) => setGbpToUsdRate(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling} htmlFor="eurToUsdRate">
-                        Euro To USD
-                      </Label>
-                      <Input
-                        className={inputStyling}
-                        id="eurToUsdRate"
-                        name="eurToUsdRate"
-                        type="number"
-                        min="0.00000001"
-                        step="0.00000001"
-                        required
-                        value={eurToUsdRate}
-                        onChange={(e) => setEurToUsdRate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  {/* Percentage settings are stored on this order; 5 means 5%. */}
-                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label
-                        className={headingStyling}
-                        htmlFor="orderHandlingFee"
-                      >
-                        Order Handling Fee (%)
-                      </Label>
-                      <Input
-                        className={inputStyling}
-                        id="orderHandlingFee"
-                        name="orderHandlingFee"
-                        type="number"
-                        min="0"
-                        step="0.0001"
-                        value={orderHandlingFee}
-                        onChange={(e) => setOrderHandlingFee(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label
-                        className={headingStyling}
-                        htmlFor="miscellaneousHandlingFee"
-                      >
-                        Miscellaneous Handling Fee (%)
-                      </Label>
-                      <Input
-                        className={inputStyling}
-                        id="miscellaneousHandlingFee"
-                        name="miscellaneousHandlingFee"
-                        type="number"
-                        min="0"
-                        step="0.0001"
-                        value={miscellaneousHandlingFee}
-                        onChange={(e) =>
-                          setMiscellaneousHandlingFee(e.target.value)
-                        }
-                      />
-                    </div>
                   </div>
                 </div>
               </form>
@@ -1262,39 +1183,6 @@ export default function PageBody({
                     </div>
                   </div>
                 </div>
-                {/* Order settings */}
-                <div className="flex flex-col gap-8">
-                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling}>GBP To USD</Label>
-                      <Label className="font-bold">
-                        {orderDetails?.gbpToUsdRate ?? "Not recorded"}
-                      </Label>
-                    </div>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling}>Euro To USD</Label>
-                      <Label className="font-bold">
-                        {orderDetails?.eurToUsdRate ?? "Not recorded"}
-                      </Label>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling}>
-                        Order Handling Fee (%)
-                      </Label>
-                      <Label className="font-bold">{orderHandlingFee}</Label>
-                    </div>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling}>
-                        Miscellaneous Handling Fee (%)
-                      </Label>
-                      <Label className="font-bold">
-                        {miscellaneousHandlingFee}
-                      </Label>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -1440,6 +1328,152 @@ export default function PageBody({
                 ) : null}
               </div>
             </div>
+
+            <section
+              aria-labelledby="order-settings-heading"
+              className="@container flex flex-col gap-4 rounded-lg bg-primary p-5 text-white sm:p-6"
+            >
+              <h2
+                id="order-settings-heading"
+                className={cn(headingStyling, "text-lg")}
+              >
+                Settings
+              </h2>
+              {/* Explicit form ownership keeps these sidebar fields in the order submission. */}
+              {isEditing ? (
+                <div className="flex flex-col gap-6">
+                  {/* Rates are saved with this order and shared by all its supplier rows. */}
+                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                      <Label className={headingStyling} htmlFor="gbpToUsdRate">
+                        GBP To USD
+                      </Label>
+                      <Input
+                        form="order-form"
+                        disabled={isSubmitting}
+                        className={cn(
+                          inputStyling,
+                          "bg-white text-foreground border-white/30",
+                        )}
+                        id="gbpToUsdRate"
+                        name="gbpToUsdRate"
+                        type="number"
+                        min="0.00000001"
+                        step="0.00000001"
+                        required
+                        value={gbpToUsdRate}
+                        onChange={(e) => setGbpToUsdRate(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                      <Label className={headingStyling} htmlFor="eurToUsdRate">
+                        Euro To USD
+                      </Label>
+                      <Input
+                        form="order-form"
+                        disabled={isSubmitting}
+                        className={cn(
+                          inputStyling,
+                          "bg-white text-foreground border-white/30",
+                        )}
+                        id="eurToUsdRate"
+                        name="eurToUsdRate"
+                        type="number"
+                        min="0.00000001"
+                        step="0.00000001"
+                        required
+                        value={eurToUsdRate}
+                        onChange={(e) => setEurToUsdRate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  {/* Percentage settings are stored on this order; 5 means 5%. */}
+                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                      <Label
+                        className={headingStyling}
+                        htmlFor="orderHandlingFee"
+                      >
+                        Order Handling Fee (%)
+                      </Label>
+                      <Input
+                        form="order-form"
+                        disabled={isSubmitting}
+                        className={cn(
+                          inputStyling,
+                          "bg-white text-foreground border-white/30",
+                        )}
+                        id="orderHandlingFee"
+                        name="orderHandlingFee"
+                        type="number"
+                        min="0"
+                        step="0.0001"
+                        value={orderHandlingFee}
+                        onChange={(e) => setOrderHandlingFee(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                      <Label
+                        className={headingStyling}
+                        htmlFor="miscellaneousHandlingFee"
+                      >
+                        Miscellaneous Handling Fee (%)
+                      </Label>
+                      <Input
+                        form="order-form"
+                        disabled={isSubmitting}
+                        className={cn(
+                          inputStyling,
+                          "bg-white text-foreground border-white/30",
+                        )}
+                        id="miscellaneousHandlingFee"
+                        name="miscellaneousHandlingFee"
+                        type="number"
+                        min="0"
+                        step="0.0001"
+                        value={miscellaneousHandlingFee}
+                        onChange={(e) =>
+                          setMiscellaneousHandlingFee(e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6">
+                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                      <Label className={headingStyling}>GBP To USD</Label>
+                      <Label className="font-bold">
+                        {orderDetails?.gbpToUsdRate ?? "Not recorded"}
+                      </Label>
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                      <Label className={headingStyling}>Euro To USD</Label>
+                      <Label className="font-bold">
+                        {orderDetails?.eurToUsdRate ?? "Not recorded"}
+                      </Label>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                      <Label className={headingStyling}>
+                        Order Handling Fee (%)
+                      </Label>
+                      <Label className="font-bold">{orderHandlingFee}</Label>
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                      <Label className={headingStyling}>
+                        Miscellaneous Handling Fee (%)
+                      </Label>
+                      <Label className="font-bold">
+                        {miscellaneousHandlingFee}
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
 
             {submissionMessage && (
               <p role="status" className="mt-3 text-black">
