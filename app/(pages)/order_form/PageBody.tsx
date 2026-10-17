@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sora, Manrope } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { clsx } from "clsx";
 import Link from "next/link";
 import { createOrder, updateOrder } from "./actions";
 import { type Order } from "@/lib/drizzle/schema";
@@ -51,7 +52,10 @@ const manrope = Manrope({
 // Override the shared uppercase label style only within this form.
 function Label(props: React.ComponentProps<typeof FormLabel>) {
   return (
-    <FormLabel {...props} className={cn(props.className, "normal-case")} />
+    <FormLabel
+      {...props}
+      className={cn("min-w-0 break-words", props.className, "normal-case")}
+    />
   );
 }
 
@@ -87,9 +91,108 @@ const orderHandlers = ["EMI ENGINEERING", "TAXILA IMPEX"];
 const DEFAULT_ORDER_HANDLING_FEE = "5";
 const DEFAULT_MISCELLANEOUS_HANDLING_FEE = "2";
 
+const inputStyling = clsx("rounded p-2");
+const headingStyling = clsx("font-bold text-1.5xl whitespace-normal");
+
 // Shared by all panel actions, including the Back link.
 const actionButtonStyling =
   "rounded normal-case bg-white text-primary hover:bg-border";
+
+// Native radio controls keep keyboard navigation while avoiding text-input sizing.
+function PaymentModeField({
+  value,
+  isOther,
+  readOnly = false,
+  disabled = false,
+  onChoiceChange,
+  onOtherChange,
+}: {
+  value: string;
+  isOther: boolean;
+  readOnly?: boolean;
+  disabled?: boolean;
+  onChoiceChange?: (choice: string) => void;
+  onOtherChange?: (value: string) => void;
+}) {
+  const selectedChoice = isOther ? "Other" : value;
+  return (
+    <fieldset className="min-w-0 space-y-3" disabled={disabled}>
+      <legend className={cn(headingStyling, "mb-3")}>Payment Mode</legend>
+      {!readOnly && <input type="hidden" name="paymentMode" value={value} />}
+      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-3">
+        {["LC", "TT", "Other"].map((choice) => {
+          const selected = selectedChoice === choice;
+          const Option = readOnly ? "div" : "label";
+          return (
+            <Option
+              key={choice}
+              className={cn(
+                "flex min-h-12 items-center gap-3 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors",
+                selected
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground",
+                !readOnly &&
+                  "cursor-pointer hover:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30",
+                disabled && "cursor-wait opacity-60",
+              )}
+            >
+              {readOnly ? (
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                    selected ? "border-primary" : "border-border",
+                  )}
+                >
+                  {selected && (
+                    <span className="size-2 rounded-full bg-primary" />
+                  )}
+                </span>
+              ) : (
+                <input
+                  id={"paymentMode" + choice}
+                  type="radio"
+                  name="paymentModeChoice"
+                  value={choice}
+                  checked={selected}
+                  onChange={() => onChoiceChange?.(choice)}
+                  className="size-4 shrink-0 accent-primary"
+                />
+              )}
+              <span>{choice}</span>
+              {readOnly && selected && (
+                <span className="sr-only">Selected</span>
+              )}
+            </Option>
+          );
+        })}
+      </div>
+      {isOther &&
+        (readOnly ? (
+          <div className="rounded-lg border border-border bg-muted/50 px-4 py-3">
+            <p className="text-xs font-medium text-muted-foreground">
+              Payment Method
+            </p>
+            <p className="mt-1 break-words text-sm font-semibold text-foreground">
+              {value || "Not specified"}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="paymentModeDetails">Payment Method</Label>
+            <Input
+              id="paymentModeDetails"
+              className={inputStyling}
+              placeholder="Specify payment method"
+              value={value}
+              onChange={(event) => onOtherChange?.(event.target.value)}
+              required
+            />
+          </div>
+        ))}
+    </fieldset>
+  );
+}
 
 export default function PageBody({
   orderDetails,
@@ -242,7 +345,7 @@ export default function PageBody({
 
   return (
     <div className={manrope.className}>
-      <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
+      <nav className="w-full bg-card border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
         <div className="flex items-center h-full">
           {/* Logo */}
           <Link
@@ -297,7 +400,7 @@ export default function PageBody({
               className="relative h-full flex items-center hover:text-primary transition-colors group"
             >
               Home
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
+              <span className="absolute bottom-0 left-0 w-full h-0.75 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
             </Link>
 
             <Link
@@ -305,7 +408,7 @@ export default function PageBody({
               className="relative h-full flex items-center hover:text-primary transition-colors group"
             >
               Summary
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
+              <span className="absolute bottom-0 left-0 w-full h-0.75 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
             </Link>
           </div>
         </div>
@@ -326,11 +429,15 @@ export default function PageBody({
           </form>
         </div>
       </nav>
-
+      <div className="px-4 pt-4 flex gap-4 items-center">
+        <Label className="text-2xl">{orderDetails?.projectName}</Label>
+        <Label className="text-4xl font-thin">|</Label>
+        <Label className="text-2xl">{orderDetails?.clientName}</Label>
+      </div>
       <div>
         <div className="grid grid-cols-1 items-start gap-4 p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           {isEditing ? (
-            <div className="min-w-0 w-full overflow-x-auto p-4 border rounded ">
+            <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
               <form
                 id="order-form"
                 onSubmit={async (e) => {
@@ -365,10 +472,15 @@ export default function PageBody({
                     setIsSubmitting(false);
                   }
                 }}
-                className="p-4 flex flex-col gap-10 "
+                className="flex flex-col gap-8"
               >
                 <div className="">
-                  <Label htmlFor="orderHandlerChoice">Order Handled By</Label>
+                  <Label
+                    className={headingStyling}
+                    htmlFor="orderHandlerChoice"
+                  >
+                    Order Handled By
+                  </Label>
                   <div className="flex flex-col gap-3">
                     <Select
                       value={orderHandlerChoice}
@@ -391,11 +503,15 @@ export default function PageBody({
                       </SelectContent>
                     </Select>
                     {orderHandlerChoice === "OTHERS" && (
-                      <div className="flex">
-                        <Label htmlFor="otherOrderHandler">
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          className={headingStyling}
+                          htmlFor="otherOrderHandler"
+                        >
                           Other Order Handler
                         </Label>
                         <Input
+                          className={inputStyling}
                           id="otherOrderHandler"
                           placeholder="Specify order handler"
                           value={orderHandledBy}
@@ -412,14 +528,17 @@ export default function PageBody({
                   />
                 </div>
                 {/* Project information */}
-                <div>
-                  <Label className="text-2xl">Project Information</Label>
-                  <div className="flex flex-col gap-10">
-                    <div>
-                      <Label htmlFor="systemTypeChoice" className="font-bold">
+                <div className="space-y-4">
+                  <Label className={headingStyling}>Project Information</Label>
+                  <div className="flex flex-col gap-8">
+                    <div className="space-y-4 flex flex-col">
+                      <Label
+                        htmlFor="systemTypeChoice"
+                        className={headingStyling}
+                      >
                         System Type
                       </Label>
-                      <div className="flex gap-3">
+                      <div className="flex min-w-0 flex-col  gap-3">
                         <Select
                           value={systemTypeChoice}
                           onValueChange={(value) => {
@@ -441,11 +560,15 @@ export default function PageBody({
                           </SelectContent>
                         </Select>
                         {systemTypeChoice === "OTHER" && (
-                          <div>
-                            <Label htmlFor="otherSystemType">
+                          <div className="space-y-4">
+                            <Label
+                              className={headingStyling}
+                              htmlFor="otherSystemType"
+                            >
                               Other System Type
                             </Label>
                             <Input
+                              className={inputStyling}
                               id="otherSystemType"
                               placeholder="Specify system type"
                               value={productSystem}
@@ -462,20 +585,25 @@ export default function PageBody({
                         value={productSystem}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="projectName">Project Name</Label>
+                    <div className="space-y-4">
+                      <Label className={headingStyling} htmlFor="projectName">
+                        Project Name
+                      </Label>
                       <Input
                         id="projectName"
                         name="projectName"
                         type="text"
                         value={projectName}
-                        className="rounded"
+                        className={inputStyling}
                         onChange={(e) => setProjectName(e.target.value)}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="clientName">Customer</Label>
+                    <div className="space-y-4">
+                      <Label className={headingStyling} htmlFor="clientName">
+                        Customer
+                      </Label>
                       <Input
+                        className={inputStyling}
                         id="clientName"
                         name="clientName"
                         type="text"
@@ -483,9 +611,12 @@ export default function PageBody({
                         onChange={(e) => setClientName(e.target.value)}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="endUser">End User</Label>
+                    <div className="space-y-4">
+                      <Label className={headingStyling} htmlFor="endUser">
+                        End User
+                      </Label>
                       <Input
+                        className={inputStyling}
                         id="endUser"
                         name="endUser"
                         type="text"
@@ -493,9 +624,12 @@ export default function PageBody({
                         onChange={(e) => setEndUser(e.target.value)}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="projectNotes">Project Notes</Label>
+                    <div className="space-y-4">
+                      <Label className={headingStyling} htmlFor="projectNotes">
+                        Project Notes
+                      </Label>
                       <Textarea
+                        className={inputStyling}
                         id="projectNotes"
                         name="projectNotes"
                         value={projectNotes}
@@ -505,11 +639,17 @@ export default function PageBody({
                   </div>
                 </div>
                 {/* Order value, payment and costs */}
-                <div className="flex flex-col gap-10">
-                  <div>
-                    <Label htmlFor="clientOrderValue">Client Order Value</Label>
-                    <div className="flex gap-3">
+                <div className="flex flex-col gap-8">
+                  <div className="space-y-4">
+                    <Label
+                      className={headingStyling}
+                      htmlFor="clientOrderValue"
+                    >
+                      Client Order Value
+                    </Label>
+                    <div className="grid grid-cols-1 items-end gap-4 @xl:grid-cols-[minmax(0,1fr)_8rem]">
                       <Input
+                        className={inputStyling}
                         id="clientOrderValue"
                         name="clientOrderValue"
                         type="number"
@@ -518,120 +658,88 @@ export default function PageBody({
                         value={clientOrderValue}
                         onChange={(e) => setClientOrderValue(e.target.value)}
                       />
-                      <Label htmlFor="clientOrderCurrency">Currency</Label>
-                      <Select
-                        value={clientOrderCurrency}
-                        onValueChange={(currency) => {
-                          if (isCurrency(currency))
-                            setClientOrderCurrency(currency);
-                        }}
-                      >
-                        <SelectTrigger id="clientOrderCurrency">
-                          <SelectValue>
-                            {clientOrderCurrency === "EUR"
-                              ? "Euro"
-                              : clientOrderCurrency}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="EUR">Euro</SelectItem>
-                          <SelectItem value="GBP">GBP</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="space-y-2 [&_[data-slot=select-trigger]]:w-full">
+                        <Label
+                          className={headingStyling}
+                          htmlFor="clientOrderCurrency"
+                        >
+                          Currency
+                        </Label>
+                        <Select
+                          value={clientOrderCurrency}
+                          onValueChange={(currency) => {
+                            if (isCurrency(currency))
+                              setClientOrderCurrency(currency);
+                          }}
+                        >
+                          <SelectTrigger id="clientOrderCurrency">
+                            <SelectValue>
+                              {clientOrderCurrency === "EUR"
+                                ? "Euro"
+                                : clientOrderCurrency}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="USD">USD</SelectItem>
+                            <SelectItem value="EUR">Euro</SelectItem>
+                            <SelectItem value="GBP">GBP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <Input
                         type="hidden"
                         name="clientOrderCurrency"
                         value={clientOrderCurrency}
                       />
-                      {clientOrderCurrency !== "USD" && (
-                        <div className="flex">
-                          <Label htmlFor="clientOrderUsdValue">
-                            Order Value (USD)
-                          </Label>
-                          <Input
-                            id="clientOrderUsdValue"
-                            value={
-                              convertToUsd(
-                                clientOrderValue,
-                                clientOrderCurrency,
-                                gbpToUsdRate,
-                                eurToUsdRate,
-                              ) ?? ""
-                            }
-                            placeholder="Enter an amount and valid rate"
-                            readOnly
-                          />
-                        </div>
-                      )}
+                      <div className="min-w-0 @xl:col-span-2">
+                        {clientOrderCurrency !== "USD" && (
+                          <div className="flex min-w-0 flex-wrap items-center gap-3">
+                            <Label
+                              className={headingStyling}
+                              htmlFor="clientOrderUsdValue"
+                            >
+                              Order Value (USD)
+                            </Label>
+                            <Input
+                              className={inputStyling}
+                              id="clientOrderUsdValue"
+                              value={
+                                convertToUsd(
+                                  clientOrderValue,
+                                  clientOrderCurrency,
+                                  gbpToUsdRate,
+                                  eurToUsdRate,
+                                ) ?? ""
+                              }
+                              placeholder="Enter an amount and valid rate"
+                              readOnly
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <input
-                      type="hidden"
-                      name="paymentMode"
-                      value={paymentMode}
-                    />
-                    <Label className="font-bold">Payment Mode</Label>
-                    <div className="flex justify-between">
-                      <Label htmlFor="paymentModeLC">LC</Label>
-                      <Input
-                        id="paymentModeLC"
-                        name="paymentModeChoice"
-                        type="radio"
-                        value="LC"
-                        checked={
-                          paymentMode === "LC" && paymentModeOther !== "Other"
-                        }
-                        onChange={() => {
-                          setPaymentMode("LC");
-
-                          setPaymentModeOther("");
-                        }}
-                      />
-                    </div>
-                    <div className="flex justify-between">
-                      <Label htmlFor="paymentModeTT">TT</Label>
-                      <Input
-                        id="paymentModeTT"
-                        name="paymentModeChoice"
-                        type="radio"
-                        value="TT"
-                        checked={
-                          paymentMode === "TT" && paymentModeOther !== "Other"
-                        }
-                        onChange={() => {
-                          setPaymentMode("TT");
-                          setPaymentModeOther("");
-                        }}
-                      />
-                    </div>
-                    <div className="flex flex-col justify-between">
-                      <Label htmlFor="paymentModeOther">Other</Label>
-                      <Input
-                        id="paymentModeOther"
-                        name="paymentModeChoice"
-                        type="radio"
-                        value="Other"
-                        checked={paymentModeOther === "Other"}
-                        onChange={() => {
-                          setPaymentModeOther("Other");
-                          setPaymentMode("");
-                        }}
-                      />
-                      {paymentModeOther === "Other" && (
-                        <Input
-                          value={paymentMode}
-                          onChange={(e) => {
-                            setPaymentMode(e.target.value);
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="paymentNotes">Payment Notes</Label>
+                  <PaymentModeField
+                    value={paymentMode}
+                    isOther={paymentModeOther === "Other"}
+                    disabled={isSubmitting}
+                    onChoiceChange={(choice) => {
+                      if (choice === "Other") {
+                        if (paymentModeOther !== "Other") setPaymentMode("");
+                        setPaymentModeOther("Other");
+                      } else {
+                        setPaymentMode(choice);
+                        setPaymentModeOther("");
+                      }
+                    }}
+                    onOtherChange={setPaymentMode}
+                  />
+                  <div className="space-y-4">
+                    <Label className={headingStyling} htmlFor="paymentNotes">
+                      Payment Notes
+                    </Label>
                     <Input
+                      className={inputStyling}
                       id="paymentNotes"
                       name="paymentNotes"
                       type="text"
@@ -640,7 +748,7 @@ export default function PageBody({
                     />
                   </div>
                   {/* Supplier names use inputs, with suggestions for the brands in the schema. */}
-                  <div>
+                  <div className="space-y-4">
                     <datalist id="supplier-options">
                       <option value="TRANE" />
                       <option value="BELIMO" />
@@ -675,112 +783,136 @@ export default function PageBody({
                       <option value="OTHERS" />
                     </datalist>
 
-                    <Label className="font-bold">Material Cost</Label>
+                    <Label className={headingStyling}>Material Cost</Label>
                     {suppliers.map((row, index) => (
-                      <div key={row.id} className="flex">
+                      <div
+                        key={row.id}
+                        className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 rounded-lg border border-border p-4 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_auto]"
+                      >
                         <Label>{index + 1}.</Label>
-                        <Input
-                          id={`supplier-${row.id}`}
-                          name="supplier"
-                          placeholder="Supplier"
-                          aria-label={`Supplier ${index + 1}`}
-                          list="supplier-options"
-                          value={row.supplier}
-                          onChange={(e) => {
-                            // Update only this row's supplier name.
-                            setSuppliers((rows) =>
-                              rows.map((item) =>
-                                item.id === row.id
-                                  ? { ...item, supplier: e.target.value }
-                                  : item,
-                              ),
-                            );
-                          }}
-                        />
-                        <Label htmlFor={`supplier-amount-${row.id}`}>
-                          Amount
-                        </Label>
-                        <Input
-                          id={`supplier-amount-${row.id}`}
-                          name="supplierAmount"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={row.amount}
-                          placeholder={`in ${row.currency}`}
-                          onChange={(e) => {
-                            // Update only this row's amount; keep it as a string so it can be cleared.
-                            setSuppliers((rows) =>
-                              rows.map((item) =>
-                                item.id === row.id
-                                  ? { ...item, amount: e.target.value }
-                                  : item,
-                              ),
-                            );
-                          }}
-                        />
-                        <Label htmlFor={`supplier-currency-${row.id}`}>
-                          Currency
-                        </Label>
-                        <Select
-                          value={row.currency}
-                          onValueChange={(currency) => {
-                            if (!isCurrency(currency)) return;
-                            setSuppliers((rows) =>
-                              rows.map((item) =>
-                                item.id === row.id
-                                  ? { ...item, currency }
-                                  : item,
-                              ),
-                            );
-                          }}
-                        >
-                          <SelectTrigger id={`supplier-currency-${row.id}`}>
-                            <SelectValue>
-                              {row.currency === "EUR" ? "Euro" : row.currency}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="USD">USD</SelectItem>
-                            <SelectItem value="EUR">Euro</SelectItem>
-                            <SelectItem value="GBP">GBP</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {/* A hidden field keeps the currency paired with its FormData row. */}
+                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto">
+                          <Label>Supplier</Label>
+                          <Input
+                            className={inputStyling}
+                            id={`supplier-${row.id}`}
+                            name="supplier"
+                            placeholder="Supplier"
+                            aria-label={`Supplier ${index + 1}`}
+                            list="supplier-options"
+                            value={row.supplier}
+                            onChange={(e) => {
+                              // Update only this row's supplier name.
+                              setSuppliers((rows) =>
+                                rows.map((item) =>
+                                  item.id === row.id
+                                    ? { ...item, supplier: e.target.value }
+                                    : item,
+                                ),
+                              );
+                            }}
+                          />
+                        </div>
+                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto">
+                          <Label
+                            className={headingStyling}
+                            htmlFor={`supplier-amount-${row.id}`}
+                          >
+                            Amount
+                          </Label>
+                          <Input
+                            className={inputStyling}
+                            id={`supplier-amount-${row.id}`}
+                            name="supplierAmount"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={row.amount}
+                            placeholder={`in ${row.currency}`}
+                            onChange={(e) => {
+                              // Update only this row's amount; keep it as a string so it can be cleared.
+                              setSuppliers((rows) =>
+                                rows.map((item) =>
+                                  item.id === row.id
+                                    ? { ...item, amount: e.target.value }
+                                    : item,
+                                ),
+                              );
+                            }}
+                          />
+                        </div>
+                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto [&_[data-slot=select-trigger]]:w-full">
+                          <Label
+                            className={headingStyling}
+                            htmlFor={`supplier-currency-${row.id}`}
+                          >
+                            Currency
+                          </Label>
+                          <Select
+                            value={row.currency}
+                            onValueChange={(currency) => {
+                              if (!isCurrency(currency)) return;
+                              setSuppliers((rows) =>
+                                rows.map((item) =>
+                                  item.id === row.id
+                                    ? { ...item, currency }
+                                    : item,
+                                ),
+                              );
+                            }}
+                          >
+                            <SelectTrigger id={`supplier-currency-${row.id}`}>
+                              <SelectValue>
+                                {row.currency === "EUR" ? "Euro" : row.currency}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="EUR">Euro</SelectItem>
+                              <SelectItem value="GBP">GBP</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <input
                           type="hidden"
                           name="supplierCurrency"
                           value={row.currency}
                         />
+                        <div className="col-start-3 row-start-1 self-end @2xl:col-start-5">
+                          <Button
+                            type="button"
+                            aria-label={`Remove supplier ${index + 1}`}
+                            onClick={() =>
+                              setSuppliers((rows) =>
+                                rows.filter((item) => item.id !== row.id),
+                              )
+                            }
+                          >
+                            −
+                          </Button>
+                        </div>
                         {row.currency !== "USD" && (
-                          <div className="flex">
-                            <Label htmlFor={`supplier-usd-${row.id}`}>
-                              Amount (USD)
-                            </Label>
-                            <Label
-                              id={`supplier-usd-${row.id}`}
-                              className="px-2"
-                            >
-                              {convertToUsd(
-                                row.amount,
-                                row.currency,
-                                gbpToUsdRate,
-                                eurToUsdRate,
-                              ) ?? ""}
-                            </Label>
+                          <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                            <div className="flex min-w-0 flex-wrap items-center gap-3">
+                              <Label
+                                className={headingStyling}
+                                htmlFor={`supplier-usd-${row.id}`}
+                              >
+                                Amount (USD)
+                              </Label>
+                              <Label
+                                id={`supplier-usd-${row.id}`}
+                                className="px-2"
+                              >
+                                {convertToUsd(
+                                  row.amount,
+                                  row.currency,
+                                  gbpToUsdRate,
+                                  eurToUsdRate,
+                                ) ?? ""}
+                              </Label>
+                            </div>
                           </div>
                         )}
-                        <Button
-                          type="button"
-                          aria-label={`Remove supplier ${index + 1}`}
-                          onClick={() =>
-                            setSuppliers((rows) =>
-                              rows.filter((item) => item.id !== row.id),
-                            )
-                          }
-                        >
-                          −
-                        </Button>
                       </div>
                     ))}
                     <Button
@@ -798,7 +930,7 @@ export default function PageBody({
                       +
                     </Button>
                   </div>
-                  <div>
+                  <div className="space-y-4">
                     <datalist id="expense-options">
                       <option value="FREIGHT: USA TO SINGAPORE" />
                       <option value="FREIGHT: GERMANY TO SINGAPORE" />
@@ -807,109 +939,135 @@ export default function PageBody({
                       <option value="DHL Cost" />
                       <option value="UPS Cost" />
                     </datalist>
-                    <Label className="font-bold">Miscellaneous Costs</Label>
+                    <Label className={headingStyling}>
+                      Miscellaneous Costs
+                    </Label>
                     {expenses.map((row, index) => (
-                      <div key={row.id} className="flex">
+                      <div
+                        key={row.id}
+                        className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 rounded-lg border border-border p-4 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_auto]"
+                      >
                         <Label>{index + 1}.</Label>
-                        <Input
-                          id={`expense-${row.id}`}
-                          name="expenseName"
-                          placeholder="Expenditure name"
-                          aria-label={`Expenditure name ${index + 1}`}
-                          list="expense-options"
-                          value={row.name}
-                          onChange={(e) => {
-                            // Update only this row's expenditure name.
-                            setExpenses((rows) =>
-                              rows.map((item) =>
-                                item.id === row.id
-                                  ? { ...item, name: e.target.value }
-                                  : item,
-                              ),
-                            );
-                          }}
-                        />
-                        <Label htmlFor={`expense-amount-${row.id}`}>
-                          Amount
-                        </Label>
-                        <Input
-                          id={`expense-amount-${row.id}`}
-                          name="expenseAmount"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={row.amount}
-                          placeholder={`in ${row.currency}`}
-                          onChange={(e) => {
-                            // Update only this row's amount; keep it as a string so it can be cleared.
-                            setExpenses((rows) =>
-                              rows.map((item) =>
-                                item.id === row.id
-                                  ? { ...item, amount: e.target.value }
-                                  : item,
-                              ),
-                            );
-                          }}
-                        />
-                        <Label htmlFor={`expense-currency-${row.id}`}>
-                          Currency
-                        </Label>
-                        <Select
-                          value={row.currency}
-                          onValueChange={(currency) => {
-                            if (!isCurrency(currency)) return;
-                            setExpenses((rows) =>
-                              rows.map((item) =>
-                                item.id === row.id
-                                  ? { ...item, currency }
-                                  : item,
-                              ),
-                            );
-                          }}
-                        >
-                          <SelectTrigger id={`expense-currency-${row.id}`}>
-                            <SelectValue>
-                              {row.currency === "EUR" ? "Euro" : row.currency}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="USD">USD</SelectItem>
-                            <SelectItem value="EUR">Euro</SelectItem>
-                            <SelectItem value="GBP">GBP</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {/* A hidden field keeps the currency paired with its FormData row. */}
+                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto">
+                          <Label>Expenditure</Label>
+                          <Input
+                            className={inputStyling}
+                            id={`expense-${row.id}`}
+                            name="expenseName"
+                            placeholder="Expenditure name"
+                            aria-label={`Expenditure name ${index + 1}`}
+                            list="expense-options"
+                            value={row.name}
+                            onChange={(e) => {
+                              // Update only this row's expenditure name.
+                              setExpenses((rows) =>
+                                rows.map((item) =>
+                                  item.id === row.id
+                                    ? { ...item, name: e.target.value }
+                                    : item,
+                                ),
+                              );
+                            }}
+                          />
+                        </div>
+                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto">
+                          <Label
+                            className={headingStyling}
+                            htmlFor={`expense-amount-${row.id}`}
+                          >
+                            Amount
+                          </Label>
+                          <Input
+                            className={inputStyling}
+                            id={`expense-amount-${row.id}`}
+                            name="expenseAmount"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={row.amount}
+                            placeholder={`in ${row.currency}`}
+                            onChange={(e) => {
+                              // Update only this row's amount; keep it as a string so it can be cleared.
+                              setExpenses((rows) =>
+                                rows.map((item) =>
+                                  item.id === row.id
+                                    ? { ...item, amount: e.target.value }
+                                    : item,
+                                ),
+                              );
+                            }}
+                          />
+                        </div>
+                        <div className="col-start-2 min-w-0 space-y-2 @2xl:col-start-auto [&_[data-slot=select-trigger]]:w-full">
+                          <Label
+                            className={headingStyling}
+                            htmlFor={`expense-currency-${row.id}`}
+                          >
+                            Currency
+                          </Label>
+                          <Select
+                            value={row.currency}
+                            onValueChange={(currency) => {
+                              if (!isCurrency(currency)) return;
+                              setExpenses((rows) =>
+                                rows.map((item) =>
+                                  item.id === row.id
+                                    ? { ...item, currency }
+                                    : item,
+                                ),
+                              );
+                            }}
+                          >
+                            <SelectTrigger id={`expense-currency-${row.id}`}>
+                              <SelectValue>
+                                {row.currency === "EUR" ? "Euro" : row.currency}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="EUR">Euro</SelectItem>
+                              <SelectItem value="GBP">GBP</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <input
                           type="hidden"
                           name="expenseCurrency"
                           value={row.currency}
                         />
+                        <div className="col-start-3 row-start-1 self-end @2xl:col-start-5">
+                          <Button
+                            type="button"
+                            aria-label={`Remove expenditure ${index + 1}`}
+                            onClick={() =>
+                              setExpenses((rows) =>
+                                rows.filter((item) => item.id !== row.id),
+                              )
+                            }
+                          >
+                            −
+                          </Button>
+                        </div>
                         {row.currency !== "USD" && (
-                          <div className="flex">
-                            <Label htmlFor={`expense-usd-${row.id}`}>
-                              Amount (USD)
-                            </Label>
-                            <Label id={`expense-usd-${row.id}`}>
-                              {convertToUsd(
-                                row.amount,
-                                row.currency,
-                                gbpToUsdRate,
-                                eurToUsdRate,
-                              ) ?? ""}
-                            </Label>
+                          <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                            <div className="flex min-w-0 flex-wrap items-center gap-3">
+                              <Label
+                                className={headingStyling}
+                                htmlFor={`expense-usd-${row.id}`}
+                              >
+                                Amount (USD)
+                              </Label>
+                              <Label id={`expense-usd-${row.id}`}>
+                                {convertToUsd(
+                                  row.amount,
+                                  row.currency,
+                                  gbpToUsdRate,
+                                  eurToUsdRate,
+                                ) ?? ""}
+                              </Label>
+                            </div>
                           </div>
                         )}
-                        <Button
-                          type="button"
-                          aria-label={`Remove expenditure ${index + 1}`}
-                          onClick={() =>
-                            setExpenses((rows) =>
-                              rows.filter((item) => item.id !== row.id),
-                            )
-                          }
-                        >
-                          −
-                        </Button>
                       </div>
                     ))}
                     <Button
@@ -929,12 +1087,15 @@ export default function PageBody({
                   </div>
                 </div>
                 {/* Order settings */}
-                <div className="flex flex-col gap-10">
+                <div className="flex flex-col gap-8">
                   {/* Rates are saved with this order and shared by all its supplier rows. */}
-                  <div className="flex gap-10">
-                    <div>
-                      <Label htmlFor="gbpToUsdRate">GBP To USD</Label>
+                  <div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
+                    <div className="space-y-4">
+                      <Label className={headingStyling} htmlFor="gbpToUsdRate">
+                        GBP To USD
+                      </Label>
                       <Input
+                        className={inputStyling}
                         id="gbpToUsdRate"
                         name="gbpToUsdRate"
                         type="number"
@@ -945,9 +1106,12 @@ export default function PageBody({
                         onChange={(e) => setGbpToUsdRate(e.target.value)}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="eurToUsdRate">Euro To USD</Label>
+                    <div className="space-y-4">
+                      <Label className={headingStyling} htmlFor="eurToUsdRate">
+                        Euro To USD
+                      </Label>
                       <Input
+                        className={inputStyling}
                         id="eurToUsdRate"
                         name="eurToUsdRate"
                         type="number"
@@ -960,12 +1124,16 @@ export default function PageBody({
                     </div>
                   </div>
                   {/* Percentage settings are stored on this order; 5 means 5%. */}
-                  <div className="flex gap-10">
-                    <div>
-                      <Label htmlFor="orderHandlingFee">
+                  <div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
+                    <div className="space-y-4">
+                      <Label
+                        className={headingStyling}
+                        htmlFor="orderHandlingFee"
+                      >
                         Order Handling Fee (%)
                       </Label>
                       <Input
+                        className={inputStyling}
                         id="orderHandlingFee"
                         name="orderHandlingFee"
                         type="number"
@@ -975,11 +1143,15 @@ export default function PageBody({
                         onChange={(e) => setOrderHandlingFee(e.target.value)}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="miscellaneousHandlingFee">
+                    <div className="space-y-4">
+                      <Label
+                        className={headingStyling}
+                        htmlFor="miscellaneousHandlingFee"
+                      >
                         Miscellaneous Handling Fee (%)
                       </Label>
                       <Input
+                        className={inputStyling}
                         id="miscellaneousHandlingFee"
                         name="miscellaneousHandlingFee"
                         type="number"
@@ -996,45 +1168,49 @@ export default function PageBody({
               </form>
             </div>
           ) : (
-            <div className="min-w-0 w-full overflow-x-auto border rounded p-4">
-              <div className="p-4 flex flex-col gap-10">
-                <div>
-                  <Label>Order Handled By</Label>
+            <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
+              <div className="flex flex-col gap-8">
+                <div className="space-y-4">
+                  <Label className={headingStyling}>Order Handled By</Label>
                   <Label className="font-bold">{orderHandledBy}</Label>
                 </div>
                 {/* Project information */}
-                <div className="flex flex-col gap-10">
-                  <div>
-                    <Label className="font-bold">System Type</Label>
+                <div className="flex flex-col gap-8">
+                  <div className="space-y-4">
+                    <Label className={headingStyling}>System Type</Label>
                     <Label className="font-bold">{productSystem}</Label>
                   </div>
-                  <div>
-                    <Label>Project Name</Label>
+                  <div className="space-y-4">
+                    <Label className={headingStyling}>Project Name</Label>
                     <Label className="font-bold">{projectName}</Label>
                   </div>
-                  <div>
-                    <Label>Customer</Label>
+                  <div className="space-y-4">
+                    <Label className={headingStyling}>Customer</Label>
                     <Label className="font-bold">{clientName}</Label>
                   </div>
-                  <div>
-                    <Label>End User</Label>
+                  <div className="space-y-4">
+                    <Label className={headingStyling}>End User</Label>
                     <Label className="font-bold">{endUser}</Label>
                   </div>
-                  <div>
-                    <Label>Project Notes</Label>
+                  <div className="space-y-4">
+                    <Label className={headingStyling}>Project Notes</Label>
                     <Label className="font-bold whitespace-pre-wrap">
                       {projectNotes}
                     </Label>
                   </div>
                 </div>
                 {/* Order value, payment and costs */}
-                <div className="flex flex-col gap-10">
-                  <div>
-                    <Label>Client Order Value ({clientOrderCurrency})</Label>
+                <div className="flex flex-col gap-8">
+                  <div className="space-y-4">
+                    <Label className={headingStyling}>
+                      Client Order Value ({clientOrderCurrency})
+                    </Label>
                     <Label className="font-bold">{clientOrderValue}</Label>
                     {clientOrderCurrency !== "USD" && (
-                      <div>
-                        <Label>Order Value (USD)</Label>
+                      <div className="space-y-4">
+                        <Label className={headingStyling}>
+                          Order Value (USD)
+                        </Label>
                         <Label className="font-bold">
                           {convertToUsd(
                             clientOrderValue,
@@ -1046,149 +1222,155 @@ export default function PageBody({
                       </div>
                     )}
                   </div>
-                  <div>
-                    <Label className="font-bold">Payment Mode</Label>
-
-                    <div className="flex justify-between">
-                      <Label htmlFor="paymentModeLC">LC</Label>
-                      <Input
-                        id="paymentModeLC"
-                        name="paymentMode"
-                        type="radio"
-                        value="LC"
-                        checked={
-                          paymentMode === "LC" && paymentModeOther !== "Other"
-                        }
-                        disabled
-                      />
-                    </div>
-
-                    <div className="flex justify-between">
-                      <Label htmlFor="paymentModeTT">TT</Label>
-                      <Input
-                        id="paymentModeTT"
-                        name="paymentMode"
-                        type="radio"
-                        value="TT"
-                        checked={
-                          paymentMode === "TT" && paymentModeOther !== "Other"
-                        }
-                        disabled
-                      />
-                    </div>
-
-                    <div className="flex justify-between">
-                      <Label htmlFor="paymentModeOther">Other</Label>
-                      <Input
-                        id="paymentModeOther"
-                        name="paymentMode"
-                        type="radio"
-                        value="Other"
-                        checked={paymentModeOther === "Other"}
-                        disabled
-                      />
-
-                      {paymentModeOther === "Other" && (
-                        <Label className="font-bold">{paymentMode}</Label>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Payment Notes</Label>
+                  <PaymentModeField
+                    value={paymentMode}
+                    isOther={paymentModeOther === "Other"}
+                    readOnly
+                  />
+                  <div className="space-y-4">
+                    <Label className={headingStyling}>Payment Notes</Label>
                     <Label className="font-bold">{paymentNotes}</Label>
                   </div>
-                  <div>
-                    <Label className="font-bold">Material Cost</Label>
-                    {suppliers.map((row, index) => (
-                      <div key={row.id} className="flex gap-10">
-                        <Label>{index + 1}.</Label>
-                        <div className="flex gap-3">
-                          <Label className="font-bold">{row.supplier}</Label>
-                        </div>
-                        <div className="flex gap-3">
-                          <Label>Amount ({row.currency})</Label>
-                          <Label className="font-bold">{row.amount}</Label>
-                        </div>
-                        <div className="flex gap-3">
-                          <Label>Currency</Label>
-                          <Label className="font-bold">
-                            {row.currency === "EUR" ? "Euro" : row.currency}
-                          </Label>
-                        </div>
-                        {row.currency !== "USD" && (
-                          <div className="flex gap-3 items-center">
-                            <Label>Amount (USD)</Label>
-                            <Label className="font-bold">
-                              {convertToUsd(
-                                row.amount,
-                                row.currency,
-                                gbpToUsdRate,
-                                eurToUsdRate,
-                              ) ?? "—"}
-                            </Label>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <Label className="font-bold">Miscellaneous Costs</Label>
-                    {expenses
-                      .filter((row) => row.name || row.amount)
-                      .map((row, index) => (
-                        <div key={row.id} className="flex gap-10">
+                  <div className="flex flex-col gap-4">
+                    <Label className={headingStyling}>Material Cost</Label>
+                    <div className="flex flex-col gap-2">
+                      {suppliers.map((row, index) => (
+                        <div
+                          key={row.id}
+                          className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-start gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
+                        >
                           <Label>{index + 1}.</Label>
-                          <Label className="font-bold">{row.name}</Label>
-                          <div className="flex gap-3">
-                            <Label>Amount ({row.currency})</Label>
-                            <Label className="font-bold">{row.amount}</Label>
+                          <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                            <div className="flex min-w-0 flex-wrap items-center gap-3">
+                              <Label className="font-bold">
+                                {row.supplier}
+                              </Label>
+                            </div>
                           </div>
-                          <div className="flex gap-3">
-                            <Label>Currency</Label>
-                            <Label className="font-bold">
-                              {row.currency === "EUR" ? "Euro" : row.currency}
-                            </Label>
+                          <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                            <div className="flex min-w-0 flex-wrap items-center gap-3">
+                              <Label className={headingStyling}>
+                                Amount ({row.currency})
+                              </Label>
+                              <Label className="font-bold">{row.amount}</Label>
+                            </div>
+                          </div>
+                          <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                            <div className="flex min-w-0 flex-wrap items-center gap-3">
+                              <Label className={headingStyling}>Currency</Label>
+                              <Label className="font-bold">
+                                {row.currency === "EUR" ? "Euro" : row.currency}
+                              </Label>
+                            </div>
                           </div>
                           {row.currency !== "USD" && (
-                            <div className="flex gap-3">
-                              <Label>Amount (USD)</Label>
-                              <Label className="font-bold">
-                                {convertToUsd(
-                                  row.amount,
-                                  row.currency,
-                                  gbpToUsdRate,
-                                  eurToUsdRate,
-                                ) ?? "—"}
-                              </Label>
+                            <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                <Label className={headingStyling}>
+                                  Amount (USD)
+                                </Label>
+                                <Label className="font-bold">
+                                  {convertToUsd(
+                                    row.amount,
+                                    row.currency,
+                                    gbpToUsdRate,
+                                    eurToUsdRate,
+                                  ) ?? "—"}
+                                </Label>
+                              </div>
                             </div>
                           )}
                         </div>
                       ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <Label className={headingStyling}>
+                      Miscellaneous Costs
+                    </Label>
+                    <div className="flex flex-col gap-2">
+                      {expenses
+                        .filter((row) => row.name || row.amount)
+                        .map((row, index) => (
+                          <div
+                            key={row.id}
+                            className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-start gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
+                          >
+                            <Label>{index + 1}.</Label>
+                            <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                              <Label className="font-bold">{row.name}</Label>
+                            </div>
+                            <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                <Label className={headingStyling}>
+                                  Amount ({row.currency})
+                                </Label>
+                                <Label className="font-bold">
+                                  {row.amount}
+                                </Label>
+                              </div>
+                            </div>
+                            <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                <Label className={headingStyling}>
+                                  Currency
+                                </Label>
+                                <Label className="font-bold">
+                                  {row.currency === "EUR"
+                                    ? "Euro"
+                                    : row.currency}
+                                </Label>
+                              </div>
+                            </div>
+                            {row.currency !== "USD" && (
+                              <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                                <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                  <Label className={headingStyling}>
+                                    Amount (USD)
+                                  </Label>
+                                  <Label className="font-bold">
+                                    {convertToUsd(
+                                      row.amount,
+                                      row.currency,
+                                      gbpToUsdRate,
+                                      eurToUsdRate,
+                                    ) ?? "—"}
+                                  </Label>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 </div>
                 {/* Order settings */}
-                <div className="flex flex-col gap-10">
-                  <div className="flex gap-10">
-                    <div>
-                      <Label>GBP To USD</Label>
+                <div className="flex flex-col gap-8">
+                  <div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
+                    <div className="space-y-4">
+                      <Label className={headingStyling}>GBP To USD</Label>
                       <Label className="font-bold">
                         {orderDetails?.gbpToUsdRate ?? "Not recorded"}
                       </Label>
                     </div>
-                    <div>
-                      <Label>Euro To USD</Label>
+                    <div className="space-y-4">
+                      <Label className={headingStyling}>Euro To USD</Label>
                       <Label className="font-bold">
                         {orderDetails?.eurToUsdRate ?? "Not recorded"}
                       </Label>
                     </div>
                   </div>
-                  <div className="flex gap-10">
-                    <div>
-                      <Label>Order Handling Fee (%)</Label>
+                  <div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
+                    <div className="space-y-4">
+                      <Label className={headingStyling}>
+                        Order Handling Fee (%)
+                      </Label>
                       <Label className="font-bold">{orderHandlingFee}</Label>
                     </div>
-                    <div>
-                      <Label>Miscellaneous Handling Fee (%)</Label>
+                    <div className="space-y-4">
+                      <Label className={headingStyling}>
+                        Miscellaneous Handling Fee (%)
+                      </Label>
                       <Label className="font-bold">
                         {miscellaneousHandlingFee}
                       </Label>
@@ -1199,27 +1381,29 @@ export default function PageBody({
             </div>
           )}
           <div className="min-w-0 flex flex-col gap-4">
-            <div className="flex p-4 text-white flex-col gap-3 rounded bg-primary">
-              <div className="flex min-h-10 items-center justify-between gap-10">
-                <Label>Created By:</Label>
+            <div className="flex flex-col gap-4 rounded-lg bg-primary p-5 text-white sm:p-6">
+              <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
+                <Label className={headingStyling}>Created By:</Label>
                 <Label className="font-bold">
                   {isEditing ? username : (orderDetails?.createdBy ?? username)}
                 </Label>
               </div>
               {felixOrderNo && (
-                <div className="flex min-h-10 items-center justify-between gap-10">
-                  <Label>Purchase Order Number:</Label>
+                <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
+                  <Label className={headingStyling}>
+                    Purchase Order Number:
+                  </Label>
                   <Label className="font-bold">{felixOrderNo}</Label>
                 </div>
               )}
-              <div className="flex min-h-10 items-center justify-between gap-10">
-                <Label>Date Created:</Label>
+              <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
+                <Label className={headingStyling}>Date Created:</Label>
                 <Label className="font-bold">
                   {formatOrderDate(createdDate)}
                 </Label>
               </div>
             </div>
-            <div className="flex p-4 text-white flex-col gap-3 rounded bg-primary">
+            <div className="flex flex-col gap-4 rounded-lg bg-primary p-5 text-white sm:p-6">
               {panelFields.map(([key, label]) => {
                 const amount = totals[key];
                 const displayed =
@@ -1234,9 +1418,12 @@ export default function PageBody({
                 return (
                   <div
                     key={key}
-                    className="flex items-center justify-between gap-10"
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4"
                   >
-                    <Label htmlFor={`panel-currency-${key}`}>
+                    <Label
+                      className={headingStyling}
+                      htmlFor={`panel-currency-${key}`}
+                    >
                       {titleCaseLabel(label)}:
                     </Label>
                     <div className="flex gap-4">
