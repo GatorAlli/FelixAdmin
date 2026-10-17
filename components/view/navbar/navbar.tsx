@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Manrope,Sora } from "next/font/google";
-import { LogOut } from "lucide-react";
+import { ChartNoAxesCombined, House, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sora=Sora({ subsets: ["latin"],weight: ["600"] });
@@ -18,14 +18,14 @@ export default function Navbar() {
   const pathname=usePathname();
   return (
     <nav aria-label="Main navigation" className={cn("w-full bg-card border-b border-gray-200 px-4 sm:px-6 md:px-8 flex items-center justify-between gap-3 sticky top-0 z-50 shadow-sm h-[68px]",manrope.className)}>
-      <div className="flex items-center h-full">
+      <div className="flex min-w-0 flex-1 items-center h-full">
         {/* Logo */}
         <Link
           href="/home"
           className="flex items-center gap-3 cursor-pointer min-w-0 md:mr-8 lg:mr-12"
         >
           <svg
-            className="h-10 w-auto"
+            className="h-10 w-auto shrink-0"
             viewBox="56 18 416 334"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -54,13 +54,13 @@ export default function Navbar() {
               strokeLinejoin="round"
             />
           </svg>
-          <div className="flex flex-col border-l border-gray-200 pl-3 py-0.5 justify-center">
+          <div className="min-w-0 flex flex-col border-l border-gray-200 pl-3 py-0.5 justify-center">
             <span
-              className={`text-[13px] sm:text-[15px] font-extrabold leading-none text-gray-900 mb-1 ${sora.className}`}
+              className={`truncate text-[13px] sm:text-[15px] font-extrabold leading-none text-gray-900 mb-1 ${sora.className}`}
             >
               Felix Controls Limited
             </span>
-            <span className="text-[10px] text-gray-500 font-semibold tracking-wide leading-none">
+            <span className="truncate text-[10px] text-gray-500 font-semibold tracking-wide leading-none">
               Order Workspace
             </span>
           </div>
@@ -89,7 +89,35 @@ export default function Navbar() {
         </div>
       </div>
       {/* User */}
-      <div className="flex shrink-0 items-center gap-3 sm:gap-5">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-5">
+        <Link
+          href="/home"
+          aria-label="Home"
+          title="Home"
+          aria-current={pathname === "/home" ? "page" : undefined}
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-ring md:hidden",
+            pathname === "/home"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-muted hover:text-primary",
+          )}
+        >
+          <House className="size-5" aria-hidden="true" />
+        </Link>
+        <Link
+          href="/summary"
+          aria-label="Summary"
+          title="Summary"
+          aria-current={pathname === "/summary" ? "page" : undefined}
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-ring md:hidden",
+            pathname === "/summary"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-muted hover:text-primary",
+          )}
+        >
+          <ChartNoAxesCombined className="size-5" aria-hidden="true" />
+        </Link>
         {/* Avatar temporarily hidden.
           <div className="hidden sm:flex w-9 h-9 rounded-full bg-primary/10 text-primary items-center justify-center font-bold text-sm">
             A
@@ -100,7 +128,7 @@ export default function Navbar() {
           <button
             type="submit"
             aria-label="Sign out"
-            className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors text-[15px] font-medium"
+            className="flex size-10 sm:h-auto sm:w-auto items-center justify-center gap-2 text-gray-500 hover:text-black transition-colors text-[15px] font-medium"
           >
             <LogOut className="h-4 w-4" strokeWidth={2} />
             <span className="hidden sm:inline">Sign out</span>

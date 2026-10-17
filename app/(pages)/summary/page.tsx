@@ -27,14 +27,14 @@ export default async function Summary() {
   );
   return (
     <div
-      className={`min-h-screen bg-muted flex flex-col ${manrope.className}`}
+      className={`h-dvh min-h-0 overflow-hidden bg-muted flex flex-col [&>nav]:shrink-0 ${manrope.className}`}
     >
       {/* Navbar */}
       <Navbar />
       {/* Main */}
-      <div className="flex-1 p-6 md:p-10">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col p-6 md:p-10">
         {/* Header */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="mb-6 flex shrink-0 flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h1
               className={`text-[32px] text-black pr-4 py-1 ${sora.className}`}
@@ -48,10 +48,15 @@ export default async function Summary() {
           </div>
         </div>
         {/* Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden flex flex-col">
-          <div className="h-1.5 w-full bg-primary" />
+        <div className="min-h-0 bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden flex flex-col">
+          <div className="h-1.5 w-full shrink-0 bg-primary" />
 
-          <div className="overflow-x-auto w-full max-h-[75vh]">
+          <div
+            className="summary-table-scroll min-h-0 overflow-x-scroll overflow-y-auto w-full focus-visible:outline-2 focus-visible:outline-ring"
+            role="region"
+            aria-label="Order summary table"
+            tabIndex={0}
+          >
             <table className="w-full text-left border-collapse">
               <thead className="bg-white">
                 <tr>

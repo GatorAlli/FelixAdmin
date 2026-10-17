@@ -127,3 +127,26 @@
     @apply font-sans;
   }
 }
+
+/* Keep the Summary scrollbar visible on browsers with auto-hiding scrollbars. */
+.summary-table-scroll::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.summary-table-scroll::-webkit-scrollbar-track,
+.summary-table-scroll::-webkit-scrollbar-corner {
+  background: var(--muted);
+}
+
+.summary-table-scroll::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border: 3px solid var(--muted);
+  border-radius: 999px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .summary-table-scroll {
+    scrollbar-color: var(--muted-foreground) var(--muted);
+  }
+}

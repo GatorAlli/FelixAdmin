@@ -97,7 +97,7 @@ export default function App() {
               alt="Felix Controls Limited"
               width={160}
               height={45}
-              className="object-contain mb-6"
+              className="object-contain mb-6 w-40 h-auto"
             />
             {/* animated line */}
             <div className="w-full h-px bg-gray-200 relative flex items-center">
