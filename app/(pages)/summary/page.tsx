@@ -1,3 +1,4 @@
+import Navbar from "@/components/view/navbar/navbar";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data } from "@/lib/drizzle/schema";
@@ -5,8 +6,6 @@ import { asc } from "drizzle-orm";
 import { expenseColumns, expenseUsdByName } from "@/lib/drizzle/expenses";
 import { clsx } from "clsx";
 import { Sora, Manrope } from "next/font/google";
-import Link from "next/link";
-import { LogOut } from "lucide-react";
 const sora = Sora({
   subsets: ["latin"],
   weight: ["600"],
@@ -31,90 +30,7 @@ export default async function Summary() {
       className={`min-h-screen bg-muted flex flex-col ${manrope.className}`}
     >
       {/* Navbar */}
-      <nav className="w-full bg-white border-b border-gray-200 px-6 md:px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm h-[68px]">
-        <div className="flex items-center h-full">
-          {/* Logo */}
-          <Link
-            href="/home"
-            className="flex items-center gap-3 cursor-pointer mr-12 lg:mr-16"
-          >
-            <svg
-              className="h-10 w-auto"
-              viewBox="56 18 416 334"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M63 24H182V56H133V86H177V117H133V200H63Z"
-                stroke="#186636"
-                strokeWidth="4"
-              />
-              <path
-                d="M145 127H220V141H190V155H215V168H190V185H224V199H145Z M239 127H284V185H316V199H239Z"
-                fill="#000000"
-              />
-              <path
-                d="M302 127H359C361 160 348 194 330 219H302Z"
-                fill="#186636"
-                stroke="#000000"
-                strokeWidth="4"
-              />
-              <circle cx="331" cy="93" r="28" fill="#F80304" />
-              <path
-                d="M371 129L402 178L443 141L466 171L418 203L454 257L402 214L212 345L383 196L359 177Z"
-                fill="#000000"
-                stroke="#F80304"
-                strokeWidth="3"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <div className="flex flex-col border-l border-gray-200 pl-3 py-0.5 justify-center">
-              <span
-                className={`text-[15px] font-extrabold leading-none text-gray-900 mb-1 ${sora.className}`}
-              >
-                FELIX CONTROLS LIMITED
-              </span>
-              <span className="text-[10px] text-gray-500 font-semibold tracking-wide uppercase leading-none">
-                ORDER WORKSPACE
-              </span>
-            </div>
-          </Link>
-          {/* Navbar animations */}
-          <div className="hidden md:flex items-center h-full gap-8 text-[15px] font-medium text-gray-600">
-            <Link
-              href="/home"
-              className="relative h-full flex items-center hover:text-primary transition-colors group"
-            >
-              Home
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-left" />
-            </Link>
-
-            <Link
-              href="/summary"
-              className="relative h-full flex items-center text-primary font-semibold"
-            >
-              Summary
-              <span className="absolute bottom-0 left-0 w-full h-[3px] bg-primary" />
-            </Link>
-          </div>
-        </div>
-        {/* User */}
-        <div className="flex items-center gap-5">
-          <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-            A
-          </div>
-          <div className="h-6 w-px bg-gray-200" />
-          <form action="/auth/signout" method="post">
-            <button
-              type="submit"
-              className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors text-[15px] font-medium"
-            >
-              <LogOut className="h-4 w-4" strokeWidth={2} />
-              Sign out
-            </button>
-          </form>
-        </div>
-      </nav>
+      <Navbar />
       {/* Main */}
       <div className="flex-1 p-6 md:p-10">
         {/* Header */}
