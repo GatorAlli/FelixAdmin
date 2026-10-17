@@ -7,6 +7,7 @@ import { data, users } from "@/lib/drizzle/schema";
 import { revalidatePath } from "next/cache";
 import { readOrderValues } from "@/lib/drizzle/order-values";
 import { currentOrderDate } from "@/lib/drizzle/order-date";
+import { nextOrderReference } from "@/lib/drizzle/order-reference";
 
 // Resolve attribution on every save. Never trust a name sent by the browser.
 async function readAuthenticatedOrderValues(formData: FormData) {
@@ -37,27 +38,15 @@ export async function createOrder(formData: FormData) {
   const createdDate = currentOrderDate();
   try {
     const result = await db.transaction(async (transaction) => {
-      const [insertedOrder] = await transaction
-        .insert(data)
-        .values({
-          ...parsed.values,
-          createdDate,
-          // The generated primary key is needed before building the final reference.
-          felixOrderRef: "FCL/FPO/2024/PENDING",
-        })
-        .returning({ sl: data.sl });
-
-      if (!insertedOrder)
-        throw new Error("Order insert returned no primary key.");
-
-      const felixOrderRef = `FCL/FPO/${String(new Date().getFullYear())}/${String(insertedOrder.sl).padStart(3, "0")}`;
-      await transaction
-        .update(data)
-        .set({ felixOrderRef })
-        .where(eq(data.sl, insertedOrder.sl));
+      const felixOrderRef = await nextOrderReference(transaction, createdDate);
+      await transaction.insert(data).values({
+        ...parsed.values,
+        createdDate,
+        felixOrderRef,
+      });
 
       return felixOrderRef;
-    });
+    }, { isolationLevel: "read committed" });
 
     return { ok: true, message: `Order created: ${result}`, createdDate };
   } catch (error) {
