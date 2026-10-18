@@ -349,21 +349,26 @@ export default function PageBody({
   return (
     <div className={manrope.className}>
       <Navbar />
-      {(orderDetails?.projectName?.trim() ||
-        orderDetails?.clientName?.trim()) && (
-        <div className="px-4 pt-4 flex flex-wrap gap-4 items-center">
-          {orderDetails?.projectName?.trim() && (
-            <Label className="text-2xl">{orderDetails.projectName}</Label>
-          )}
-          {orderDetails?.projectName?.trim() &&
-            orderDetails?.clientName?.trim() && (
-              <Label className="text-4xl font-thin">|</Label>
+      <div className="flex flex-col gap-4 px-4 pt-4 lg:flex-row lg:items-center lg:justify-between">
+        {(orderDetails?.projectName?.trim() ||
+          orderDetails?.clientName?.trim()) && (
+          <div className="flex min-w-0 flex-wrap items-center gap-4">
+            {orderDetails?.projectName?.trim() && (
+              <Label className="text-2xl">{orderDetails.projectName}</Label>
             )}
-          {orderDetails?.clientName?.trim() && (
-            <Label className="text-2xl">{orderDetails.clientName}</Label>
-          )}
+            {orderDetails?.projectName?.trim() &&
+              orderDetails?.clientName?.trim() && (
+                <Label className="text-4xl font-thin">|</Label>
+              )}
+            {orderDetails?.clientName?.trim() && (
+              <Label className="text-2xl">{orderDetails.clientName}</Label>
+            )}
+          </div>
+        )}
+        <div className="shrink-0">
+          <Label className="text-2xl whitespace-nowrap">{orderDetails?.felixOrderRef}</Label>
         </div>
-      )}
+      </div>
       <div>
         <div className="grid grid-cols-1 items-start gap-4 p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           {isEditing ? (
