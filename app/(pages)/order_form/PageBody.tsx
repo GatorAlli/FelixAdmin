@@ -114,77 +114,86 @@ function PaymentModeField({
     <fieldset className="min-w-0 space-y-3" disabled={disabled}>
       <legend className={cn(headingStyling, "mb-3")}>Payment Mode</legend>
       {!readOnly && <input type="hidden" name="paymentMode" value={value} />}
-      <div className="grid grid-cols-1 gap-3 @sm:grid-cols-3">
+      <div className="grid grid-cols-[5rem_5rem_minmax(0,1fr)] gap-3">
         {["LC", "TT", "Other"].map((choice) => {
           const selected = selectedChoice === choice;
           const Option = readOnly ? "div" : "label";
           return (
-            <Option
+            <div
               key={choice}
               className={cn(
-                "flex min-h-12 items-center gap-3 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors",
-                selected
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-card text-muted-foreground",
-                !readOnly &&
-                  "cursor-pointer hover:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30",
-                disabled && "cursor-wait opacity-60",
+                "flex min-w-0 flex-wrap items-center gap-3",
+                choice === "Other" && "col-span-full @2xl:col-span-1",
               )}
             >
-              {readOnly ? (
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "flex size-4 shrink-0 items-center justify-center rounded-full border",
-                    selected ? "border-primary" : "border-border",
-                  )}
-                >
-                  {selected && (
-                    <span className="size-2 rounded-full bg-primary" />
-                  )}
-                </span>
-              ) : (
-                <input
-                  id={"paymentMode" + choice}
-                  type="radio"
-                  name="paymentModeChoice"
-                  value={choice}
-                  checked={selected}
-                  onChange={() => onChoiceChange?.(choice)}
-                  className="size-4 shrink-0 accent-primary"
-                />
-              )}
-              <span>{choice}</span>
-              {readOnly && selected && (
-                <span className="sr-only">Selected</span>
-              )}
-            </Option>
+              <Option
+                className={cn(
+                  "flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-semibold transition-colors",
+                  choice !== "Other" && "w-full",
+                  selected
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-card text-muted-foreground",
+                  !readOnly &&
+                    "cursor-pointer hover:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30",
+                  disabled && "cursor-wait opacity-60",
+                )}
+              >
+                {readOnly ? (
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                      selected ? "border-primary" : "border-border",
+                    )}
+                  >
+                    {selected && (
+                      <span className="size-2 rounded-full bg-primary" />
+                    )}
+                  </span>
+                ) : (
+                  <input
+                    id={"paymentMode" + choice}
+                    type="radio"
+                    name="paymentModeChoice"
+                    value={choice}
+                    checked={selected}
+                    onChange={() => onChoiceChange?.(choice)}
+                    className="size-4 shrink-0 accent-primary"
+                  />
+                )}
+                <span>{choice}</span>
+                {readOnly && selected && (
+                  <span className="sr-only">Selected</span>
+                )}
+              </Option>
+              {choice === "Other" &&
+                isOther &&
+                (readOnly ? (
+                  <div className="grid min-w-0 basis-full grid-cols-[auto_minmax(0,1fr)] items-center gap-3 @sm:basis-0 @sm:flex-1">
+                    <Label className="shrink-0 whitespace-nowrap">
+                      Payment Method
+                    </Label>
+                    <Label className="min-h-10 break-words rounded border bg-muted/50 p-2 text-sm font-semibold text-foreground">
+                      {value || "Not specified"}
+                    </Label>
+                  </div>
+                ) : (
+                  <div className="grid min-w-0 basis-full grid-cols-[auto_minmax(0,1fr)] items-center gap-3 @sm:basis-0 @sm:flex-1">
+                    <Label className="shrink-0 whitespace-nowrap" htmlFor="paymentModeDetails">Payment Method</Label>
+                    <Input
+                      id="paymentModeDetails"
+                      className={cn(inputStyling, "h-10 w-full")}
+                      placeholder="Specify payment method"
+                      value={value}
+                      onChange={(event) => onOtherChange?.(event.target.value)}
+                      required
+                    />
+                  </div>
+                ))}
+            </div>
           );
         })}
       </div>
-      {isOther &&
-        (readOnly ? (
-          <div className="rounded-lg border border-border bg-muted/50 px-4 py-3">
-            <p className="text-xs font-medium text-muted-foreground">
-              Payment Method
-            </p>
-            <p className="mt-1 break-words text-sm font-semibold text-foreground">
-              {value || "Not specified"}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <Label htmlFor="paymentModeDetails">Payment Method</Label>
-            <Input
-              id="paymentModeDetails"
-              className={inputStyling}
-              placeholder="Specify payment method"
-              value={value}
-              onChange={(event) => onOtherChange?.(event.target.value)}
-              required
-            />
-          </div>
-        ))}
     </fieldset>
   );
 }
@@ -366,7 +375,9 @@ export default function PageBody({
           </div>
         )}
         <div className="shrink-0">
-          <Label className="text-2xl whitespace-nowrap">{orderDetails?.felixOrderRef}</Label>
+          <Label className="text-2xl whitespace-nowrap">
+            {orderDetails?.felixOrderRef}
+          </Label>
         </div>
       </div>
       <div>
