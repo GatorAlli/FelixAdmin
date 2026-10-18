@@ -6,6 +6,7 @@ function form() {
   const data = new FormData();
   data.set("gbpToUsdRate", "1.3");
   data.set("eurToUsdRate", "1.1");
+  data.set("usdToSgdRate", "1.30");
   return data;
 }
 

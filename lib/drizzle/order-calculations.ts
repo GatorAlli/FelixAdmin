@@ -33,6 +33,7 @@ type CalculationInputs = {
   expenses: AmountRow[];
   gbpToUsdRate: string;
   eurToUsdRate: string;
+  usdToSgdRate?: string;
   orderHandlingFee: string;
   miscellaneousHandlingFee: string;
 };
@@ -62,13 +63,13 @@ export function calculateOrderTotals(input: CalculationInputs): Record<PanelKey,
     const amounts: string[] = [];
     for (const row of rows) {
       if (!row.amount && !row.name && !row.supplier) continue;
-      const amount = convertToUsd(row.amount, row.currency, input.gbpToUsdRate, input.eurToUsdRate);
+      const amount = convertToUsd(row.amount, row.currency, input.gbpToUsdRate, input.eurToUsdRate, input.usdToSgdRate);
       if (amount === null) return null;
       amounts.push(amount);
     }
     return sumUsdAmounts(amounts);
   }
-  const projectValue = convertToUsd(input.projectValue, input.projectCurrency, input.gbpToUsdRate, input.eurToUsdRate);
+  const projectValue = convertToUsd(input.projectValue, input.projectCurrency, input.gbpToUsdRate, input.eurToUsdRate, input.usdToSgdRate);
   const materialCost = total(input.suppliers);
   const miscellaneousCost = total(input.expenses);
   const orderHandlingCost = percentageOf(materialCost, input.orderHandlingFee);

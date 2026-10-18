@@ -7,6 +7,7 @@ function parse(rows: [string, string, string][]) {
   const form = new FormData();
   form.set("gbpToUsdRate", "1.3");
   form.set("eurToUsdRate", "1.1");
+  form.set("usdToSgdRate", "1.30");
   form.set("misCost", "999999"); // The server must ignore forged totals.
   for (const [name, amount, currency] of rows) {
     form.append("expenseName", name);
@@ -39,7 +40,7 @@ test("duplicate names, incomplete rows, invalid currencies and invalid amounts f
   ];
   for (const rows of cases) assert.equal(parse(rows).ok, false, JSON.stringify(rows));
   const incomplete = new FormData();
-  incomplete.set("gbpToUsdRate", "1.3"); incomplete.set("eurToUsdRate", "1.1");
+  incomplete.set("gbpToUsdRate", "1.3"); incomplete.set("eurToUsdRate", "1.1"); incomplete.set("usdToSgdRate", "1.30");
   incomplete.set("expenseName", "SHIPPING");
   assert.equal(readOrderValues(incomplete, "Current user").ok, false);
 });

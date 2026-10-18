@@ -11,6 +11,7 @@ export type ExpenseOrder = {
   misCost: string | null;
   gbpToUsdRate?: string | null;
   eurToUsdRate?: string | null;
+  usdToSgdRate?: string | null;
 };
 
 // Null means an older order; an empty array means all expenses were removed.
@@ -34,7 +35,7 @@ export function expenseUsdByName(order: ExpenseOrder): Map<string, string | null
   return new Map(restoreExpenses(order).map((expense) => [
     expense.name.trim().toUpperCase(),
     convertToUsd(expense.amount, expense.currency,
-      order.gbpToUsdRate ?? "", order.eurToUsdRate ?? ""),
+      order.gbpToUsdRate ?? "", order.eurToUsdRate ?? "", order.usdToSgdRate ?? undefined),
   ]));
 }
 

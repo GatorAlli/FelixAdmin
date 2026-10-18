@@ -56,7 +56,7 @@ test("handling percentages round half cents upward using exact decimals", () => 
 });
 
 test("panel currency choices save with the order, default to USD and reject unknown currencies", () => {
-  const f=new FormData();f.set("gbpToUsdRate","1.3");f.set("eurToUsdRate","1.1");
+  const f=new FormData();f.set("gbpToUsdRate","1.3");f.set("eurToUsdRate","1.1");f.set("usdToSgdRate","1.3");
   const defaults=readOrderValues(f,"Test");assert.ok(defaults.ok);
   assert.deepEqual(defaults.values.calculationCurrencies,DEFAULT_PANEL_CURRENCIES);
   f.set("panelCurrency-projectValue","EUR");f.set("panelCurrency-commission","GBP");

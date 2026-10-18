@@ -194,10 +194,7 @@ export default function TableBody({
             );
           }}
         >
-          <SelectTrigger
-            className="w-[180px] bg-white"
-            aria-label="Select year"
-          >
+          <SelectTrigger className="w-45 bg-white" aria-label="Select year">
             <SelectValue placeholder="Select year" />
           </SelectTrigger>
           <SelectContent>

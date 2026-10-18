@@ -32,8 +32,9 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
 
   const gbpToUsdRate = readText(formData, "gbpToUsdRate");
   const eurToUsdRate = readText(formData, "eurToUsdRate");
-  if (!isValidRate(gbpToUsdRate) || !isValidRate(eurToUsdRate)) {
-    return { ok: false, message: "Both exchange rates must be positive decimals with at most 8 decimal places." };
+  const usdToSgdRate = readText(formData, "usdToSgdRate");
+  if (!isValidRate(gbpToUsdRate) || !isValidRate(eurToUsdRate) || !isValidRate(usdToSgdRate)) {
+    return { ok: false, message: "All three exchange rates must be positive decimals with at most 2 decimal places." };
   }
 
   const orderHandlingFee = readOptionalFee(formData, "orderHandlingFee");
@@ -48,7 +49,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     return { ok: false, message: "Choose a valid currency for the order value." };
   }
   const clientOrderUsdValue = clientOrderOriginalValue
-    ? convertToUsd(clientOrderOriginalValue, clientOrderCurrency, gbpToUsdRate, eurToUsdRate)
+    ? convertToUsd(clientOrderOriginalValue, clientOrderCurrency, gbpToUsdRate, eurToUsdRate, usdToSgdRate)
     : null;
   if (clientOrderOriginalValue && clientOrderUsdValue === null) {
     return { ok: false, message: "Enter a valid order value (up to 2 decimal places and within the supported range)." };
@@ -96,7 +97,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     if (!isCurrency(currency)) {
       return { ok: false, message: `Choose a valid currency for ${name}.` };
     }
-    const usdAmount = convertToUsd(amount, currency, gbpToUsdRate, eurToUsdRate);
+    const usdAmount = convertToUsd(amount, currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate);
     if (usdAmount === null) {
       return { ok: false, message: `Enter a valid amount for ${name} (up to 2 decimal places and within the supported range).` };
     }
@@ -132,7 +133,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     if (!isCurrency(currency)) {
       return { ok: false, message: `Choose a valid currency for ${name}.` };
     }
-    const usdAmount = convertToUsd(amount, currency, gbpToUsdRate, eurToUsdRate);
+    const usdAmount = convertToUsd(amount, currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate);
     if (usdAmount === null) {
       return { ok: false, message: `Enter a valid amount for ${name} (up to 2 decimal places and within the supported range).` };
     }
@@ -163,6 +164,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     calculationCurrencies,
     gbpToUsdRate,
     eurToUsdRate,
+    usdToSgdRate,
     supplierCurrencyDetails,
     paymentMode: readText(formData, "paymentMode") || null,
     clientOrderValue: clientOrderUsdValue,

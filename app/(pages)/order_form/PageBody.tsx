@@ -23,6 +23,7 @@ import {
 import {
   DEFAULT_GBP_TO_USD,
   DEFAULT_EUR_TO_USD,
+  DEFAULT_USD_TO_SGD,
   convertToUsd,
   convertFromUsd,
   isCurrency,
@@ -60,6 +61,7 @@ function titleCaseLabel(text: string) {
     "USD",
     "GBP",
     "EUR",
+    "SGD",
     "BMS",
     "FDAS",
     "CCTV",
@@ -253,6 +255,7 @@ export default function PageBody({
   ]);
   const [gbpToUsdRate, setGbpToUsdRate] = useState(DEFAULT_GBP_TO_USD);
   const [eurToUsdRate, setEurToUsdRate] = useState(DEFAULT_EUR_TO_USD);
+  const [usdToSgdRate, setUsdToSgdRate] = useState(DEFAULT_USD_TO_SGD);
   // Saved supplier rows use IDs 1–31; newly added rows start after those.
   const nextSupplierId = useRef(32);
   const [loadedOrderDetails, setLoadedOrderDetails] = useState<Order>();
@@ -331,6 +334,7 @@ export default function PageBody({
     );
     setGbpToUsdRate(orderDetails.gbpToUsdRate ?? DEFAULT_GBP_TO_USD);
     setEurToUsdRate(orderDetails.eurToUsdRate ?? DEFAULT_EUR_TO_USD);
+    setUsdToSgdRate(orderDetails.usdToSgdRate ?? DEFAULT_USD_TO_SGD);
 
     setIsEditing(false);
   }
@@ -343,6 +347,7 @@ export default function PageBody({
     expenses,
     gbpToUsdRate,
     eurToUsdRate,
+    usdToSgdRate,
     orderHandlingFee,
     miscellaneousHandlingFee,
   });
@@ -634,6 +639,7 @@ export default function PageBody({
                                 <SelectItem value="USD">USD</SelectItem>
                                 <SelectItem value="EUR">Euro</SelectItem>
                                 <SelectItem value="GBP">GBP</SelectItem>
+                                <SelectItem value="SGD">SGD</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -660,6 +666,7 @@ export default function PageBody({
                                       clientOrderCurrency,
                                       gbpToUsdRate,
                                       eurToUsdRate,
+                                      usdToSgdRate,
                                     ) ?? ""
                                   }
                                   placeholder="Enter an amount and valid rate"
@@ -825,6 +832,7 @@ export default function PageBody({
                                 <SelectItem value="USD">USD</SelectItem>
                                 <SelectItem value="EUR">Euro</SelectItem>
                                 <SelectItem value="GBP">GBP</SelectItem>
+                                <SelectItem value="SGD">SGD</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -864,6 +872,7 @@ export default function PageBody({
                                   row.currency,
                                   gbpToUsdRate,
                                   eurToUsdRate,
+                                  usdToSgdRate,
                                 ) ?? ""}
                               </Label>
                             </div>
@@ -987,6 +996,7 @@ export default function PageBody({
                                 <SelectItem value="USD">USD</SelectItem>
                                 <SelectItem value="EUR">Euro</SelectItem>
                                 <SelectItem value="GBP">GBP</SelectItem>
+                                <SelectItem value="SGD">SGD</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1023,6 +1033,7 @@ export default function PageBody({
                                   row.currency,
                                   gbpToUsdRate,
                                   eurToUsdRate,
+                                  usdToSgdRate,
                                 ) ?? ""}
                               </Label>
                             </div>
@@ -1140,6 +1151,7 @@ export default function PageBody({
                                     clientOrderCurrency,
                                     gbpToUsdRate,
                                     eurToUsdRate,
+                                    usdToSgdRate,
                                   ) ?? "—"}
                                 </Label>
                               </div>
@@ -1214,6 +1226,7 @@ export default function PageBody({
                                         row.currency,
                                         gbpToUsdRate,
                                         eurToUsdRate,
+                                        usdToSgdRate,
                                       ) ?? "—"}
                                     </Label>
                                   </div>
@@ -1273,6 +1286,7 @@ export default function PageBody({
                                         row.currency,
                                         gbpToUsdRate,
                                         eurToUsdRate,
+                                        usdToSgdRate,
                                       ) ?? "—"}
                                     </Label>
                                   </div>
@@ -1324,6 +1338,7 @@ export default function PageBody({
                         panelCurrencies[key],
                         gbpToUsdRate,
                         eurToUsdRate,
+                        usdToSgdRate,
                       );
                 if (!isEditing && displayed === null) return null;
                 return (
@@ -1367,6 +1382,7 @@ export default function PageBody({
                           <SelectItem value="USD">USD</SelectItem>
                           <SelectItem value="EUR">Euro</SelectItem>
                           <SelectItem value="GBP">GBP</SelectItem>
+                          <SelectItem value="SGD">SGD</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1418,6 +1434,9 @@ export default function PageBody({
                       onClick={(event) => {
                         event.preventDefault();
                         setSubmissionMessage("");
+                        setGbpToUsdRate(Number(gbpToUsdRate).toFixed(2));
+                        setEurToUsdRate(Number(eurToUsdRate).toFixed(2));
+                        setUsdToSgdRate(Number(usdToSgdRate).toFixed(2));
                         setIsEditing(true);
                       }}
                     >
@@ -1463,11 +1482,20 @@ export default function PageBody({
                         id="gbpToUsdRate"
                         name="gbpToUsdRate"
                         type="number"
-                        min="0.00000001"
-                        step="0.00000001"
+                        min="0.01"
+                        step="0.01"
                         required
                         value={gbpToUsdRate}
-                        onChange={(e) => setGbpToUsdRate(e.target.value)}
+                        onChange={(e) => {
+                          if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) {
+                            setGbpToUsdRate(e.target.value);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (gbpToUsdRate !== "" && Number(gbpToUsdRate) > 0) {
+                            setGbpToUsdRate(Number(gbpToUsdRate).toFixed(2));
+                          }
+                        }}
                       />
                     </div>
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
@@ -1484,11 +1512,50 @@ export default function PageBody({
                         id="eurToUsdRate"
                         name="eurToUsdRate"
                         type="number"
-                        min="0.00000001"
-                        step="0.00000001"
+                        min="0.01"
+                        step="0.01"
                         required
                         value={eurToUsdRate}
-                        onChange={(e) => setEurToUsdRate(e.target.value)}
+                        onChange={(e) => {
+                          if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) {
+                            setEurToUsdRate(e.target.value);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (eurToUsdRate !== "" && Number(eurToUsdRate) > 0) {
+                            setEurToUsdRate(Number(eurToUsdRate).toFixed(2));
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                      <Label className={headingStyling} htmlFor="usdToSgdRate">
+                        USD To SGD
+                      </Label>
+                      <Input
+                        form="order-form"
+                        disabled={isSubmitting}
+                        className={cn(
+                          inputStyling,
+                          "bg-white text-foreground border-white/30",
+                        )}
+                        id="usdToSgdRate"
+                        name="usdToSgdRate"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        required
+                        value={usdToSgdRate}
+                        onChange={(e) => {
+                          if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) {
+                            setUsdToSgdRate(e.target.value);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (usdToSgdRate !== "" && Number(usdToSgdRate) > 0) {
+                            setUsdToSgdRate(Number(usdToSgdRate).toFixed(2));
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -1547,13 +1614,14 @@ export default function PageBody({
               ) : (
                 <div className="flex flex-col gap-6">
                   {(orderDetails?.gbpToUsdRate ||
-                    orderDetails?.eurToUsdRate) && (
+                    orderDetails?.eurToUsdRate ||
+                    orderDetails?.usdToSgdRate) && (
                     <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
                       {orderDetails?.gbpToUsdRate && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                           <Label className={headingStyling}>GBP To USD</Label>
                           <Label className="font-bold">
-                            {orderDetails?.gbpToUsdRate ?? "Not recorded"}
+                            {Number(orderDetails.gbpToUsdRate).toFixed(2)}
                           </Label>
                         </div>
                       )}
@@ -1561,7 +1629,15 @@ export default function PageBody({
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                           <Label className={headingStyling}>Euro To USD</Label>
                           <Label className="font-bold">
-                            {orderDetails?.eurToUsdRate ?? "Not recorded"}
+                            {Number(orderDetails.eurToUsdRate).toFixed(2)}
+                          </Label>
+                        </div>
+                      )}
+                      {orderDetails?.usdToSgdRate && (
+                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                          <Label className={headingStyling}>USD To SGD</Label>
+                          <Label className="font-bold">
+                            {Number(orderDetails.usdToSgdRate).toFixed(2)}
                           </Label>
                         </div>
                       )}

@@ -6,6 +6,7 @@ function parse(amount: string, currency?: string) {
   const form = new FormData();
   form.set("gbpToUsdRate", "1.3");
   form.set("eurToUsdRate", "1.1");
+  form.set("usdToSgdRate", "1.30");
   form.set("clientOrderValue", amount);
   form.set("clientOrderUsdValue", "999999");
   if (currency !== undefined) form.set("clientOrderCurrency", currency);

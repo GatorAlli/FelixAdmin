@@ -19,6 +19,7 @@ test("submitted creation dates cannot overwrite the stored creation date", () =>
   const form = new FormData();
   form.set("gbpToUsdRate", "1.3");
   form.set("eurToUsdRate", "1.1");
+  form.set("usdToSgdRate", "1.30");
   form.set("createdDate", "1999-01-01");
   const result = readOrderValues(form, "Current user");
   assert.ok(result.ok);

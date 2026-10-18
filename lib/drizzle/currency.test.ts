@@ -11,6 +11,7 @@ function form(rows: [string, string, string][] = [["HONEYWELL", "100", "GBP"]]) 
   data.set("createdBy", "Currency test");
   data.set("gbpToUsdRate", DEFAULT_GBP_TO_USD);
   data.set("eurToUsdRate", DEFAULT_EUR_TO_USD);
+  data.set("usdToSgdRate", "1.30");
   for (const [supplier, amount, currency] of rows) {
     data.append("supplier", supplier);
     data.append("supplierAmount", amount);
@@ -21,8 +22,8 @@ function form(rows: [string, string, string][] = [["HONEYWELL", "100", "GBP"]]) 
 
 test("USD is unchanged; GBP/EUR use their independent per-order rates", () => {
   assert.equal(convertToUsd("100", "USD", "", ""), "100.00");
-  assert.equal(convertToUsd("100", "GBP", DEFAULT_GBP_TO_USD, DEFAULT_EUR_TO_USD), "132.35");
-  assert.equal(convertToUsd("100", "EUR", DEFAULT_GBP_TO_USD, DEFAULT_EUR_TO_USD), "111.81");
+  assert.equal(convertToUsd("100", "GBP", DEFAULT_GBP_TO_USD, DEFAULT_EUR_TO_USD), "140.00");
+  assert.equal(convertToUsd("100", "EUR", DEFAULT_GBP_TO_USD, DEFAULT_EUR_TO_USD), "120.00");
   assert.equal(convertToUsd("100", "GBP", "1.5", "1.2"), "150.00");
   assert.equal(convertToUsd("100", "EUR", "1.5", "1.2"), "120.00");
 });
@@ -39,7 +40,8 @@ test("invalid, incomplete and excessive-precision amounts/rates are rejected", (
   for (const rate of ["", "0", "-1", "NaN", "Infinity", "1e3", "1.123456789", "10000000000"]) {
     assert.equal(isValidRate(rate), false, rate);
   }
-  assert.equal(isValidRate("0.00000001"), true);
+  assert.equal(isValidRate("0.01"), true);
+  assert.equal(isValidRate("1.001"), false);
   for (const amount of ["", "-1", "NaN", "1e3", "1.001"]) {
     assert.equal(convertToUsd(amount, "USD", "1", "1"), null, amount);
   }
@@ -50,8 +52,8 @@ test("saving recomputes USD and retains original details for reopening", () => {
   input.set("supplierUsd", "999999"); // Forged display totals must be ignored.
   const result = readOrderValues(input, "Currency test");
   assert.ok(result.ok);
-  assert.equal(result.values.honeywell, "132.35");
-  assert.equal(result.values.trane, "223.62");
+  assert.equal(result.values.honeywell, "140.00");
+  assert.equal(result.values.trane, "240.00");
   assert.equal(result.values.belimo, "50.00");
   assert.equal(result.values.gbpToUsdRate, DEFAULT_GBP_TO_USD);
   assert.equal(result.values.eurToUsdRate, DEFAULT_EUR_TO_USD);
@@ -67,7 +69,7 @@ test("saving recomputes USD and retains original details for reopening", () => {
 });
 
 test("rates are required even for USD-only orders", () => {
-  for (const field of ["gbpToUsdRate", "eurToUsdRate"]) {
+  for (const field of ["gbpToUsdRate", "eurToUsdRate", "usdToSgdRate"]) {
     const input = form([["TRANE", "1", "USD"]]);
     input.delete(field);
     assert.equal(readOrderValues(input, "Currency test").ok, false);
