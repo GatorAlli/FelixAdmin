@@ -338,14 +338,32 @@ export default function PageBody({
     miscellaneousHandlingFee,
   });
 
+  // Empty rows remain available while editing, but are omitted from the read-only view.
+  const visibleSuppliers = suppliers.filter(
+    (row) => row.supplier.trim() !== "" || row.amount.trim() !== "",
+  );
+  const visibleExpenses = expenses.filter(
+    (row) => row.name.trim() !== "" || row.amount.trim() !== "",
+  );
+
   return (
     <div className={manrope.className}>
       <Navbar />
-      <div className="px-4 pt-4 flex flex-wrap gap-4 items-center">
-        <Label className="text-2xl">{orderDetails?.projectName}</Label>
-        <Label className="text-4xl font-thin">|</Label>
-        <Label className="text-2xl">{orderDetails?.clientName}</Label>
-      </div>
+      {(orderDetails?.projectName?.trim() ||
+        orderDetails?.clientName?.trim()) && (
+        <div className="px-4 pt-4 flex flex-wrap gap-4 items-center">
+          {orderDetails?.projectName?.trim() && (
+            <Label className="text-2xl">{orderDetails.projectName}</Label>
+          )}
+          {orderDetails?.projectName?.trim() &&
+            orderDetails?.clientName?.trim() && (
+              <Label className="text-4xl font-thin">|</Label>
+            )}
+          {orderDetails?.clientName?.trim() && (
+            <Label className="text-2xl">{orderDetails.clientName}</Label>
+          )}
+        </div>
+      )}
       <div>
         <div className="grid grid-cols-1 items-start gap-4 p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           {isEditing ? (
@@ -1009,180 +1027,239 @@ export default function PageBody({
           ) : (
             <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
               <div className="flex flex-col gap-8">
-                <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                  <Label className={headingStyling}>Order Handled By</Label>
-                  <Label className="font-bold">{orderHandledBy}</Label>
-                </div>
+                {orderHandledBy.trim() !== "" && (
+                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                    <Label className={headingStyling}>Order Handled By</Label>
+                    <Label className="">{orderHandledBy}</Label>
+                  </div>
+                )}
                 {/* Project information */}
-                <div className="flex flex-col gap-8">
-                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                    <Label className={headingStyling}>System Type</Label>
-                    <Label className="font-bold">{productSystem}</Label>
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                    <Label className={headingStyling}>Project Name</Label>
-                    <Label className="font-bold">{projectName}</Label>
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                    <Label className={headingStyling}>Customer</Label>
-                    <Label className="font-bold">{clientName}</Label>
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                    <Label className={headingStyling}>End User</Label>
-                    <Label className="font-bold">{endUser}</Label>
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                    <Label className={headingStyling}>Project Notes</Label>
-                    <Label className="font-bold whitespace-pre-wrap">
-                      {projectNotes}
-                    </Label>
-                  </div>
-                </div>
-                {/* Order value, payment and costs */}
-                <div className="flex flex-col gap-8">
-                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                {[
+                  productSystem,
+                  projectName,
+                  clientName,
+                  endUser,
+                  projectNotes,
+                ].some((value) => value.trim() !== "") && (
+                  <div className="flex flex-col gap-2">
                     <Label className={headingStyling}>
-                      Client Order Value ({clientOrderCurrency})
+                      Project Information
                     </Label>
-                    <Label className="font-bold">{clientOrderValue}</Label>
-                    {clientOrderCurrency !== "USD" && (
-                      <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                        <Label className={headingStyling}>
-                          Order Value (USD)
-                        </Label>
-                        <Label className="font-bold">
-                          {convertToUsd(
-                            clientOrderValue,
-                            clientOrderCurrency,
-                            gbpToUsdRate,
-                            eurToUsdRate,
-                          ) ?? "—"}
-                        </Label>
-                      </div>
-                    )}
+                    <div className="flex flex-col gap-8 border rounded-lg p-4">
+                      {productSystem.trim() !== "" && (
+                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                          <Label className={headingStyling}>System Type</Label>
+                          <Label className="font-bold">{productSystem}</Label>
+                        </div>
+                      )}
+
+                      {projectName.trim() !== "" && (
+                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                          <Label className={headingStyling}>Project Name</Label>
+                          <Label className="font-bold">{projectName}</Label>
+                        </div>
+                      )}
+                      {clientName.trim() !== "" && (
+                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                          <Label className={headingStyling}>Customer</Label>
+                          <Label className="font-bold">{clientName}</Label>
+                        </div>
+                      )}
+                      {endUser.trim() !== "" && (
+                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                          <Label className={headingStyling}>End User</Label>
+                          <Label className="font-bold">{endUser}</Label>
+                        </div>
+                      )}
+                      {projectNotes.trim() !== "" && (
+                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                          <Label className={headingStyling}>
+                            Project Notes
+                          </Label>
+                          <Label className="font-bold whitespace-pre-wrap">
+                            {projectNotes}
+                          </Label>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <PaymentModeField
-                    value={paymentMode}
-                    isOther={paymentModeOther === "Other"}
-                    readOnly
-                  />
-                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                    <Label className={headingStyling}>Payment Notes</Label>
-                    <Label className="font-bold">{paymentNotes}</Label>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <Label className={headingStyling}>Material Cost</Label>
+                )}
+                {/* Order value, payment and costs */}
+                {(clientOrderValue.trim() !== "" ||
+                  paymentMode.trim() !== "" ||
+                  paymentNotes.trim() !== "" ||
+                  visibleSuppliers.length > 0 ||
+                  visibleExpenses.length > 0) && (
+                  <div className="flex flex-col gap-8">
                     <div className="flex flex-col gap-2">
-                      {suppliers.map((row, index) => (
-                        <div
-                          key={row.id}
-                          className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
-                        >
-                          <Label>{index + 1}.</Label>
-                          <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                            <div className="flex min-w-0 flex-wrap items-center gap-3">
-                              <Label className="font-bold">
-                                {row.supplier}
-                              </Label>
-                            </div>
-                          </div>
-                          <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                            <div className="flex min-w-0 flex-wrap items-center gap-3">
-                              <Label className={headingStyling}>
-                                Amount ({row.currency})
-                              </Label>
-                              <Label className="font-bold">{row.amount}</Label>
-                            </div>
-                          </div>
-                          <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                            <div className="flex min-w-0 flex-wrap items-center gap-3">
-                              <Label className={headingStyling}>Currency</Label>
-                              <Label className="font-bold">
-                                {row.currency === "EUR" ? "Euro" : row.currency}
-                              </Label>
-                            </div>
-                          </div>
-                          {row.currency !== "USD" && (
-                            <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
-                              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                      <Label className={headingStyling}>
+                        Payment Information
+                      </Label>
+                      <div className="flex flex-col gap-8 border rounded-lg p-4">
+                        {clientOrderValue.trim() !== "" && (
+                          <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                            <Label className={headingStyling}>
+                              Client Order Value ({clientOrderCurrency})
+                            </Label>
+                            <Label className="font-bold">
+                              {clientOrderValue}
+                            </Label>
+                            {clientOrderCurrency !== "USD" && (
+                              <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                                 <Label className={headingStyling}>
-                                  Amount (USD)
+                                  Order Value (USD)
                                 </Label>
                                 <Label className="font-bold">
                                   {convertToUsd(
-                                    row.amount,
-                                    row.currency,
+                                    clientOrderValue,
+                                    clientOrderCurrency,
                                     gbpToUsdRate,
                                     eurToUsdRate,
                                   ) ?? "—"}
                                 </Label>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                            )}
+                          </div>
+                        )}
+                        {paymentMode.trim() !== "" && (
+                          <PaymentModeField
+                            value={paymentMode}
+                            isOther={paymentModeOther === "Other"}
+                            readOnly
+                          />
+                        )}
+                        {paymentNotes.trim() !== "" && (
+                          <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                            <Label className={headingStyling}>
+                              Payment Notes
+                            </Label>
+                            <Label className="font-bold">{paymentNotes}</Label>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <Label className={headingStyling}>
-                      Miscellaneous Costs
-                    </Label>
-                    <div className="flex flex-col gap-2">
-                      {expenses
-                        .filter((row) => row.name || row.amount)
-                        .map((row, index) => (
-                          <div
-                            key={row.id}
-                            className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
-                          >
-                            <Label>{index + 1}.</Label>
-                            <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                              <Label className="font-bold">{row.name}</Label>
-                            </div>
-                            <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                              <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                <Label className={headingStyling}>
-                                  Amount ({row.currency})
-                                </Label>
-                                <Label className="font-bold">
-                                  {row.amount}
-                                </Label>
-                              </div>
-                            </div>
-                            <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                              <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                <Label className={headingStyling}>
-                                  Currency
-                                </Label>
-                                <Label className="font-bold">
-                                  {row.currency === "EUR"
-                                    ? "Euro"
-                                    : row.currency}
-                                </Label>
-                              </div>
-                            </div>
-                            {row.currency !== "USD" && (
-                              <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                    {visibleSuppliers.length > 0 && (
+                      <div className="flex flex-col gap-4">
+                        <Label className={headingStyling}>Material Cost</Label>
+                        <div className="flex flex-col gap-2 border px-4 py-2 rounded-lg">
+                          {visibleSuppliers.map((row, index) => (
+                            <div
+                              key={row.id}
+                              className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
+                            >
+                              <Label>{index + 1}.</Label>
+                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
                                 <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                  <Label className={headingStyling}>
-                                    Amount (USD)
-                                  </Label>
                                   <Label className="font-bold">
-                                    {convertToUsd(
-                                      row.amount,
-                                      row.currency,
-                                      gbpToUsdRate,
-                                      eurToUsdRate,
-                                    ) ?? "—"}
+                                    {row.supplier}
                                   </Label>
                                 </div>
                               </div>
-                            )}
-                          </div>
-                        ))}
-                    </div>
+                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                                <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                  <Label className={headingStyling}>
+                                    Amount ({row.currency})
+                                  </Label>
+                                  <Label className="font-bold">
+                                    {row.amount}
+                                  </Label>
+                                </div>
+                              </div>
+                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                                <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                  <Label className={headingStyling}>
+                                    Currency
+                                  </Label>
+                                  <Label className="font-bold">
+                                    {row.currency === "EUR"
+                                      ? "Euro"
+                                      : row.currency}
+                                  </Label>
+                                </div>
+                              </div>
+                              {row.currency !== "USD" && (
+                                <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                                  <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                    <Label className={headingStyling}>
+                                      Amount (USD)
+                                    </Label>
+                                    <Label className="font-bold">
+                                      {convertToUsd(
+                                        row.amount,
+                                        row.currency,
+                                        gbpToUsdRate,
+                                        eurToUsdRate,
+                                      ) ?? "—"}
+                                    </Label>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {visibleExpenses.length > 0 && (
+                      <div className="flex flex-col gap-4">
+                        <Label className={headingStyling}>
+                          Miscellaneous Costs
+                        </Label>
+                        <div className="flex flex-col gap-2 border px-4 py-2 rounded-lg">
+                          {visibleExpenses.map((row, index) => (
+                            <div
+                              key={row.id}
+                              className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
+                            >
+                              <Label>{index + 1}.</Label>
+                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                                <Label className="font-bold">{row.name}</Label>
+                              </div>
+                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                                <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                  <Label className={headingStyling}>
+                                    Amount ({row.currency})
+                                  </Label>
+                                  <Label className="font-bold">
+                                    {row.amount}
+                                  </Label>
+                                </div>
+                              </div>
+                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                                <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                  <Label className={headingStyling}>
+                                    Currency
+                                  </Label>
+                                  <Label className="font-bold">
+                                    {row.currency === "EUR"
+                                      ? "Euro"
+                                      : row.currency}
+                                  </Label>
+                                </div>
+                              </div>
+                              {row.currency !== "USD" && (
+                                <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                                  <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                    <Label className={headingStyling}>
+                                      Amount (USD)
+                                    </Label>
+                                    <Label className="font-bold">
+                                      {convertToUsd(
+                                        row.amount,
+                                        row.currency,
+                                        gbpToUsdRate,
+                                        eurToUsdRate,
+                                      ) ?? "—"}
+                                    </Label>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
             </div>
           )}
@@ -1202,12 +1279,14 @@ export default function PageBody({
                   <Label className="font-bold">{felixOrderNo}</Label>
                 </div>
               )}
-              <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
-                <Label className={headingStyling}>Date Created:</Label>
-                <Label className="font-bold">
-                  {formatOrderDate(createdDate)}
-                </Label>
-              </div>
+              {createdDate && (
+                <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
+                  <Label className={headingStyling}>Date Created:</Label>
+                  <Label className="font-bold">
+                    {formatOrderDate(createdDate)}
+                  </Label>
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-4 rounded-lg bg-primary p-5 text-white sm:p-6">
               {panelFields.map(([key, label]) => {
@@ -1221,6 +1300,7 @@ export default function PageBody({
                         gbpToUsdRate,
                         eurToUsdRate,
                       );
+                if (!isEditing && displayed === null) return null;
                 return (
                   <div
                     key={key}
@@ -1441,35 +1521,46 @@ export default function PageBody({
                 </div>
               ) : (
                 <div className="flex flex-col gap-6">
+                  {(orderDetails?.gbpToUsdRate ||
+                    orderDetails?.eurToUsdRate) && (
+                    <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
+                      {orderDetails?.gbpToUsdRate && (
+                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                          <Label className={headingStyling}>GBP To USD</Label>
+                          <Label className="font-bold">
+                            {orderDetails?.gbpToUsdRate ?? "Not recorded"}
+                          </Label>
+                        </div>
+                      )}
+                      {orderDetails?.eurToUsdRate && (
+                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                          <Label className={headingStyling}>Euro To USD</Label>
+                          <Label className="font-bold">
+                            {orderDetails?.eurToUsdRate ?? "Not recorded"}
+                          </Label>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling}>GBP To USD</Label>
-                      <Label className="font-bold">
-                        {orderDetails?.gbpToUsdRate ?? "Not recorded"}
-                      </Label>
-                    </div>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling}>Euro To USD</Label>
-                      <Label className="font-bold">
-                        {orderDetails?.eurToUsdRate ?? "Not recorded"}
-                      </Label>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 items-end gap-6 @xl:grid-cols-2">
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling}>
-                        Order Handling Fee (%)
-                      </Label>
-                      <Label className="font-bold">{orderHandlingFee}</Label>
-                    </div>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling}>
-                        Miscellaneous Handling Fee (%)
-                      </Label>
-                      <Label className="font-bold">
-                        {miscellaneousHandlingFee}
-                      </Label>
-                    </div>
+                    {orderHandlingFee.trim() !== "" && (
+                      <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                        <Label className={headingStyling}>
+                          Order Handling Fee (%)
+                        </Label>
+                        <Label className="font-bold">{orderHandlingFee}</Label>
+                      </div>
+                    )}
+                    {miscellaneousHandlingFee.trim() !== "" && (
+                      <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                        <Label className={headingStyling}>
+                          Miscellaneous Handling Fee (%)
+                        </Label>
+                        <Label className="font-bold">
+                          {miscellaneousHandlingFee}
+                        </Label>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
