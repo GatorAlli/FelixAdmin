@@ -142,7 +142,7 @@
 .summary-table-scroll::-webkit-scrollbar-thumb {
   background: var(--muted-foreground);
   border: 3px solid var(--muted);
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
 }
 
 @supports not selector(::-webkit-scrollbar) {

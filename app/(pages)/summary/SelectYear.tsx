@@ -29,7 +29,7 @@ export default function YearSelect({
         });
       }}
     >
-      <SelectTrigger aria-label="Select year">
+      <SelectTrigger aria-label="Select year" className="bg-white">
         <SelectValue placeholder="Select Year" />
       </SelectTrigger>
 

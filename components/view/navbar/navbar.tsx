@@ -119,7 +119,7 @@ export default function Navbar() {
           <ChartNoAxesCombined className="size-5" aria-hidden="true" />
         </Link>
         {/* Avatar temporarily hidden.
-          <div className="hidden sm:flex w-9 h-9 rounded-full bg-primary/10 text-primary items-center justify-center font-bold text-sm">
+          <div className="hidden sm:flex w-9 h-9 rounded-lg bg-primary/10 text-primary items-center justify-center font-bold text-sm">
             A
           </div>
           <div className="hidden sm:block h-6 w-px bg-gray-200" />

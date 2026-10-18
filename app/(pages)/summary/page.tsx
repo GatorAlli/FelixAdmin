@@ -77,7 +77,7 @@ export default async function Summary({
           </div>
         </div>
         {/* Table */}
-        <div className="min-h-0 bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden flex flex-col">
+        <div className="min-h-0 bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden flex flex-col">
           <div className="h-1.5 w-full shrink-0 bg-primary" />
 
           <div

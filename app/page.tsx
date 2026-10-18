@@ -27,7 +27,7 @@ const FallingParticles = () => {
       {[...Array(30)].map((_, i) => (
         <div
           key={i}
-          className="absolute top-[-10%] w-1 h-1 bg-white/20 rounded-full"
+          className="absolute top-[-10%] w-1 h-1 bg-white/20 rounded-lg"
           style={{
             // Vary particles by index so their settings stay consistent across renders.
             left: `${(i * 37) % 100}%`,
@@ -183,7 +183,7 @@ export default function App() {
               <div className="relative flex w-full items-center justify-between">
                 <span className="relative z-10">Sign In</span>
                 {/* Arrow moving */}
-                <div className="bg-black/10 p-1.5 rounded-full group-hover:bg-black/20 transition-all duration-300 group-hover:translate-x-1 shrink-0 z-10">
+                <div className="bg-black/10 p-1.5 rounded-lg group-hover:bg-black/20 transition-all duration-300 group-hover:translate-x-1 shrink-0 z-10">
                   <ArrowRight
                     className="h-5 w-5 text-white"
                     strokeWidth={2.5}
