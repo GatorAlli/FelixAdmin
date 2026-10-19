@@ -1,6 +1,6 @@
 import { supplierColumns } from "./currency";
 
-export type DatalistKind = "suppliers" | "expenses";
+export type DatalistKind = "suppliers" | "customers" | "expenses";
 
 export const defaultSupplierSuggestions = Object.keys(supplierColumns);
 export const defaultExpenseSuggestions = [

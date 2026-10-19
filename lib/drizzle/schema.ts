@@ -84,6 +84,11 @@ export const suppliers = p.pgTable("suppliers", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   supplierName: p.varchar(),
 });
+export const customers = p.pgTable("customers", {
+  sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
+  customerName: p.varchar().notNull(),
+});
+
 export const miscellaneousExpenditures = p.pgTable(
   "miscellaneousExpenditures",
   {

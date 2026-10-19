@@ -213,6 +213,7 @@ export default function PageBody({
   username,
   currentDate,
   supplierSuggestions,
+  customerSuggestions,
   expenseSuggestions,
 }: {
   orderDetails?: Order;
@@ -220,6 +221,7 @@ export default function PageBody({
   username: string;
   currentDate: string;
   supplierSuggestions: string[];
+  customerSuggestions: string[];
   expenseSuggestions: string[];
 }) {
   // Existing orders retain their recorded date; new orders display today's date.
@@ -573,10 +575,14 @@ export default function PageBody({
                         className={inputStyling}
                         id="clientName"
                         name="clientName"
+                        list="customer-options"
                         type="text"
                         value={clientName}
                         onChange={(e) => setClientName(e.target.value)}
                       />
+                      <datalist id="customer-options">
+                        {customerSuggestions.map(name => <option key={name} value={name} />)}
+                      </datalist>
                     </div>
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling} htmlFor="endUser">

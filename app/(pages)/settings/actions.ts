@@ -4,7 +4,7 @@ import { asc, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
-import { miscellaneousExpenditures, suppliers, users } from "@/lib/drizzle/schema";
+import { miscellaneousExpenditures, suppliers, customers, users } from "@/lib/drizzle/schema";
 import { readDatalistValues, type DatalistKind } from "@/lib/drizzle/datalist-values";
 
 export async function fetchSuppliersList() {
@@ -26,7 +26,7 @@ export async function saveDatalist(kind: DatalistKind, input: string[]) {
   if (profile?.status !== "admin") {
     return { ok: false, message: "Only admins can change Order Form suggestions." };
   }
-  if (kind !== "suppliers" && kind !== "expenses") {
+  if (kind !== "suppliers" && kind !== "customers" && kind !== "expenses") {
     return { ok: false, message: "Invalid suggestion list." };
   }
   const parsed = readDatalistValues(kind, input);
@@ -35,11 +35,15 @@ export async function saveDatalist(kind: DatalistKind, input: string[]) {
   try {
     await db.transaction(async (transaction) => {
       // Serialize list replacements so two saves cannot combine their rows.
-      await transaction.execute(sql`select pg_advisory_xact_lock(4604748, ${kind === "suppliers" ? 1 : 2})`);
+      await transaction.execute(sql`select pg_advisory_xact_lock(4604748, ${kind === "suppliers" ? 1 : kind === "customers" ? 3 : 2})`);
       if (kind === "suppliers") {
         await transaction.delete(suppliers);
         if (parsed.values.length) await transaction.insert(suppliers)
           .values(parsed.values.map((supplierName) => ({ supplierName })));
+      } else if (kind === "customers") {
+        await transaction.delete(customers);
+        if (parsed.values.length) await transaction.insert(customers)
+          .values(parsed.values.map((customerName) => ({ customerName })));
       } else {
         await transaction.delete(miscellaneousExpenditures);
         if (parsed.values.length) await transaction.insert(miscellaneousExpenditures)

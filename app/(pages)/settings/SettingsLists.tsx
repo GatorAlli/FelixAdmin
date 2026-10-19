@@ -16,6 +16,7 @@ function SuggestionList({
   title: string;
   initialValues: string[];
 }) {
+  const itemLabel = kind === "suppliers" ? "Supplier" : kind === "customers" ? "Customer" : "Expense";
   const nextId = useRef(initialValues.length);
   const newInput = useRef<HTMLInputElement | null>(null);
   const [rows, setRows] = useState(
@@ -92,7 +93,8 @@ function SuggestionList({
                     id={`${kind}-${row.id}`}
                     ref={index === rows.length - 1 ? newInput : undefined}
                     className="rounded-lg p-2"
-                    placeholder={kind === "suppliers" ? "Supplier" : "Expense"}
+                    placeholder={itemLabel}
+                    aria-label={`${itemLabel} ${index + 1}`}
                     value={row.value}
                     required
                     maxLength={200}
@@ -109,7 +111,7 @@ function SuggestionList({
                 </div>
                 <Button
                   type="button"
-                  aria-label={`Remove ${kind === "suppliers" ? "supplier" : "expense"} ${index + 1}`}
+                  aria-label={`Remove ${itemLabel.toLowerCase()} ${index + 1}`}
                   onClick={() =>
                     editRows(rows.filter((item) => item.id !== row.id))
                   }
@@ -122,7 +124,7 @@ function SuggestionList({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Button
               type="button"
-              aria-label={`Add ${kind === "suppliers" ? "supplier" : "expense"}`}
+              aria-label={`Add ${itemLabel.toLowerCase()}`}
               disabled={rows.length >= 500}
               onClick={() => {
                 editRows([...rows, { id: nextId.current++, value: "" }]);
@@ -149,17 +151,24 @@ function SuggestionList({
 
 export default function SettingsLists({
   supplierSuggestions,
+  customerSuggestions,
   expenseSuggestions,
 }: {
   supplierSuggestions: string[];
+  customerSuggestions: string[];
   expenseSuggestions: string[];
 }) {
   return (
-    <div className="grid grid-cols-1 items-start gap-4 p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div className="grid grid-cols-1 items-start gap-4 p-4 xl:grid-cols-3">
       <SuggestionList
         kind="suppliers"
         title="Suppliers"
         initialValues={supplierSuggestions}
+      />
+      <SuggestionList
+        kind="customers"
+        title="Customers"
+        initialValues={customerSuggestions}
       />
       <SuggestionList
         kind="expenses"
