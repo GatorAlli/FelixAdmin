@@ -68,11 +68,14 @@ export async function updateOrder(orderId: number, formData: FormData) {
 
   if (!parsed.ok) return parsed;
 
+  // The authenticated saver becomes the editor; the original creator stays unchanged.
+  const { createdBy: lastEditedBy, ...editableValues } = parsed.values;
+
   try {
     const [updatedOrder] = await db
       .update(data)
-      // The primary key, order reference and creation date are excluded.
-      .set(parsed.values)
+      // The primary key, creator, order reference and creation date are excluded.
+      .set({ ...editableValues, lastEditedBy })
       .where(eq(data.sl, orderId))
       .returning({ felixOrderRef: data.felixOrderRef });
 

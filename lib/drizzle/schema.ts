@@ -6,6 +6,7 @@ import type { PanelCurrencies } from "./order-calculations";
 export const data = p.pgTable("data", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   createdBy: p.varchar().notNull(),
+  lastEditedBy: p.varchar(),
   createdDate: p.date(),
   felixOrderRef: p.varchar().notNull(),
 

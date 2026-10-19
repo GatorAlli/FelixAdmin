@@ -50,7 +50,7 @@ function Label(props: React.ComponentProps<typeof FormLabel>) {
   return (
     <FormLabel
       {...props}
-      className={cn("min-w-0 break-words", props.className, "normal-case")}
+      className={cn("min-w-0 wrap-break-words", props.className, "normal-case")}
     />
   );
 }
@@ -68,6 +68,7 @@ function titleCaseLabel(text: string) {
     "LC",
     "TT",
     "EMI",
+    "PTE",
   ]);
   return text.replace(/[A-Za-z]+/g, (word) =>
     acronyms.has(word.toUpperCase())
@@ -83,7 +84,7 @@ const systemTypes = [
   "ACCESS CONTROL",
   "HOME AUTOMATION",
 ];
-const orderHandlers = ["EMI ENGINEERING", "TAXILA IMPEX"];
+const orderHandlers = ["EMI Engineering PTE", "Taxilla Impex PTE"];
 // SETTINGS sheet: G = 5%, H = 2%. Inputs store percentages, not fractions.
 const DEFAULT_ORDER_HANDLING_FEE = "5";
 const DEFAULT_MISCELLANEOUS_HANDLING_FEE = "2";
@@ -181,7 +182,12 @@ function PaymentModeField({
                   </div>
                 ) : (
                   <div className="grid min-w-0 basis-full grid-cols-[auto_minmax(0,1fr)] items-center gap-3 @sm:basis-0 @sm:flex-1">
-                    <Label className="shrink-0 whitespace-nowrap" htmlFor="paymentModeDetails">Payment Method</Label>
+                    <Label
+                      className="shrink-0 whitespace-nowrap"
+                      htmlFor="paymentModeDetails"
+                    >
+                      Payment Method
+                    </Label>
                     <Input
                       id="paymentModeDetails"
                       className={cn(inputStyling, "h-10 w-full")}
@@ -592,7 +598,9 @@ export default function PageBody({
                 {/* Order value, payment and costs */}
                 <div className="flex flex-col gap-8">
                   <div className="flex flex-col gap-2">
-                    <Label className={headingStyling}>Payment Information</Label>
+                    <Label className={headingStyling}>
+                      Payment Information
+                    </Label>
                     <div className="flex flex-col gap-8 border rounded-lg p-4">
                       <div className="space-y-4">
                         <div className="grid grid-cols-1 items-end gap-4 @xl:grid-cols-[minmax(0,1fr)_8rem]">
@@ -611,7 +619,9 @@ export default function PageBody({
                               min="0"
                               step="0.01"
                               value={clientOrderValue}
-                              onChange={(e) => setClientOrderValue(e.target.value)}
+                              onChange={(e) =>
+                                setClientOrderValue(e.target.value)
+                              }
                             />
                           </div>
                           <div className="flex min-w-0 flex-col gap-2 [&>label]:min-h-6 [&_[data-slot=select-trigger]]:w-full">
@@ -683,7 +693,8 @@ export default function PageBody({
                         disabled={isSubmitting}
                         onChoiceChange={(choice) => {
                           if (choice === "Other") {
-                            if (paymentModeOther !== "Other") setPaymentMode("");
+                            if (paymentModeOther !== "Other")
+                              setPaymentMode("");
                             setPaymentModeOther("Other");
                           } else {
                             setPaymentMode(choice);
@@ -693,7 +704,10 @@ export default function PageBody({
                         onOtherChange={setPaymentMode}
                       />
                       <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                        <Label className={headingStyling} htmlFor="paymentNotes">
+                        <Label
+                          className={headingStyling}
+                          htmlFor="paymentNotes"
+                        >
                           Payment Notes
                         </Label>
                         <Input
@@ -825,7 +839,9 @@ export default function PageBody({
                             >
                               <SelectTrigger id={`supplier-currency-${row.id}`}>
                                 <SelectValue>
-                                  {row.currency === "EUR" ? "Euro" : row.currency}
+                                  {row.currency === "EUR"
+                                    ? "Euro"
+                                    : row.currency}
                                 </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
@@ -843,43 +859,43 @@ export default function PageBody({
                           />
                           <div className="col-start-3 row-start-1 self-end @2xl:col-start-5">
                             <Button
-                            type="button"
-                            aria-label={`Remove supplier ${index + 1}`}
-                            onClick={() =>
-                              setSuppliers((rows) =>
-                                rows.filter((item) => item.id !== row.id),
-                              )
-                            }
-                          >
-                            −
-                          </Button>
-                        </div>
-                        {row.currency !== "USD" && (
-                          <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
-                            <div className="flex min-w-0 flex-wrap items-center gap-3">
-                              <Label
-                                className={headingStyling}
-                                htmlFor={`supplier-usd-${row.id}`}
-                              >
-                                Amount (USD)
-                              </Label>
-                              <Label
-                                id={`supplier-usd-${row.id}`}
-                                className="px-2"
-                              >
-                                {convertToUsd(
-                                  row.amount,
-                                  row.currency,
-                                  gbpToUsdRate,
-                                  eurToUsdRate,
-                                  usdToSgdRate,
-                                ) ?? ""}
-                              </Label>
-                            </div>
+                              type="button"
+                              aria-label={`Remove supplier ${index + 1}`}
+                              onClick={() =>
+                                setSuppliers((rows) =>
+                                  rows.filter((item) => item.id !== row.id),
+                                )
+                              }
+                            >
+                              −
+                            </Button>
                           </div>
-                        )}
-                      </div>
-                    ))}
+                          {row.currency !== "USD" && (
+                            <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                <Label
+                                  className={headingStyling}
+                                  htmlFor={`supplier-usd-${row.id}`}
+                                >
+                                  Amount (USD)
+                                </Label>
+                                <Label
+                                  id={`supplier-usd-${row.id}`}
+                                  className="px-2"
+                                >
+                                  {convertToUsd(
+                                    row.amount,
+                                    row.currency,
+                                    gbpToUsdRate,
+                                    eurToUsdRate,
+                                    usdToSgdRate,
+                                  ) ?? ""}
+                                </Label>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                     <Button
                       type="button"
@@ -918,7 +934,9 @@ export default function PageBody({
                             {index + 1}.
                           </Label>
                           <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
-                            <Label className={headingStyling}>Expenditure</Label>
+                            <Label className={headingStyling}>
+                              Expenditure
+                            </Label>
                             <Input
                               className={inputStyling}
                               id={`expense-${row.id}`}
@@ -989,7 +1007,9 @@ export default function PageBody({
                             >
                               <SelectTrigger id={`expense-currency-${row.id}`}>
                                 <SelectValue>
-                                  {row.currency === "EUR" ? "Euro" : row.currency}
+                                  {row.currency === "EUR"
+                                    ? "Euro"
+                                    : row.currency}
                                 </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
@@ -1007,40 +1027,40 @@ export default function PageBody({
                           />
                           <div className="col-start-3 row-start-1 self-end @2xl:col-start-5">
                             <Button
-                            type="button"
-                            aria-label={`Remove expenditure ${index + 1}`}
-                            onClick={() =>
-                              setExpenses((rows) =>
-                                rows.filter((item) => item.id !== row.id),
-                              )
-                            }
-                          >
-                            −
-                          </Button>
-                        </div>
-                        {row.currency !== "USD" && (
-                          <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
-                            <div className="flex min-w-0 flex-wrap items-center gap-3">
-                              <Label
-                                className={headingStyling}
-                                htmlFor={`expense-usd-${row.id}`}
-                              >
-                                Amount (USD)
-                              </Label>
-                              <Label id={`expense-usd-${row.id}`}>
-                                {convertToUsd(
-                                  row.amount,
-                                  row.currency,
-                                  gbpToUsdRate,
-                                  eurToUsdRate,
-                                  usdToSgdRate,
-                                ) ?? ""}
-                              </Label>
-                            </div>
+                              type="button"
+                              aria-label={`Remove expenditure ${index + 1}`}
+                              onClick={() =>
+                                setExpenses((rows) =>
+                                  rows.filter((item) => item.id !== row.id),
+                                )
+                              }
+                            >
+                              −
+                            </Button>
                           </div>
-                        )}
-                      </div>
-                    ))}
+                          {row.currency !== "USD" && (
+                            <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                <Label
+                                  className={headingStyling}
+                                  htmlFor={`expense-usd-${row.id}`}
+                                >
+                                  Amount (USD)
+                                </Label>
+                                <Label id={`expense-usd-${row.id}`}>
+                                  {convertToUsd(
+                                    row.amount,
+                                    row.currency,
+                                    gbpToUsdRate,
+                                    eurToUsdRate,
+                                    usdToSgdRate,
+                                  ) ?? ""}
+                                </Label>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                     <Button
                       type="button"
@@ -1307,7 +1327,13 @@ export default function PageBody({
               <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
                 <Label className={headingStyling}>Created By:</Label>
                 <Label className="font-bold">
-                  {isEditing ? username : (orderDetails?.createdBy ?? username)}
+                  {orderDetails?.createdBy ?? username}
+                </Label>
+              </div>
+              <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
+                <Label className={headingStyling}>Last Edited By:</Label>
+                <Label className="font-bold">
+                  {orderDetails?.lastEditedBy ?? "Not edited yet"}
                 </Label>
               </div>
               {felixOrderNo && (
