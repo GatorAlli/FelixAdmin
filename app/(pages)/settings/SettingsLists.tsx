@@ -16,7 +16,12 @@ function SuggestionList({
   title: string;
   initialValues: string[];
 }) {
-  const itemLabel = kind === "suppliers" ? "Supplier" : kind === "customers" ? "Customer" : "Expense";
+  const itemLabel =
+    kind === "suppliers"
+      ? "Supplier"
+      : kind === "customers"
+        ? "Customer"
+        : "Expense";
   const nextId = useRef(initialValues.length);
   const newInput = useRef<HTMLInputElement | null>(null);
   const [rows, setRows] = useState(
@@ -159,22 +164,24 @@ export default function SettingsLists({
   expenseSuggestions: string[];
 }) {
   return (
-    <div className="grid grid-cols-1 items-start gap-4 p-4 xl:grid-cols-3">
+    <div className="grid grid-cols-1 items-start gap-4 p-4 md:grid-cols-2">
       <SuggestionList
         kind="suppliers"
         title="Suppliers"
         initialValues={supplierSuggestions}
       />
-      <SuggestionList
-        kind="customers"
-        title="Customers"
-        initialValues={customerSuggestions}
-      />
-      <SuggestionList
-        kind="expenses"
-        title="Expenses"
-        initialValues={expenseSuggestions}
-      />
+      <div className="grid min-w-0 grid-cols-1 gap-4">
+        <SuggestionList
+          kind="customers"
+          title="Customers"
+          initialValues={customerSuggestions}
+        />
+        <SuggestionList
+          kind="expenses"
+          title="Expenses"
+          initialValues={expenseSuggestions}
+        />
+      </div>
     </div>
   );
 }
