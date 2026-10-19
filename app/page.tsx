@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
-
 import { supabase } from "@/lib/supabase/actions";
 
 import { useRouter } from "next/navigation";
@@ -70,9 +69,7 @@ export default function App() {
   }, [router]);
 
   return (
-    <div
-      className={`min-h-screen flex w-full bg-muted ${manrope.className}`}
-    >
+    <div className={`min-h-screen flex w-full bg-muted ${manrope.className}`}>
       <div className="relative hidden md:flex md:w-1/2 bg-primary items-center justify-center overflow-hidden">
         <FallingParticles />
         <div className="relative z-10 w-[70%] max-w-lg">
@@ -189,7 +186,6 @@ export default function App() {
                     strokeWidth={2.5}
                   />
                 </div>
-                <span className="absolute left-0 bottom-1.5 h-px w-0 bg-white transition-all duration-300 ease-out group-hover:w-full opacity-0 group-hover:opacity-100" />
               </div>
             </Button>
             {message === "NULL" || <Label>{message}</Label>}
