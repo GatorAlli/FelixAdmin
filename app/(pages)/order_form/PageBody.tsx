@@ -86,8 +86,8 @@ const systemTypes = [
 ];
 const orderHandlers = ["EMI Engineering PTE", "Taxilla Impex PTE"];
 // SETTINGS sheet: G = 5%, H = 2%. Inputs store percentages, not fractions.
-const DEFAULT_ORDER_HANDLING_FEE = "5";
-const DEFAULT_MISCELLANEOUS_HANDLING_FEE = "2";
+const DEFAULT_ORDER_HANDLING_FEE = "5.00";
+const DEFAULT_MISCELLANEOUS_HANDLING_FEE = "2.00";
 
 const inputStyling = clsx("rounded-lg p-2");
 const headingStyling = clsx("font-bold text-1.5xl whitespace-normal");
@@ -1463,6 +1463,8 @@ export default function PageBody({
                         setGbpToUsdRate(Number(gbpToUsdRate).toFixed(2));
                         setEurToUsdRate(Number(eurToUsdRate).toFixed(2));
                         setUsdToSgdRate(Number(usdToSgdRate).toFixed(2));
+                        if (orderHandlingFee !== "") setOrderHandlingFee(Number(orderHandlingFee).toFixed(2));
+                        if (miscellaneousHandlingFee !== "") setMiscellaneousHandlingFee(Number(miscellaneousHandlingFee).toFixed(2));
                         setIsEditing(true);
                       }}
                     >
@@ -1605,9 +1607,16 @@ export default function PageBody({
                         name="orderHandlingFee"
                         type="number"
                         min="0"
-                        step="0.0001"
+                        step="0.01"
                         value={orderHandlingFee}
-                        onChange={(e) => setOrderHandlingFee(e.target.value)}
+                        onChange={(e) => {
+                          if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) {
+                            setOrderHandlingFee(e.target.value);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (orderHandlingFee !== "") setOrderHandlingFee(Number(orderHandlingFee).toFixed(2));
+                        }}
                       />
                     </div>
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
@@ -1628,11 +1637,16 @@ export default function PageBody({
                         name="miscellaneousHandlingFee"
                         type="number"
                         min="0"
-                        step="0.0001"
+                        step="0.01"
                         value={miscellaneousHandlingFee}
-                        onChange={(e) =>
-                          setMiscellaneousHandlingFee(e.target.value)
-                        }
+                        onChange={(e) => {
+                          if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) {
+                            setMiscellaneousHandlingFee(e.target.value);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (miscellaneousHandlingFee !== "") setMiscellaneousHandlingFee(Number(miscellaneousHandlingFee).toFixed(2));
+                        }}
                       />
                     </div>
                   </div>
@@ -1675,7 +1689,9 @@ export default function PageBody({
                         <Label className={headingStyling}>
                           Order Handling Fee (%)
                         </Label>
-                        <Label className="font-bold">{orderHandlingFee}</Label>
+                        <Label className="font-bold">
+                          {Number(orderHandlingFee).toFixed(2)}
+                        </Label>
                       </div>
                     )}
                     {miscellaneousHandlingFee.trim() !== "" && (
@@ -1684,7 +1700,7 @@ export default function PageBody({
                           Miscellaneous Handling Fee (%)
                         </Label>
                         <Label className="font-bold">
-                          {miscellaneousHandlingFee}
+                          {Number(miscellaneousHandlingFee).toFixed(2)}
                         </Label>
                       </div>
                     )}
