@@ -6,6 +6,7 @@ import { Manrope, Sora } from "next/font/google";
 import { ChartNoAxesCombined, House, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase/actions";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const sora = Sora({ subsets: ["latin"], weight: ["600"] });
 const manrope = Manrope({
@@ -22,6 +23,8 @@ const navigationLinks = [
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
   return (
     <nav
       aria-label="Main navigation"
@@ -141,16 +144,38 @@ export default function Navbar() {
           <div className="hidden sm:block h-6 w-px bg-gray-200" />
           */}
         <button
+          type="button"
           aria-label="Sign out"
-          onClick={() => {
-            supabase.auth.signOut();
-            router.push("/");
+          disabled={isSigningOut}
+          aria-busy={isSigningOut}
+          onClick={async () => {
+            if (isSigningOut) return;
+            setIsSigningOut(true);
+            setSignOutError("");
+            try {
+              const { error } = await supabase.auth.signOut();
+              if (error) {
+                setSignOutError("Could not sign out. Please try again.");
+                return;
+              }
+              router.replace("/");
+              router.refresh();
+            } catch {
+              setSignOutError("Could not sign out. Please try again.");
+            } finally {
+              setIsSigningOut(false);
+            }
           }}
-          className="flex size-10 sm:h-auto sm:w-auto items-center justify-center gap-2 text-gray-500 hover:text-black transition-colors text-[15px] font-medium"
+          className="flex size-10 sm:h-auto sm:w-auto items-center justify-center gap-2 text-gray-500 hover:text-black transition-colors text-[15px] font-medium disabled:cursor-wait disabled:opacity-50"
         >
           <LogOut className="h-4 w-4" strokeWidth={2} />
-          <span className="hidden sm:inline">Sign out</span>
+          <span className="hidden sm:inline">{isSigningOut ? "Signing out…" : "Sign out"}</span>
         </button>
+        {signOutError && (
+          <p role="alert" className="absolute right-4 top-full mt-2 rounded-lg border bg-card p-3 text-sm text-destructive shadow-sm">
+            {signOutError}
+          </p>
+        )}
       </div>
     </nav>
   );

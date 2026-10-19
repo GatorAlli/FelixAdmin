@@ -22,7 +22,7 @@ function readOptionalFee(formData: FormData, name: string) {
 
 // Both creating and editing use the same field validation and conversion.
 export function readOrderValues(formData: FormData, authenticatedUsername: string):
-  | { ok: true; values: Omit<NewOrder, "sl" | "felixOrderRef" | "createdDate"> }
+  | { ok: true; values: Omit<NewOrder, "sl" | "felixOrderRef" | "createdDate" | "orderManagerAccess"> }
   | { ok: false; message: string } {
   // The server supplies this name after authentication; FormData cannot override it.
   const createdBy = authenticatedUsername.trim();

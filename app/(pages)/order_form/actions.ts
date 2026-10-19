@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data, users } from "@/lib/drizzle/schema";
@@ -8,17 +8,21 @@ import { revalidatePath } from "next/cache";
 import { readOrderValues } from "@/lib/drizzle/order-values";
 import { currentOrderDate } from "@/lib/drizzle/order-date";
 import { nextOrderReference } from "@/lib/drizzle/order-reference";
+import { canEditOrder } from "@/lib/drizzle/order-access";
 
 // Resolve attribution on every save. Never trust a name sent by the browser.
 async function readAuthenticatedOrderValues(formData: FormData) {
   const user = await requireUser();
   const [profile] = user.email
     ? await db
-        .select({ name: users.name })
+        .select({ name: users.name, status: users.status })
         .from(users)
         .where(eq(users.email, user.email))
         .limit(1)
     : [];
+  if (!canEditOrder(profile?.status, true)) {
+    return { ok: false as const, message: "You do not have permission to save orders." };
+  }
   const username = profile?.name?.trim();
   if (!username) {
     return {
@@ -27,7 +31,7 @@ async function readAuthenticatedOrderValues(formData: FormData) {
         "Your account has no username. Please have your user profile name set before saving.",
     };
   }
-  return readOrderValues(formData, username);
+  return { ...readOrderValues(formData, username), status: profile?.status };
 }
 
 export async function createOrder(formData: FormData) {
@@ -43,11 +47,14 @@ export async function createOrder(formData: FormData) {
         ...parsed.values,
         createdDate,
         felixOrderRef,
+        orderManagerAccess: true,
       });
 
       return felixOrderRef;
     }, { isolationLevel: "read committed" });
 
+    revalidatePath("/home");
+    revalidatePath("/summary");
     return { ok: true, message: `Order created: ${result}`, createdDate };
   } catch (error) {
     console.error("Unable to create order", error);
@@ -62,7 +69,7 @@ export async function createOrder(formData: FormData) {
 export async function updateOrder(orderId: number, formData: FormData) {
   // Authentication is checked even when the supplied order ID is invalid.
   const parsed = await readAuthenticatedOrderValues(formData);
-  if (!Number.isInteger(orderId) || orderId < 1) {
+  if (!Number.isInteger(orderId) || orderId < 1 || orderId > 2147483647) {
     return { ok: false, message: "Invalid order ID." };
   }
 
@@ -76,11 +83,15 @@ export async function updateOrder(orderId: number, formData: FormData) {
       .update(data)
       // The primary key, creator, order reference and creation date are excluded.
       .set({ ...editableValues, lastEditedBy })
-      .where(eq(data.sl, orderId))
+      // Check the flag in the UPDATE itself, including for already-open forms.
+      .where(and(
+        eq(data.sl, orderId),
+        parsed.status === "admin" ? undefined : eq(data.orderManagerAccess, true),
+      ))
       .returning({ felixOrderRef: data.felixOrderRef });
 
     if (!updatedOrder) {
-      return { ok: false, message: "Order not found." };
+      return { ok: false, message: "Order not found or your editing access has been revoked." };
     }
 
     revalidatePath("/summary");

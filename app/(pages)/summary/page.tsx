@@ -2,7 +2,7 @@ import Navbar from "@/components/view/navbar/navbar";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data } from "@/lib/drizzle/schema";
-import { asc, like } from "drizzle-orm";
+import { asc } from "drizzle-orm";
 import TableBody from "./TableBody";
 import { Sora, Manrope } from "next/font/google";
 const sora = Sora({
@@ -14,24 +14,9 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-export default async function Summary({
-  searchParams,
-}: {
-  searchParams: Promise<{ year?: string | string[] }>;
-}) {
+export default async function Summary() {
   await requireUser();
   const currentYear = new Date().getFullYear();
-  const { year } = await searchParams;
-  const requestedYear =
-    typeof year === "string" && /^\d{4}$/.test(year) ? Number(year) : NaN;
-  // Missing or invalid URL years fall back to the current year.
-  const selectedYear =
-    Number.isInteger(requestedYear) &&
-    requestedYear >= 2024 &&
-    requestedYear <= currentYear
-      ? requestedYear
-      : currentYear;
-
   const orders = await db.select().from(data).orderBy(asc(data.sl));
   return (
     <div

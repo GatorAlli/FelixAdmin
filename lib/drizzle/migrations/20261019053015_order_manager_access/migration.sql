@@ -1,0 +1,1 @@
+ALTER TABLE "data" ADD COLUMN "orderManagerAccess" boolean DEFAULT true NOT NULL;

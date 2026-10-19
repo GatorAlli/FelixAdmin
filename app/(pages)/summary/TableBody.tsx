@@ -23,7 +23,10 @@ export default function TableBody({
     { length: currentYear - 2024 + 1 },
     (_, index) => 2024 + index,
   );
-  const [orderArray, setOrderArray] = useState(orders);
+  const [selectedYear, setSelectedYear] = useState("all");
+  const orderArray = selectedYear === "all" ? orders : orders.filter((order) =>
+    order.felixOrderRef.startsWith(`FCL/FPO/${selectedYear}/`),
+  );
   const expenditureColumns = expenseColumns(orderArray);
   const expenditureAmounts = orderArray.map(expenseUsdByName);
 
@@ -175,7 +178,7 @@ export default function TableBody({
       <div className="shrink-0 pt-4">
         {/* Filter the original list so switching years restores the matching orders. */}
         <Select
-          defaultValue="all"
+          value={selectedYear}
           items={[
             { value: "all", label: "All Years" },
             ...years.map((year) => ({
@@ -185,13 +188,7 @@ export default function TableBody({
           ]}
           onValueChange={(year) => {
             if (year === null) return;
-            setOrderArray(
-              year === "all"
-                ? orders
-                : orders.filter((e) =>
-                    e.felixOrderRef.startsWith(`FCL/FPO/${year}/`),
-                  ),
-            );
+            setSelectedYear(year);
           }}
         >
           <SelectTrigger className="w-45 bg-white" aria-label="Select year">

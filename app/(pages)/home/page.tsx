@@ -7,6 +7,7 @@ import TableBody from "./TableBody";
 import { Sora, Manrope } from "next/font/google";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { canEditOrder } from "@/lib/drizzle/order-access";
 const sora = Sora({
   subsets: ["latin"],
   weight: ["600"],
@@ -20,13 +21,13 @@ const manrope = Manrope({
 export default async function Home() {
   const user = await requireUser();
   let name = "";
-  let adminStatus = false;
+  let adminStatus = "";
 
   const userArray = await db.select().from(users);
 
   userArray.forEach((e) => {
-    if (e.email === user.email && e.status === "admin") {
-      adminStatus = true;
+    if (e.email === user.email) {
+      adminStatus = String(e.status);
       name = String(e.name);
       return;
     }
@@ -36,28 +37,28 @@ export default async function Home() {
 
   return (
     <div className={`min-h-screen bg-muted flex flex-col ${manrope.className}`}>
-      
       {/* Navbar */}
       <Navbar />
 
       {/* Content  */}
       <div className="flex-1 p-6 md:p-10 max-w-[1600px] mx-auto w-full">
-        
         {/* header */}
         <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className={`text-[18px] text-black font-extrabold uppercase tracking-wide ${sora.className}`}>
+            <h1
+              className={`text-[18px] text-black font-extrabold uppercase tracking-wide ${sora.className}`}
+            >
               HELLO {name || "USER"}
             </h1>
           </div>
 
           <div className="flex items-center gap-3">
-            {adminStatus && (
-              <Link 
-                href="/order_form" 
+            {canEditOrder(adminStatus, true) && (
+              <Link
+                href="/order_form"
                 className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-lg text-[13px] font-bold uppercase tracking-wide flex items-center gap-2 transition-colors shadow-sm"
               >
-                <Plus className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                <Plus className="h-4.5 w-4.5" strokeWidth={2.5} />
                 CREATE NEW ORDER
               </Link>
             )}
@@ -65,8 +66,11 @@ export default async function Home() {
         </div>
 
         {/* Table*/}
-        <TableBody orders={orders} currentYear={new Date().getFullYear()} />
-
+        <TableBody
+          orders={orders}
+          adminStatus={adminStatus}
+          currentYear={new Date().getFullYear()}
+        />
       </div>
     </div>
   );

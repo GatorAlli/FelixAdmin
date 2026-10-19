@@ -12,6 +12,7 @@ import { clsx } from "clsx";
 import Link from "next/link";
 import { createOrder, updateOrder } from "./actions";
 import { type Order } from "@/lib/drizzle/schema";
+import { canEditOrder } from "@/lib/drizzle/order-access";
 
 import {
   Select,
@@ -213,7 +214,7 @@ export default function PageBody({
   currentDate,
 }: {
   orderDetails?: Order;
-  isAdmin: boolean;
+  isAdmin: string;
   username: string;
   currentDate: string;
 }) {
@@ -266,7 +267,9 @@ export default function PageBody({
   const nextSupplierId = useRef(32);
   const [loadedOrderDetails, setLoadedOrderDetails] = useState<Order>();
 
-  const [isEditing, setIsEditing] = useState(!orderDetails);
+  const canEdit = canEditOrder(isAdmin, orderDetails?.orderManagerAccess ?? true);
+  const [editingRequested, setIsEditing] = useState(!orderDetails);
+  const isEditing = canEdit && editingRequested;
 
   // Only load a new order once. Without this guard, the setters cause a render loop.
   if (orderDetails && orderDetails !== loadedOrderDetails) {
@@ -392,6 +395,11 @@ export default function PageBody({
         </div>
       </div>
       <div>
+        {isAdmin === "order" && orderDetails?.orderManagerAccess === false && (
+          <p role="status" className="px-4 pt-4 text-sm text-muted-foreground">
+            Your editing access for this order has been revoked. You can still view it.
+          </p>
+        )}
         <div className="grid grid-cols-1 items-start gap-4 p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           {isEditing ? (
             <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
@@ -1451,25 +1459,33 @@ export default function PageBody({
                       Discard Changes
                     </Button>
                   </>
-                ) : isAdmin ? (
+                ) : (
                   <>
-                    <Button
-                      type="button"
-                      className={actionButtonStyling}
-                      key="edit-order"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setSubmissionMessage("");
-                        setGbpToUsdRate(Number(gbpToUsdRate).toFixed(2));
-                        setEurToUsdRate(Number(eurToUsdRate).toFixed(2));
-                        setUsdToSgdRate(Number(usdToSgdRate).toFixed(2));
-                        if (orderHandlingFee !== "") setOrderHandlingFee(Number(orderHandlingFee).toFixed(2));
-                        if (miscellaneousHandlingFee !== "") setMiscellaneousHandlingFee(Number(miscellaneousHandlingFee).toFixed(2));
-                        setIsEditing(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
+                    {canEdit && (
+                      <Button
+                        type="button"
+                        className={actionButtonStyling}
+                        key="edit-order"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          setSubmissionMessage("");
+                          setGbpToUsdRate(Number(gbpToUsdRate).toFixed(2));
+                          setEurToUsdRate(Number(eurToUsdRate).toFixed(2));
+                          setUsdToSgdRate(Number(usdToSgdRate).toFixed(2));
+                          if (orderHandlingFee !== "")
+                            setOrderHandlingFee(
+                              Number(orderHandlingFee).toFixed(2),
+                            );
+                          if (miscellaneousHandlingFee !== "")
+                            setMiscellaneousHandlingFee(
+                              Number(miscellaneousHandlingFee).toFixed(2),
+                            );
+                          setIsEditing(true);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    )}
                     <Link
                       href="/home"
                       className={cn(buttonVariants(), actionButtonStyling)}
@@ -1477,7 +1493,7 @@ export default function PageBody({
                       Back
                     </Link>
                   </>
-                ) : null}
+                )}
               </div>
             </div>
 
@@ -1615,7 +1631,10 @@ export default function PageBody({
                           }
                         }}
                         onBlur={() => {
-                          if (orderHandlingFee !== "") setOrderHandlingFee(Number(orderHandlingFee).toFixed(2));
+                          if (orderHandlingFee !== "")
+                            setOrderHandlingFee(
+                              Number(orderHandlingFee).toFixed(2),
+                            );
                         }}
                       />
                     </div>
@@ -1645,7 +1664,10 @@ export default function PageBody({
                           }
                         }}
                         onBlur={() => {
-                          if (miscellaneousHandlingFee !== "") setMiscellaneousHandlingFee(Number(miscellaneousHandlingFee).toFixed(2));
+                          if (miscellaneousHandlingFee !== "")
+                            setMiscellaneousHandlingFee(
+                              Number(miscellaneousHandlingFee).toFixed(2),
+                            );
                         }}
                       />
                     </div>
