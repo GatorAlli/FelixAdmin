@@ -3,15 +3,17 @@
 import { and, eq } from "drizzle-orm";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
-import { data, users } from "@/lib/drizzle/schema";
+import { data, users, suppliers } from "@/lib/drizzle/schema";
 import { revalidatePath } from "next/cache";
 import { readOrderValues } from "@/lib/drizzle/order-values";
 import { currentOrderDate } from "@/lib/drizzle/order-date";
 import { nextOrderReference } from "@/lib/drizzle/order-reference";
 import { canEditOrder } from "@/lib/drizzle/order-access";
 
+import { restoreSupplierRows } from "@/lib/drizzle/currency";
+
 // Resolve attribution on every save. Never trust a name sent by the browser.
-async function readAuthenticatedOrderValues(formData: FormData) {
+async function readAuthenticatedOrderValues(formData: FormData, orderId?: number) {
   const user = await requireUser();
   const [profile] = user.email
     ? await db
@@ -31,7 +33,12 @@ async function readAuthenticatedOrderValues(formData: FormData) {
         "Your account has no username. Please have your user profile name set before saving.",
     };
   }
-  return { ...readOrderValues(formData, username), status: profile?.status };
+  const catalog = await db.select({ name: suppliers.supplierName }).from(suppliers);
+  const historicalOrders = orderId && Number.isInteger(orderId) && orderId > 0 && orderId <= 2147483647
+    ? await db.select().from(data).where(eq(data.sl, orderId)).limit(1) : [];
+  const historicalNames = historicalOrders.flatMap(order => restoreSupplierRows(order).map(row => row.supplier));
+  const allowedNames = [...catalog.flatMap(row => row.name ? [row.name] : []), ...historicalNames];
+  return { ...readOrderValues(formData, username, allowedNames), status: profile?.status };
 }
 
 export async function createOrder(formData: FormData) {
@@ -68,7 +75,7 @@ export async function createOrder(formData: FormData) {
 // Update only the existing row identified by its primary key.
 export async function updateOrder(orderId: number, formData: FormData) {
   // Authentication is checked even when the supplied order ID is invalid.
-  const parsed = await readAuthenticatedOrderValues(formData);
+  const parsed = await readAuthenticatedOrderValues(formData, orderId);
   if (!Number.isInteger(orderId) || orderId < 1 || orderId > 2147483647) {
     return { ok: false, message: "Invalid order ID." };
   }

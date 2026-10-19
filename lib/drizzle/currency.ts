@@ -41,6 +41,7 @@ export type SupplierCurrencyDetail = {
   amount: string;
   currency: Currency;
 };
+export type CustomSupplierDetail = { name: string; amount: string; currency: Currency };
 export type SupplierRow = {
   id: number;
   supplier: string;
@@ -99,8 +100,9 @@ export function convertToUsd(
 
 export function restoreSupplierRows(order: {
   supplierCurrencyDetails: SupplierCurrencyDetail[] | null;
+  customSupplierDetails?: CustomSupplierDetail[] | null;
 } & Partial<Record<SupplierKey, string | null>>): SupplierRow[] {
-  return Object.entries(supplierColumns).flatMap(([name, column], index) => {
+  const legacy = Object.entries(supplierColumns).flatMap(([name, column], index) => {
     const usdAmount = order[column];
     if (usdAmount == null) return [];
     const original = order.supplierCurrencyDetails?.find(
@@ -113,6 +115,10 @@ export function restoreSupplierRows(order: {
       currency: original?.currency ?? "USD",
     }];
   });
+  return [...legacy, ...(order.customSupplierDetails ?? []).map((detail, index) => ({
+    id: Object.keys(supplierColumns).length + index + 1,
+    supplier: detail.name, amount: detail.amount, currency: detail.currency,
+  }))];
 }
 
 // Convert USD panel values using the saved per-order rate direction.

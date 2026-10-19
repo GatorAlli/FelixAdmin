@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data } from "@/lib/drizzle/schema";
 import { asc } from "drizzle-orm";
+import { getOrderDatalists } from "@/lib/drizzle/order-datalists";
 import TableBody from "./TableBody";
 import { Sora, Manrope } from "next/font/google";
 const sora = Sora({
@@ -17,7 +18,9 @@ const manrope = Manrope({
 export default async function Summary() {
   await requireUser();
   const currentYear = new Date().getFullYear();
-  const orders = await db.select().from(data).orderBy(asc(data.sl));
+  const [orders, { supplierSuggestions }] = await Promise.all([
+    db.select().from(data).orderBy(asc(data.sl)), getOrderDatalists(),
+  ]);
   return (
     <div
       className={`h-dvh min-h-0 overflow-hidden bg-muted flex flex-col [&>nav]:shrink-0 ${manrope.className}`}
@@ -41,7 +44,7 @@ export default async function Summary() {
           </div>
         </div>
         {/* Table */}
-        <TableBody orders={orders} currentYear={currentYear} />
+        <TableBody orders={orders} currentYear={currentYear} supplierSuggestions={supplierSuggestions} />
       </div>
     </div>
   );

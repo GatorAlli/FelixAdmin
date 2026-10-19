@@ -1,3 +1,4 @@
+import { getOrderDatalists } from "@/lib/drizzle/order-datalists";
 import { currentOrderDate } from "@/lib/drizzle/order-date";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
@@ -38,9 +39,11 @@ export default async function OrderForm({
     }
   });
 
+  const datalists = await getOrderDatalists();
+
   return (
     <div>
-      <PageBody orderDetails={order[0]} isAdmin={adminStatus} username={username} currentDate={currentOrderDate()} />
+      <PageBody {...datalists} orderDetails={order[0]} isAdmin={adminStatus} username={username} currentDate={currentOrderDate()} />
     </div>
   );
 }

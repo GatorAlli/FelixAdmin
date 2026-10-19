@@ -212,11 +212,15 @@ export default function PageBody({
   isAdmin,
   username,
   currentDate,
+  supplierSuggestions,
+  expenseSuggestions,
 }: {
   orderDetails?: Order;
   isAdmin: string;
   username: string;
   currentDate: string;
+  supplierSuggestions: string[];
+  expenseSuggestions: string[];
 }) {
   // Existing orders retain their recorded date; new orders display today's date.
   const [createdDate, setCreatedDate] = useState<string | null>(
@@ -267,7 +271,10 @@ export default function PageBody({
   const nextSupplierId = useRef(32);
   const [loadedOrderDetails, setLoadedOrderDetails] = useState<Order>();
 
-  const canEdit = canEditOrder(isAdmin, orderDetails?.orderManagerAccess ?? true);
+  const canEdit = canEditOrder(
+    isAdmin,
+    orderDetails?.orderManagerAccess ?? true,
+  );
   const [editingRequested, setIsEditing] = useState(!orderDetails);
   const isEditing = canEdit && editingRequested;
 
@@ -395,11 +402,6 @@ export default function PageBody({
         </div>
       </div>
       <div>
-        {isAdmin === "order" && orderDetails?.orderManagerAccess === false && (
-          <p role="status" className="px-4 pt-4 text-sm text-muted-foreground">
-            Your editing access for this order has been revoked. You can still view it.
-          </p>
-        )}
         <div className="grid grid-cols-1 items-start gap-4 p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           {isEditing ? (
             <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
@@ -732,37 +734,7 @@ export default function PageBody({
                   {/* Supplier names use inputs, with suggestions for the brands in the schema. */}
                   <div className="space-y-4">
                     <datalist id="supplier-options">
-                      <option value="TRANE" />
-                      <option value="BELIMO" />
-                      <option value="DANFOSS" />
-                      <option value="HONEYWELL" />
-                      <option value="REGELTECHNIK" />
-                      <option value="DWYER" />
-                      <option value="ALPS" />
-                      <option value="CONTROL 4" />
-                      <option value="LUTRON" />
-                      <option value="LANDIS+GYR" />
-                      <option value="RBH" />
-                      <option value="PROSTAR" />
-                      <option value="GISSMATIC" />
-                      <option value="ZKTECO" />
-                      <option value="ADTESHIA" />
-                      <option value="FIKE" />
-                      <option value="TECOFI" />
-                      <option value="SEWO" />
-                      <option value="EBELCO" />
-                      <option value="DOOYA" />
-                      <option value="POGO" />
-                      <option value="PARK HELP" />
-                      <option value="FOSHAN" />
-                      <option value="KELE" />
-                      <option value="MULTICABLE" />
-                      <option value="DEYZ" />
-                      <option value="SIEMENS" />
-                      <option value="FLASH TURTLE" />
-                      <option value="SERVO" />
-                      <option value="HABOO" />
-                      <option value="OTHERS" />
+                      {supplierSuggestions.map((name) => <option key={name} value={name} />)}
                     </datalist>
 
                     <Label className={headingStyling}>Material Cost</Label>
@@ -910,7 +882,8 @@ export default function PageBody({
                       aria-label="Add supplier"
                       onClick={() => {
                         // Append a new empty row with an ID that has not been used before.
-                        const id = nextSupplierId.current++;
+                        const id = Math.max(nextSupplierId.current, ...suppliers.map(row => row.id + 1));
+                        nextSupplierId.current = id + 1;
                         setSuppliers((rows) => [
                           ...rows,
                           { id, supplier: "", amount: "", currency: "USD" },
@@ -922,12 +895,7 @@ export default function PageBody({
                   </div>
                   <div className="space-y-4">
                     <datalist id="expense-options">
-                      <option value="FREIGHT: USA TO SINGAPORE" />
-                      <option value="FREIGHT: GERMANY TO SINGAPORE" />
-                      <option value="FREIGHT: CHINA TO SINGAPORE" />
-                      <option value="Bank Fee" />
-                      <option value="DHL Cost" />
-                      <option value="UPS Cost" />
+                      {expenseSuggestions.map((name) => <option key={name} value={name} />)}
                     </datalist>
                     <Label className={headingStyling}>
                       Miscellaneous Costs

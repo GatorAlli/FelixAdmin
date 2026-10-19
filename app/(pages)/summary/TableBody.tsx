@@ -2,6 +2,7 @@
 
 import type { Order } from "@/lib/drizzle/schema";
 import { expenseColumns, expenseUsdByName } from "@/lib/drizzle/expenses";
+import { customSupplierColumns, customSupplierUsdByName } from "@/lib/drizzle/custom-suppliers";
 import { clsx } from "clsx";
 import { useState } from "react";
 import {
@@ -15,9 +16,11 @@ import {
 export default function TableBody({
   orders,
   currentYear,
+  supplierSuggestions,
 }: {
   orders: Order[];
   currentYear: number;
+  supplierSuggestions: string[];
 }) {
   const years = Array.from(
     { length: currentYear - 2024 + 1 },
@@ -27,6 +30,8 @@ export default function TableBody({
   const orderArray = selectedYear === "all" ? orders : orders.filter((order) =>
     order.felixOrderRef.startsWith(`FCL/FPO/${selectedYear}/`),
   );
+  const additionalSuppliers = customSupplierColumns(orders, supplierSuggestions);
+  const supplierAmounts = orderArray.map(customSupplierUsdByName);
   const expenditureColumns = expenseColumns(orderArray);
   const expenditureAmounts = orderArray.map(expenseUsdByName);
 
@@ -94,6 +99,9 @@ export default function TableBody({
                   <th className={headerStyling}>SERVO</th>
                   <th className={headerStyling}>HABOO</th>
                   <th className={headerStyling}>OTHERS</th>
+                  {additionalSuppliers.map(name => (
+                    <th className={headerStyling} key={`supplier-${name}`}>{name} (USD)</th>
+                  ))}
                   {expenditureColumns.map((name) => (
                     <th className={headerStyling} key={name}>
                       {name} (USD)
@@ -158,6 +166,9 @@ export default function TableBody({
                     <td className={cellStyling}>{e.servo}</td>
                     <td className={cellStyling}>{e.haboo}</td>
                     <td className={cellStyling}>{e.others}</td>
+                    {additionalSuppliers.map(name => (
+                      <td className={cellStyling} key={`supplier-${name}`}>{supplierAmounts[index].get(name) ?? ""}</td>
+                    ))}
                     {expenditureColumns.map((name) => (
                       <td className={cellStyling} key={name}>
                         {expenditureAmounts[index].get(name) ?? ""}

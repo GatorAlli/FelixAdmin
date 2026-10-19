@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Manrope, Sora } from "next/font/google";
 import { ChartNoAxesCombined, House, LogOut } from "lucide-react";
+import { GearSixIcon } from "@phosphor-icons/react";
 import { supabase } from "@/lib/supabase/actions";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -17,9 +18,10 @@ const manrope = Manrope({
 const navigationLinks = [
   { href: "/home", label: "Home" },
   { href: "/summary", label: "Summary" },
+  { href: "/settings", label: "Settings" },
 ];
 
-// Exact paths keep both links unselected on Order Form pages.
+// Exact paths keep navigation links unselected on Order Form pages.
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -143,6 +145,20 @@ export default function Navbar() {
           </div>
           <div className="hidden sm:block h-6 w-px bg-gray-200" />
           */}
+        <Link
+          href="/settings"
+          aria-label="Settings"
+          title="Settings"
+          aria-current={pathname === "/settings" ? "page" : undefined}
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-ring md:hidden",
+            pathname === "/settings"
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-muted hover:text-primary",
+          )}
+        >
+          <GearSixIcon className="size-5" aria-hidden="true" />
+        </Link>
         <button
           type="button"
           aria-label="Sign out"
@@ -169,10 +185,15 @@ export default function Navbar() {
           className="flex size-10 sm:h-auto sm:w-auto items-center justify-center gap-2 text-gray-500 hover:text-black transition-colors text-[15px] font-medium disabled:cursor-wait disabled:opacity-50"
         >
           <LogOut className="h-4 w-4" strokeWidth={2} />
-          <span className="hidden sm:inline">{isSigningOut ? "Signing out…" : "Sign out"}</span>
+          <span className="hidden sm:inline">
+            {isSigningOut ? "Signing out…" : "Sign out"}
+          </span>
         </button>
         {signOutError && (
-          <p role="alert" className="absolute right-4 top-full mt-2 rounded-lg border bg-card p-3 text-sm text-destructive shadow-sm">
+          <p
+            role="alert"
+            className="absolute right-4 top-full mt-2 rounded-lg border bg-card p-3 text-sm text-destructive shadow-sm"
+          >
             {signOutError}
           </p>
         )}

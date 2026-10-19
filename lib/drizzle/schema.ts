@@ -1,5 +1,5 @@
 import * as p from "drizzle-orm/pg-core";
-import type { Currency, SupplierCurrencyDetail } from "./currency";
+import type { Currency, SupplierCurrencyDetail, CustomSupplierDetail } from "./currency";
 import type { MiscellaneousExpense } from "./expenses";
 import type { PanelCurrencies } from "./order-calculations";
 
@@ -23,13 +23,13 @@ export const data = p.pgTable("data", {
   endUser: p.varchar(),
   productSystem: p.text(),
 
-
   orderHandledBy: p.varchar(),
   suppliers: p.text(),
   gbpToUsdRate: p.numeric({ precision: 18, scale: 8 }),
   eurToUsdRate: p.numeric({ precision: 18, scale: 8 }),
   usdToSgdRate: p.numeric({ precision: 18, scale: 2 }),
   supplierCurrencyDetails: p.jsonb().$type<SupplierCurrencyDetail[]>(),
+  customSupplierDetails: p.jsonb().$type<CustomSupplierDetail[]>().notNull().default([]),
 
   trane: p.numeric({ precision: 18, scale: 2 }),
   belimo: p.numeric({ precision: 18, scale: 2 }),
@@ -80,5 +80,21 @@ export const users = p.pgTable("users", {
   status: p.varchar(),
 });
 
+export const suppliers = p.pgTable("suppliers", {
+  sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
+  supplierName: p.varchar(),
+});
+export const miscellaneousExpenditures = p.pgTable(
+  "miscellaneousExpenditures",
+  {
+    sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
+    miscellaneousExpenditureType: p.varchar(),
+  },
+);
+
+export type Supplier = typeof suppliers.$inferSelect;
+export type NewSupplier = typeof suppliers.$inferInsert;
+export type Expense = typeof miscellaneousExpenditures.$inferSelect;
+export type NewExpense = typeof miscellaneousExpenditures.$inferInsert;
 export type Order = typeof data.$inferSelect;
 export type NewOrder = typeof data.$inferInsert;

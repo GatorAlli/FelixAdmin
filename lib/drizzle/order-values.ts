@@ -1,7 +1,7 @@
 import type { NewOrder } from "./schema";
 import { DEFAULT_PANEL_CURRENCIES, panelFields } from "./order-calculations";
 import { sumUsdAmounts, type MiscellaneousExpense } from "./expenses";
-import { supplierColumns, type SupplierKey, type SupplierCurrencyDetail,
+import { supplierColumns, type SupplierKey, type SupplierCurrencyDetail, type CustomSupplierDetail,
   isCurrency, isValidRate, convertToUsd } from "./currency";
 
 function readText(formData: FormData, name: string) {
@@ -21,7 +21,7 @@ function readOptionalFee(formData: FormData, name: string) {
 }
 
 // Both creating and editing use the same field validation and conversion.
-export function readOrderValues(formData: FormData, authenticatedUsername: string):
+export function readOrderValues(formData: FormData, authenticatedUsername: string, allowedSupplierNames: readonly string[] = Object.keys(supplierColumns)):
   | { ok: true; values: Omit<NewOrder, "sl" | "felixOrderRef" | "createdDate" | "orderManagerAccess"> }
   | { ok: false; message: string } {
   // The server supplies this name after authentication; FormData cannot override it.
@@ -63,13 +63,16 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
       supplierNames.length !== supplierCurrencies.length) {
     return { ok: false, message: "Supplier rows are incomplete." };
   }
+  const allowedSuppliers = new Set(allowedSupplierNames.map(name => name.trim().toUpperCase()));
+  const customSupplierDetails: CustomSupplierDetail[] = [];
+  const customUsdAmounts: string[] = [];
   const supplierValues: Partial<Record<SupplierKey, string>> = {};
   const selectedSuppliers: string[] = [];
 
   for (let index = 0; index < supplierNames.length; index++) {
     const supplierName = supplierNames[index];
     const supplierAmount = supplierAmounts[index];
-    const name = typeof supplierName === "string" ? supplierName.trim() : "";
+    const name = typeof supplierName === "string" ? supplierName.trim().toUpperCase() : "";
     const amount =
       typeof supplierAmount === "string" ? supplierAmount.trim() : "";
 
@@ -82,14 +85,12 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
       };
     }
 
-    if (!Object.prototype.hasOwnProperty.call(supplierColumns, name)) {
-      return { ok: false, message: `Unknown supplier: ${name}.` };
+    if (!allowedSuppliers.has(name) || name.length > 200) {
+      return { ok: false, message: `Unknown supplier: ${name}. Add new suppliers in Settings first.` };
     }
-    const column = supplierColumns[name as keyof typeof supplierColumns];
-    if (!column) {
-      return { ok: false, message: `Unknown supplier: ${name}.` };
-    }
-    if (supplierValues[column] !== undefined) {
+    const column = Object.hasOwn(supplierColumns, name)
+      ? supplierColumns[name as keyof typeof supplierColumns] : undefined;
+    if (selectedSuppliers.includes(name)) {
       return { ok: false, message: `${name} can only be entered once.` };
     }
 
@@ -102,8 +103,13 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
       return { ok: false, message: `Enter a valid amount for ${name} (up to 2 decimal places and within the supported range).` };
     }
 
-    supplierValues[column] = usdAmount;
-    supplierCurrencyDetails.push({ supplier: column, amount, currency });
+    if (column) {
+      supplierValues[column] = usdAmount;
+      supplierCurrencyDetails.push({ supplier: column, amount, currency });
+    } else {
+      customSupplierDetails.push({ name, amount, currency });
+      customUsdAmounts.push(usdAmount);
+    }
     selectedSuppliers.push(name);
   }
 
@@ -146,7 +152,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     return { ok: false, message: "The combined miscellaneous cost exceeds the supported range." };
   }
 
-  const materialTotal = sumUsdAmounts(Object.values(supplierValues));
+  const materialTotal = sumUsdAmounts([...Object.values(supplierValues), ...customUsdAmounts]);
   if (materialTotal === null) {
     return { ok: false, message: "The combined material cost exceeds the supported range." };
   }
@@ -166,6 +172,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     eurToUsdRate,
     usdToSgdRate,
     supplierCurrencyDetails,
+    customSupplierDetails,
     paymentMode: readText(formData, "paymentMode") || null,
     clientOrderValue: clientOrderUsdValue,
     clientOrderOriginalValue: clientOrderOriginalValue || null,
