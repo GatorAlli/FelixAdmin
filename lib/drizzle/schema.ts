@@ -24,6 +24,7 @@ export const data = p.pgTable("data", {
   productSystem: p.text(),
 
   orderHandledBy: p.varchar(),
+  importedBy: p.varchar().$type<"Felix" | "Customer">(),
   suppliers: p.text(),
   gbpToUsdRate: p.numeric({ precision: 18, scale: 8 }),
   eurToUsdRate: p.numeric({ precision: 18, scale: 8 }),
@@ -87,6 +88,7 @@ export const suppliers = p.pgTable("suppliers", {
 export const customers = p.pgTable("customers", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   customerName: p.varchar().notNull(),
+  address: p.text(),
 });
 
 export const miscellaneousExpenditures = p.pgTable(

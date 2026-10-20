@@ -232,6 +232,7 @@ export default function PageBody({
 
   const [felixOrderNo, setFelixOrderNo] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
+  const [importedBy, setImportedBy] = useState<"" | "Felix" | "Customer">("");
   const [clientOrderValue, setClientOrderValue] = useState("");
   const [clientOrderCurrency, setClientOrderCurrency] =
     useState<Currency>("USD");
@@ -291,6 +292,7 @@ export default function PageBody({
     setFelixOrderNo(orderDetails.felixOrderRef);
     // Database nulls become empty strings so the inputs can display them.
     setPaymentMode(orderDetails.paymentMode ?? "");
+    setImportedBy(orderDetails.importedBy ?? "");
     setClientOrderValue(
       orderDetails.clientOrderOriginalValue ??
         orderDetails.clientOrderValue ??
@@ -443,58 +445,75 @@ export default function PageBody({
                 }}
                 className="flex flex-col gap-8"
               >
-                <div className="">
-                  <Label
-                    className={headingStyling}
-                    htmlFor="orderHandlerChoice"
-                  >
-                    Order Handled By
-                  </Label>
-                  <div className="flex flex-col gap-3">
-                    <Select
-                      value={orderHandlerChoice}
-                      onValueChange={(value) => {
-                        if (typeof value !== "string") return;
-                        setOrderHandlerChoice(value);
-                        setOrderHandledBy(value === "OTHERS" ? "" : value);
-                      }}
+                <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2">
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <Label
+                      className={headingStyling}
+                      htmlFor="orderHandlerChoice"
                     >
-                      <SelectTrigger id="orderHandlerChoice">
-                        <SelectValue placeholder="Select order handler" />
+                      Order Handled By
+                    </Label>
+                    <div className="flex flex-col gap-3">
+                      <Select
+                        value={orderHandlerChoice}
+                        onValueChange={(value) => {
+                          if (typeof value !== "string") return;
+                          setOrderHandlerChoice(value);
+                          setOrderHandledBy(value === "OTHERS" ? "" : value);
+                        }}
+                      >
+                        <SelectTrigger id="orderHandlerChoice">
+                          <SelectValue placeholder="Select order handler" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {orderHandlers.map((handler) => (
+                            <SelectItem key={handler} value={handler}>
+                              {titleCaseLabel(handler)}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="OTHERS">Others</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {orderHandlerChoice === "OTHERS" && (
+                        <div className="flex flex-col gap-2">
+                          <Label
+                            className={headingStyling}
+                            htmlFor="otherOrderHandler"
+                          >
+                            Other Order Handler
+                          </Label>
+                          <Input
+                            className={inputStyling}
+                            id="otherOrderHandler"
+                            placeholder="Specify order handler"
+                            value={orderHandledBy}
+                            onChange={(e) => setOrderHandledBy(e.target.value)}
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="hidden"
+                      name="orderHandledBy"
+                      value={orderHandledBy}
+                    />
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <Label className={headingStyling} htmlFor="importedBy">Imported By</Label>
+                    <Select value={importedBy} onValueChange={(value) => {
+                      if (value === "Felix" || value === "Customer") setImportedBy(value);
+                    }}>
+                      <SelectTrigger id="importedBy" className="w-full" disabled={isSubmitting}>
+                        <SelectValue placeholder="Select importer" />
                       </SelectTrigger>
                       <SelectContent>
-                        {orderHandlers.map((handler) => (
-                          <SelectItem key={handler} value={handler}>
-                            {titleCaseLabel(handler)}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="OTHERS">Others</SelectItem>
+                        <SelectItem value="Felix">Felix</SelectItem>
+                        <SelectItem value="Customer">Customer</SelectItem>
                       </SelectContent>
                     </Select>
-                    {orderHandlerChoice === "OTHERS" && (
-                      <div className="flex flex-col gap-2">
-                        <Label
-                          className={headingStyling}
-                          htmlFor="otherOrderHandler"
-                        >
-                          Other Order Handler
-                        </Label>
-                        <Input
-                          className={inputStyling}
-                          id="otherOrderHandler"
-                          placeholder="Specify order handler"
-                          value={orderHandledBy}
-                          onChange={(e) => setOrderHandledBy(e.target.value)}
-                          required
-                        />
-                      </div>
-                    )}
+                    <input type="hidden" name="importedBy" value={importedBy} />
                   </div>
-                  <input
-                    type="hidden"
-                    name="orderHandledBy"
-                    value={orderHandledBy}
-                  />
                 </div>
                 {/* Project information */}
                 <div className="space-y-4">
@@ -1065,12 +1084,18 @@ export default function PageBody({
           ) : (
             <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
               <div className="flex flex-col gap-8">
-                {orderHandledBy.trim() !== "" && (
-                  <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                    <Label className={headingStyling}>Order Handled By</Label>
-                    <Label className="">{orderHandledBy}</Label>
+                  <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2">
+                    {orderHandledBy.trim() !== "" && (
+                      <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                        <Label className={headingStyling}>Order Handled By</Label>
+                        <Label className="">{orderHandledBy}</Label>
+                      </div>
+                    )}
+                      <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2">
+                        <Label className={headingStyling}>Imported By</Label>
+                        <Label className="font-bold">{importedBy || "Not selected"}</Label>
+                      </div>
                   </div>
-                )}
                 {/* Project information */}
                 {[
                   productSystem,

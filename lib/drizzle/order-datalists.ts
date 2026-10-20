@@ -14,6 +14,7 @@ export async function getOrderDatalists() {
   return {
     supplierSuggestions: supplierRows.flatMap((row) => row.supplierName ? [row.supplierName] : []),
     customerSuggestions: customerRows.map(row => row.customerName),
+    customerAddresses: customerRows.map(row => row.address ?? ""),
     expenseSuggestions: expenseRows.flatMap((row) => row.miscellaneousExpenditureType ? [row.miscellaneousExpenditureType] : []),
   };
 }

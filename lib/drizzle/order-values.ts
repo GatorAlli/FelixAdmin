@@ -165,7 +165,13 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     calculationCurrencies[key] = currency;
   }
 
+  const importedBy = readText(formData, "importedBy");
+  if (importedBy && importedBy !== "Felix" && importedBy !== "Customer") {
+    return { ok: false, message: "Choose Felix or Customer for Imported By." };
+  }
+
   const values = {
+    importedBy: importedBy ? importedBy as "Felix" | "Customer" : null,
     createdBy,
     calculationCurrencies,
     gbpToUsdRate,

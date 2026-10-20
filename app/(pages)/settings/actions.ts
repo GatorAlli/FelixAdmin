@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { miscellaneousExpenditures, suppliers, customers, users } from "@/lib/drizzle/schema";
-import { readDatalistValues, type DatalistKind } from "@/lib/drizzle/datalist-values";
+import { readCustomerAddresses, readDatalistValues, type DatalistKind } from "@/lib/drizzle/datalist-values";
 
 export async function fetchSuppliersList() {
   await requireUser();
@@ -17,7 +17,7 @@ export async function fetchExpensesList() {
   return db.select().from(miscellaneousExpenditures).orderBy(asc(miscellaneousExpenditures.sl));
 }
 
-export async function saveDatalist(kind: DatalistKind, input: string[]) {
+export async function saveDatalist(kind: DatalistKind, input: string[], addresses: string[] = []) {
   const user = await requireUser();
   const [profile] = user.email
     ? await db.select({ status: users.status }).from(users)
@@ -31,6 +31,10 @@ export async function saveDatalist(kind: DatalistKind, input: string[]) {
   }
   const parsed = readDatalistValues(kind, input);
   if (!parsed.ok) return parsed;
+  const customerAddresses = kind === "customers"
+    ? readCustomerAddresses(addresses, parsed.values.length)
+    : { ok: true as const, values: [] };
+  if (!customerAddresses.ok) return customerAddresses;
 
   try {
     await db.transaction(async (transaction) => {
@@ -43,7 +47,7 @@ export async function saveDatalist(kind: DatalistKind, input: string[]) {
       } else if (kind === "customers") {
         await transaction.delete(customers);
         if (parsed.values.length) await transaction.insert(customers)
-          .values(parsed.values.map((customerName) => ({ customerName })));
+          .values(parsed.values.map((customerName, index) => ({ customerName, address: customerAddresses.values[index] })));
       } else {
         await transaction.delete(miscellaneousExpenditures);
         if (parsed.values.length) await transaction.insert(miscellaneousExpenditures)

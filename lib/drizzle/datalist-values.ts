@@ -32,3 +32,14 @@ export function readDatalistValues(kind: DatalistKind, input: unknown):
   }
   return { ok: true, values };
 }
+
+// Addresses are optional and stay paired with the customer at the same index.
+export function readCustomerAddresses(input: unknown, count: number):
+  | { ok: true; values: (string | null)[] }
+  | { ok: false; message: string } {
+  if (!Array.isArray(input) || input.length !== count ||
+      input.some(value => typeof value !== "string" || value.trim().length > 1000)) {
+    return { ok: false, message: "Enter one optional address per customer, up to 1000 characters each." };
+  }
+  return { ok: true, values: input.map(value => value.trim() || null) };
+}

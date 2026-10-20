@@ -56,3 +56,12 @@ test("removing a suggestion does not invalidate existing order expense values", 
   assert.ok(parsed.ok);
   assert.equal(parsed.values.miscellaneousExpenses?.[0].name, "PREVIOUSLY SAVED EXPENSE");
 });
+
+test("customer addresses stay paired, trim whitespace and allow blanks", async () => {
+  const { readCustomerAddresses } = await import("./datalist-values");
+  assert.deepEqual(readCustomerAddresses([" Dhaka ", ""], 2), { ok: true, values: ["Dhaka", null] });
+  assert.deepEqual(readCustomerAddresses([], 0), { ok: true, values: [] });
+  for (const input of [["missing partner"], ["x".repeat(1001), ""], [12, ""], null]) {
+    assert.equal(readCustomerAddresses(input, 2).ok, false);
+  }
+});

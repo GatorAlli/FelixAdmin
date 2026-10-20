@@ -11,10 +11,12 @@ function SuggestionList({
   kind,
   title,
   initialValues,
+  initialAddresses = [],
 }: {
   kind: DatalistKind;
   title: string;
   initialValues: string[];
+  initialAddresses?: string[];
 }) {
   const itemLabel =
     kind === "suppliers"
@@ -25,7 +27,11 @@ function SuggestionList({
   const nextId = useRef(initialValues.length);
   const newInput = useRef<HTMLInputElement | null>(null);
   const [rows, setRows] = useState(
-    initialValues.map((value, id) => ({ id, value })),
+    initialValues.map((value, id) => ({
+      id,
+      value,
+      address: initialAddresses[id] ?? "",
+    })),
   );
   const [dirty, setDirty] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -67,6 +73,9 @@ function SuggestionList({
               const result = await saveDatalist(
                 kind,
                 rows.map((row) => row.value),
+                kind === "customers"
+                  ? rows.map((row) => row.address)
+                  : undefined,
               );
               setMessage(result.message);
               setError(!result.ok);
@@ -82,13 +91,13 @@ function SuggestionList({
           <div className="flex flex-col gap-4 rounded-lg border px-4 py-2">
             {rows.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                No suggestions yet. Add one below.
+                No datalist added. Add one below.
               </p>
             )}
             {rows.map((row, index) => (
               <div
                 key={row.id}
-                className="grid min-w-0 grid-cols-[1.5rem_minmax(0,1fr)_auto] items-end gap-x-4 gap-y-4 py-2"
+                className="grid min-w-0 grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2"
               >
                 <Label className="h-10 justify-center normal-case">
                   {index + 1}.
@@ -113,8 +122,30 @@ function SuggestionList({
                       )
                     }
                   />
+                  {kind === "customers" && (
+                    <div className="space-y-2">
+                      <Input
+                        id={`customer-address-${row.id}`}
+                        className="rounded-lg p-2"
+                        placeholder="Address"
+                        aria-label={`Customer address ${index + 1}`}
+                        value={row.address}
+                        maxLength={1000}
+                        onChange={(event) =>
+                          editRows(
+                            rows.map((item) =>
+                              item.id === row.id
+                                ? { ...item, address: event.target.value }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
                 <Button
+                  className="h-10"
                   type="button"
                   aria-label={`Remove ${itemLabel.toLowerCase()} ${index + 1}`}
                   onClick={() =>
@@ -132,7 +163,10 @@ function SuggestionList({
               aria-label={`Add ${itemLabel.toLowerCase()}`}
               disabled={rows.length >= 500}
               onClick={() => {
-                editRows([...rows, { id: nextId.current++, value: "" }]);
+                editRows([
+                  ...rows,
+                  { id: nextId.current++, value: "", address: "" },
+                ]);
                 // Focus the new row after React commits its input.
                 requestAnimationFrame(() => newInput.current?.focus());
               }}
@@ -157,10 +191,12 @@ function SuggestionList({
 export default function SettingsLists({
   supplierSuggestions,
   customerSuggestions,
+  customerAddresses,
   expenseSuggestions,
 }: {
   supplierSuggestions: string[];
   customerSuggestions: string[];
+  customerAddresses: string[];
   expenseSuggestions: string[];
 }) {
   return (
@@ -175,6 +211,7 @@ export default function SettingsLists({
           kind="customers"
           title="Customers"
           initialValues={customerSuggestions}
+          initialAddresses={customerAddresses}
         />
         <SuggestionList
           kind="expenses"
