@@ -201,11 +201,6 @@ export default function SettingsLists({
 }) {
   return (
     <div className="grid grid-cols-1 items-start gap-4 p-4 md:grid-cols-2">
-      <SuggestionList
-        kind="suppliers"
-        title="Suppliers"
-        initialValues={supplierSuggestions}
-      />
       <div className="grid min-w-0 grid-cols-1 gap-4">
         <SuggestionList
           kind="customers"
@@ -219,6 +214,11 @@ export default function SettingsLists({
           initialValues={expenseSuggestions}
         />
       </div>
+      <SuggestionList
+        kind="suppliers"
+        title="Suppliers"
+        initialValues={supplierSuggestions}
+      />
     </div>
   );
 }
