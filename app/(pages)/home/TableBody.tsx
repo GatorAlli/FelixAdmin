@@ -26,15 +26,19 @@ export default function TableBody({
   adminStatus: string;
 }) {
   const router = useRouter();
-  const [selectedYear, setSelectedYear] = useState("all");
+  const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [isSavingAccess, startAccessTransition] = useTransition();
   const [accessMessage, setAccessMessage] = useState("");
   const [accessError, setAccessError] = useState(false);
-  const [pendingAccess, setPendingAccess] = useState<Record<number, boolean>>({});
-  const accessChanges = Object.entries(pendingAccess).map(([orderId, access]) => ({
-    orderId: Number(orderId),
-    access,
-  }));
+  const [pendingAccess, setPendingAccess] = useState<Record<number, boolean>>(
+    {},
+  );
+  const accessChanges = Object.entries(pendingAccess).map(
+    ([orderId, access]) => ({
+      orderId: Number(orderId),
+      access,
+    }),
+  );
 
   useEffect(() => {
     if (!accessMessage) return;
@@ -61,7 +65,8 @@ export default function TableBody({
   }
 
   function saveAccess() {
-    if (adminStatus !== "admin" || !accessChanges.length || isSavingAccess) return;
+    if (adminStatus !== "admin" || !accessChanges.length || isSavingAccess)
+      return;
     setAccessMessage("");
     setAccessError(false);
     startAccessTransition(async () => {
@@ -115,9 +120,9 @@ export default function TableBody({
               </tr>
             </thead>
             <tbody className="bg-white">
-              {orderArray.map((e) => (
+              {orderArray.map((e, key) => (
                 <tr className="hover:bg-gray-50 group" key={e.sl}>
-                  <td className={cellStyling}>{e.sl}</td>
+                  <td className={cellStyling}>{key + 1}</td>
                   <td className={cellStyling}>
                     <span className="font-extrabold text-black">
                       {e.createdBy}
@@ -136,9 +141,7 @@ export default function TableBody({
                         checked={!(pendingAccess[e.sl] ?? e.orderManagerAccess)}
                         disabled={isSavingAccess}
                         aria-label={`Revoke access for ${e.felixOrderRef}`}
-                        onCheckedChange={(checked) =>
-                          changeAccess(e, checked)
-                        }
+                        onCheckedChange={(checked) => changeAccess(e, checked)}
                       />
                     </td>
                   ) : (
