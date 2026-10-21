@@ -1,9 +1,13 @@
 import * as p from "drizzle-orm/pg-core";
-import type { Currency, SupplierCurrencyDetail, CustomSupplierDetail } from "./currency";
+import type {
+  Currency,
+  SupplierCurrencyDetail,
+  CustomSupplierDetail,
+} from "./currency";
 import type { MiscellaneousExpense } from "./expenses";
 import type { PanelCurrencies } from "./order-calculations";
 
-export const data = p.pgTable("data", {
+export const data = p.pgTable.withRLS("data", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   createdBy: p.varchar().notNull(),
   orderManagerAccess: p.boolean().notNull().default(true),
@@ -30,7 +34,11 @@ export const data = p.pgTable("data", {
   eurToUsdRate: p.numeric({ precision: 18, scale: 8 }),
   usdToSgdRate: p.numeric({ precision: 18, scale: 2 }),
   supplierCurrencyDetails: p.jsonb().$type<SupplierCurrencyDetail[]>(),
-  customSupplierDetails: p.jsonb().$type<CustomSupplierDetail[]>().notNull().default([]),
+  customSupplierDetails: p
+    .jsonb()
+    .$type<CustomSupplierDetail[]>()
+    .notNull()
+    .default([]),
 
   trane: p.numeric({ precision: 18, scale: 2 }),
   belimo: p.numeric({ precision: 18, scale: 2 }),
@@ -74,29 +82,58 @@ export const data = p.pgTable("data", {
   miscellaneousHandlingFee: p.numeric({ precision: 18, scale: 4 }),
 });
 
-export const users = p.pgTable("users", {
+export const users = p.pgTable.withRLS("users", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   name: p.varchar(),
   email: p.varchar(),
   status: p.varchar(),
 });
 
-export const suppliers = p.pgTable("suppliers", {
+export const suppliers = p.pgTable.withRLS("suppliers", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   supplierName: p.varchar(),
 });
-export const customers = p.pgTable("customers", {
+export const customers = p.pgTable.withRLS("customers", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   customerName: p.varchar().notNull(),
   address: p.text(),
 });
 
-export const miscellaneousExpenditures = p.pgTable(
+export const miscellaneousExpenditures = p.pgTable.withRLS(
   "miscellaneousExpenditures",
   {
     sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
     miscellaneousExpenditureType: p.varchar(),
   },
+);
+
+export const orderDocuments = p.pgTable.withRLS(
+  "order_documents",
+  {
+    id: p.uuid().primaryKey().defaultRandom(),
+
+    orderId: p
+      .integer()
+      .notNull()
+      .references(() => data.sl),
+
+    title: p.varchar({ length: 120 }).notNull(),
+
+    originalName: p.varchar({ length: 255 }).notNull(),
+
+    storagePath: p.text().notNull().unique(),
+
+    mimeType: p.varchar({ length: 100 }).notNull(),
+    sizeBytes: p.integer().notNull(),
+
+    uploadedBy: p.uuid().notNull(),
+
+    createdAt: p.timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // Makes "find documents for this order" efficient.
+    p.index("order_documents_order_id_idx").on(table.orderId),
+  ],
 );
 
 export type Supplier = typeof suppliers.$inferSelect;
@@ -105,3 +142,7 @@ export type Expense = typeof miscellaneousExpenditures.$inferSelect;
 export type NewExpense = typeof miscellaneousExpenditures.$inferInsert;
 export type Order = typeof data.$inferSelect;
 export type NewOrder = typeof data.$inferInsert;
+export type DocumentSummary = Pick<
+  typeof orderDocuments.$inferSelect,
+  "id" | "title" | "originalName" | "sizeBytes"
+>;

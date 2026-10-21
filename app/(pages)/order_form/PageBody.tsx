@@ -1097,6 +1097,19 @@ export default function PageBody({
                       +
                     </Button>
                   </div>
+                  {/* Document Uploads */}
+                  <div className="space-y-4">
+                    <Label>Document Upload</Label>
+                    <div className="flex gap-4">
+                      <Label>1.</Label>
+                      <div className="flex flex-col gap-4">
+                        <Input />
+                        <Input type="file" />
+                      </div>
+                      <Button>-</Button>
+                    </div>
+                    <Button>+</Button>
+                  </div>
                 </div>
               </form>
             </div>

@@ -1,3 +1,7 @@
 {
-  "js/ts.experimental.useTsgo": false
+  "js/ts.experimental.useTsgo": false,
+  "tailwindCSS.classFunctions": [],
+  "tailwindCSS.experimental.classRegex": [
+    ["(?:cn|clsx|cva)\\(([^)]*)\\)", "[\"'`]([^\"'`]*)[\"'`]"]
+  ]
 }
