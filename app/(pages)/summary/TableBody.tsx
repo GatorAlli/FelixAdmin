@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoney } from "@/lib/format-money";
 import type { Order } from "@/lib/drizzle/schema";
 import { expenseColumns, expenseUsdByName } from "@/lib/drizzle/expenses";
 import {
@@ -138,7 +139,7 @@ export default function TableBody({
                       {e.felixOrderRef}
                     </td>
                     <td className={cellStyling}>{e.paymentMode}</td>
-                    <td className={cellStyling}>{e.clientOrderValue}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.clientOrderValue)}</td>
                     <td className={cellStyling}>{e.projectName}</td>
                     <td className={cellStyling}>{e.projectNotes}</td>
                     <td className={cellStyling}>{e.clientName}</td>
@@ -146,45 +147,45 @@ export default function TableBody({
                     <td className={cellStyling}>{e.productSystem}</td>
                     <td className={cellStyling}>{e.orderHandledBy}</td>
                     <td className={cellStyling}>{e.suppliers}</td>
-                    <td className={cellStyling}>{e.trane}</td>
-                    <td className={cellStyling}>{e.belimo}</td>
-                    <td className={cellStyling}>{e.danfoss}</td>
-                    <td className={cellStyling}>{e.honeywell}</td>
-                    <td className={cellStyling}>{e.regeltechnik}</td>
-                    <td className={cellStyling}>{e.dwyer}</td>
-                    <td className={cellStyling}>{e.alps}</td>
-                    <td className={cellStyling}>{e.control4}</td>
-                    <td className={cellStyling}>{e.lutron}</td>
-                    <td className={cellStyling}>{e.landisGyr}</td>
-                    <td className={cellStyling}>{e.rbh}</td>
-                    <td className={cellStyling}>{e.prostar}</td>
-                    <td className={cellStyling}>{e.gissmatic}</td>
-                    <td className={cellStyling}>{e.zkteco}</td>
-                    <td className={cellStyling}>{e.adteshia}</td>
-                    <td className={cellStyling}>{e.fike}</td>
-                    <td className={cellStyling}>{e.tecofi}</td>
-                    <td className={cellStyling}>{e.sewo}</td>
-                    <td className={cellStyling}>{e.ebelco}</td>
-                    <td className={cellStyling}>{e.dooya}</td>
-                    <td className={cellStyling}>{e.pogo}</td>
-                    <td className={cellStyling}>{e.parkHelp}</td>
-                    <td className={cellStyling}>{e.foshan}</td>
-                    <td className={cellStyling}>{e.kele}</td>
-                    <td className={cellStyling}>{e.multicable}</td>
-                    <td className={cellStyling}>{e.deyz}</td>
-                    <td className={cellStyling}>{e.simens}</td>
-                    <td className={cellStyling}>{e.flashTurtle}</td>
-                    <td className={cellStyling}>{e.servo}</td>
-                    <td className={cellStyling}>{e.haboo}</td>
-                    <td className={cellStyling}>{e.others}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.trane)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.belimo)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.danfoss)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.honeywell)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.regeltechnik)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.dwyer)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.alps)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.control4)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.lutron)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.landisGyr)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.rbh)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.prostar)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.gissmatic)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.zkteco)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.adteshia)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.fike)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.tecofi)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.sewo)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.ebelco)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.dooya)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.pogo)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.parkHelp)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.foshan)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.kele)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.multicable)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.deyz)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.simens)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.flashTurtle)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.servo)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.haboo)}</td>
+                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.others)}</td>
                     {additionalSuppliers.map((name) => (
                       <td className={cellStyling} key={`supplier-${name}`}>
-                        {supplierAmounts[index].get(name) ?? ""}
+                        {formatMoney(supplierAmounts[index].get(name))}
                       </td>
                     ))}
                     {expenditureColumns.map((name) => (
                       <td className={cellStyling} key={name}>
-                        {expenditureAmounts[index].get(name) ?? ""}
+                        {formatMoney(expenditureAmounts[index].get(name))}
                       </td>
                     ))}
                     <td className={cellStyling}>{e.paymentNotes}</td>

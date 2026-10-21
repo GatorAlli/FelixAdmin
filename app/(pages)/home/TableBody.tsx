@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { formatMoney } from "@/lib/format-money";
 import type { Order } from "@/lib/drizzle/schema";
 import { clsx } from "clsx";
 import {
@@ -131,7 +132,7 @@ export default function TableBody({
                   <td className={`${cellStyling} font-bold text-black`}>
                     {e.felixOrderRef}
                   </td>
-                  <td className={cellStyling}>{e.clientOrderValue}</td>
+                  <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.clientOrderValue)}</td>
                   <td className={cellStyling}>{e.projectName}</td>
                   <td className={cellStyling}>{e.clientName}</td>
                   <td className={cellStyling}>{e.endUser}</td>

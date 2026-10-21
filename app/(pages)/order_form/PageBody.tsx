@@ -1,9 +1,11 @@
 "use client";
 
+import { formatMoney } from "@/lib/format-money";
 import Navbar from "@/components/view/navbar/navbar";
 
 import { useRef, useState } from "react";
 import { Label as FormLabel } from "@/components/ui/label";
+import { MoneyInput } from "@/components/ui/money-input";
 import { Input } from "@/components/ui/input";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Manrope } from "next/font/google";
@@ -646,16 +648,13 @@ export default function PageBody({
                             >
                               Client Order Value
                             </Label>
-                            <Input
+                            <MoneyInput
                               className={inputStyling}
                               id="clientOrderValue"
                               name="clientOrderValue"
-                              type="number"
-                              min="0"
-                              step="0.01"
                               value={clientOrderValue}
-                              onChange={(e) =>
-                                setClientOrderValue(e.target.value)
+                              onValueChange={(value) =>
+                                setClientOrderValue(value)
                               }
                             />
                           </div>
@@ -706,13 +705,13 @@ export default function PageBody({
                                   className={inputStyling}
                                   id="clientOrderUsdValue"
                                   value={
-                                    convertToUsd(
+                                    formatMoney(convertToUsd(
                                       clientOrderValue,
                                       clientOrderCurrency,
                                       gbpToUsdRate,
                                       eurToUsdRate,
                                       usdToSgdRate,
-                                    ) ?? ""
+                                    ), "")
                                   }
                                   placeholder="Enter an amount and valid rate"
                                   readOnly
@@ -801,21 +800,18 @@ export default function PageBody({
                             >
                               Amount
                             </Label>
-                            <Input
+                            <MoneyInput
                               className={inputStyling}
                               id={`supplier-amount-${row.id}`}
                               name="supplierAmount"
-                              type="number"
-                              min="0"
-                              step="0.01"
                               value={row.amount}
                               placeholder={`in ${row.currency}`}
-                              onChange={(e) => {
+                              onValueChange={(value) => {
                                 // Update only this row's amount; keep it as a string so it can be cleared.
                                 setSuppliers((rows) =>
                                   rows.map((item) =>
                                     item.id === row.id
-                                      ? { ...item, amount: e.target.value }
+                                      ? { ...item, amount: value }
                                       : item,
                                   ),
                                 );
@@ -888,13 +884,13 @@ export default function PageBody({
                                   id={`supplier-usd-${row.id}`}
                                   className="px-2"
                                 >
-                                  {convertToUsd(
+                                  {formatMoney(convertToUsd(
                                     row.amount,
                                     row.currency,
                                     gbpToUsdRate,
                                     eurToUsdRate,
                                     usdToSgdRate,
-                                  ) ?? ""}
+                                  ), "")}
                                 </Label>
                               </div>
                             </div>
@@ -965,21 +961,18 @@ export default function PageBody({
                             >
                               Amount
                             </Label>
-                            <Input
+                            <MoneyInput
                               className={inputStyling}
                               id={`expense-amount-${row.id}`}
                               name="expenseAmount"
-                              type="number"
-                              min="0"
-                              step="0.01"
                               value={row.amount}
                               placeholder={`in ${row.currency}`}
-                              onChange={(e) => {
+                              onValueChange={(value) => {
                                 // Update only this row's amount; keep it as a string so it can be cleared.
                                 setExpenses((rows) =>
                                   rows.map((item) =>
                                     item.id === row.id
-                                      ? { ...item, amount: e.target.value }
+                                      ? { ...item, amount: value }
                                       : item,
                                   ),
                                 );
@@ -1049,13 +1042,13 @@ export default function PageBody({
                                   Amount (USD)
                                 </Label>
                                 <Label id={`expense-usd-${row.id}`}>
-                                  {convertToUsd(
+                                  {formatMoney(convertToUsd(
                                     row.amount,
                                     row.currency,
                                     gbpToUsdRate,
                                     eurToUsdRate,
                                     usdToSgdRate,
-                                  ) ?? ""}
+                                  ), "")}
                                 </Label>
                               </div>
                             </div>
@@ -1165,7 +1158,7 @@ export default function PageBody({
                               Client Order Value ({clientOrderCurrency})
                             </Label>
                             <Label className="font-bold">
-                              {clientOrderValue}
+                              {formatMoney(clientOrderValue)}
                             </Label>
                             {clientOrderCurrency !== "USD" && (
                               <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
@@ -1173,13 +1166,13 @@ export default function PageBody({
                                   Order Value (USD)
                                 </Label>
                                 <Label className="font-bold">
-                                  {convertToUsd(
+                                  {formatMoney(convertToUsd(
                                     clientOrderValue,
                                     clientOrderCurrency,
                                     gbpToUsdRate,
                                     eurToUsdRate,
                                     usdToSgdRate,
-                                  ) ?? "—"}
+                                  ), "—")}
                                 </Label>
                               </div>
                             )}
@@ -1225,7 +1218,7 @@ export default function PageBody({
                                     Amount ({row.currency})
                                   </Label>
                                   <Label className="font-bold">
-                                    {row.amount}
+                                    {formatMoney(row.amount)}
                                   </Label>
                                 </div>
                               </div>
@@ -1248,13 +1241,13 @@ export default function PageBody({
                                       Amount (USD)
                                     </Label>
                                     <Label className="font-bold">
-                                      {convertToUsd(
+                                      {formatMoney(convertToUsd(
                                         row.amount,
                                         row.currency,
                                         gbpToUsdRate,
                                         eurToUsdRate,
                                         usdToSgdRate,
-                                      ) ?? "—"}
+                                      ), "—")}
                                     </Label>
                                   </div>
                                 </div>
@@ -1285,7 +1278,7 @@ export default function PageBody({
                                     Amount ({row.currency})
                                   </Label>
                                   <Label className="font-bold">
-                                    {row.amount}
+                                    {formatMoney(row.amount)}
                                   </Label>
                                 </div>
                               </div>
@@ -1308,13 +1301,13 @@ export default function PageBody({
                                       Amount (USD)
                                     </Label>
                                     <Label className="font-bold">
-                                      {convertToUsd(
+                                      {formatMoney(convertToUsd(
                                         row.amount,
                                         row.currency,
                                         gbpToUsdRate,
                                         eurToUsdRate,
                                         usdToSgdRate,
-                                      ) ?? "—"}
+                                      ), "—")}
                                     </Label>
                                   </div>
                                 </div>
@@ -1387,7 +1380,7 @@ export default function PageBody({
                     </Label>
                     <div className="flex items-center gap-4">
                       <Label className="font-bold" aria-live="polite">
-                        {displayed ?? "—"}
+                        {formatMoney(displayed, "—")}
                       </Label>
                       <Select
                         disabled={isSubmitting}
