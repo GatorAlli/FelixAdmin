@@ -179,7 +179,7 @@ function PaymentModeField({
                     <Label className="shrink-0 whitespace-nowrap">
                       Payment Method
                     </Label>
-                    <Label className="min-h-10 break-words rounded-lg border bg-muted/50 p-2 text-sm font-semibold text-foreground">
+                    <Label className="min-h-10 wrap-break-words rounded-lg border bg-muted/50 p-2 text-sm font-semibold text-foreground">
                       {value || "Not specified"}
                     </Label>
                   </div>
@@ -502,11 +502,21 @@ export default function PageBody({
                     />
                   </div>
                   <div className="flex min-w-0 flex-col gap-2">
-                    <Label className={headingStyling} htmlFor="importedBy">Imported By</Label>
-                    <Select value={importedBy} onValueChange={(value) => {
-                      if (value === "Felix" || value === "Customer") setImportedBy(value);
-                    }}>
-                      <SelectTrigger id="importedBy" className="w-full" disabled={isSubmitting}>
+                    <Label className={headingStyling} htmlFor="importedBy">
+                      Imported By
+                    </Label>
+                    <Select
+                      value={importedBy}
+                      onValueChange={(value) => {
+                        if (value === "Felix" || value === "Customer")
+                          setImportedBy(value);
+                      }}
+                    >
+                      <SelectTrigger
+                        id="importedBy"
+                        className="w-full"
+                        disabled={isSubmitting}
+                      >
                         <SelectValue placeholder="Select importer" />
                       </SelectTrigger>
                       <SelectContent>
@@ -602,7 +612,9 @@ export default function PageBody({
                         onChange={(e) => setClientName(e.target.value)}
                       />
                       <datalist id="customer-options">
-                        {customerSuggestions.map(name => <option key={name} value={name} />)}
+                        {customerSuggestions.map((name) => (
+                          <option key={name} value={name} />
+                        ))}
                       </datalist>
                     </div>
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
@@ -704,15 +716,16 @@ export default function PageBody({
                                 <Input
                                   className={inputStyling}
                                   id="clientOrderUsdValue"
-                                  value={
-                                    formatMoney(convertToUsd(
+                                  value={formatMoney(
+                                    convertToUsd(
                                       clientOrderValue,
                                       clientOrderCurrency,
                                       gbpToUsdRate,
                                       eurToUsdRate,
                                       usdToSgdRate,
-                                    ), "")
-                                  }
+                                    ),
+                                    "",
+                                  )}
                                   placeholder="Enter an amount and valid rate"
                                   readOnly
                                 />
@@ -758,7 +771,9 @@ export default function PageBody({
                   {/* Supplier names use inputs, with suggestions for the brands in the schema. */}
                   <div className="space-y-4">
                     <datalist id="supplier-options">
-                      {supplierSuggestions.map((name) => <option key={name} value={name} />)}
+                      {supplierSuggestions.map((name) => (
+                        <option key={name} value={name} />
+                      ))}
                     </datalist>
 
                     <Label className={headingStyling}>Material Cost</Label>
@@ -884,13 +899,16 @@ export default function PageBody({
                                   id={`supplier-usd-${row.id}`}
                                   className="px-2"
                                 >
-                                  {formatMoney(convertToUsd(
-                                    row.amount,
-                                    row.currency,
-                                    gbpToUsdRate,
-                                    eurToUsdRate,
-                                    usdToSgdRate,
-                                  ), "")}
+                                  {formatMoney(
+                                    convertToUsd(
+                                      row.amount,
+                                      row.currency,
+                                      gbpToUsdRate,
+                                      eurToUsdRate,
+                                      usdToSgdRate,
+                                    ),
+                                    "",
+                                  )}
                                 </Label>
                               </div>
                             </div>
@@ -903,7 +921,10 @@ export default function PageBody({
                       aria-label="Add supplier"
                       onClick={() => {
                         // Append a new empty row with an ID that has not been used before.
-                        const id = Math.max(nextSupplierId.current, ...suppliers.map(row => row.id + 1));
+                        const id = Math.max(
+                          nextSupplierId.current,
+                          ...suppliers.map((row) => row.id + 1),
+                        );
                         nextSupplierId.current = id + 1;
                         setSuppliers((rows) => [
                           ...rows,
@@ -916,7 +937,9 @@ export default function PageBody({
                   </div>
                   <div className="space-y-4">
                     <datalist id="expense-options">
-                      {expenseSuggestions.map((name) => <option key={name} value={name} />)}
+                      {expenseSuggestions.map((name) => (
+                        <option key={name} value={name} />
+                      ))}
                     </datalist>
                     <Label className={headingStyling}>
                       Miscellaneous Costs
@@ -1042,13 +1065,16 @@ export default function PageBody({
                                   Amount (USD)
                                 </Label>
                                 <Label id={`expense-usd-${row.id}`}>
-                                  {formatMoney(convertToUsd(
-                                    row.amount,
-                                    row.currency,
-                                    gbpToUsdRate,
-                                    eurToUsdRate,
-                                    usdToSgdRate,
-                                  ), "")}
+                                  {formatMoney(
+                                    convertToUsd(
+                                      row.amount,
+                                      row.currency,
+                                      gbpToUsdRate,
+                                      eurToUsdRate,
+                                      usdToSgdRate,
+                                    ),
+                                    "",
+                                  )}
                                 </Label>
                               </div>
                             </div>
@@ -1077,18 +1103,20 @@ export default function PageBody({
           ) : (
             <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
               <div className="flex flex-col gap-8">
-                  <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2">
-                    {orderHandledBy.trim() !== "" && (
-                      <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                        <Label className={headingStyling}>Order Handled By</Label>
-                        <Label className="">{orderHandledBy}</Label>
-                      </div>
-                    )}
-                      <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2">
-                        <Label className={headingStyling}>Imported By</Label>
-                        <Label className="font-bold">{importedBy || "Not selected"}</Label>
-                      </div>
+                <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2">
+                  {orderHandledBy.trim() !== "" && (
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                      <Label className={headingStyling}>Order Handled By</Label>
+                      <Label className="">{orderHandledBy}</Label>
+                    </div>
+                  )}
+                  <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2">
+                    <Label className={headingStyling}>Imported By</Label>
+                    <Label className="font-bold">
+                      {importedBy || "Not selected"}
+                    </Label>
                   </div>
+                </div>
                 {/* Project information */}
                 {[
                   productSystem,
@@ -1166,13 +1194,16 @@ export default function PageBody({
                                   Order Value (USD)
                                 </Label>
                                 <Label className="font-bold">
-                                  {formatMoney(convertToUsd(
-                                    clientOrderValue,
-                                    clientOrderCurrency,
-                                    gbpToUsdRate,
-                                    eurToUsdRate,
-                                    usdToSgdRate,
-                                  ), "—")}
+                                  {formatMoney(
+                                    convertToUsd(
+                                      clientOrderValue,
+                                      clientOrderCurrency,
+                                      gbpToUsdRate,
+                                      eurToUsdRate,
+                                      usdToSgdRate,
+                                    ),
+                                    "—",
+                                  )}
                                 </Label>
                               </div>
                             )}
@@ -1241,13 +1272,16 @@ export default function PageBody({
                                       Amount (USD)
                                     </Label>
                                     <Label className="font-bold">
-                                      {formatMoney(convertToUsd(
-                                        row.amount,
-                                        row.currency,
-                                        gbpToUsdRate,
-                                        eurToUsdRate,
-                                        usdToSgdRate,
-                                      ), "—")}
+                                      {formatMoney(
+                                        convertToUsd(
+                                          row.amount,
+                                          row.currency,
+                                          gbpToUsdRate,
+                                          eurToUsdRate,
+                                          usdToSgdRate,
+                                        ),
+                                        "—",
+                                      )}
                                     </Label>
                                   </div>
                                 </div>
@@ -1301,13 +1335,16 @@ export default function PageBody({
                                       Amount (USD)
                                     </Label>
                                     <Label className="font-bold">
-                                      {formatMoney(convertToUsd(
-                                        row.amount,
-                                        row.currency,
-                                        gbpToUsdRate,
-                                        eurToUsdRate,
-                                        usdToSgdRate,
-                                      ), "—")}
+                                      {formatMoney(
+                                        convertToUsd(
+                                          row.amount,
+                                          row.currency,
+                                          gbpToUsdRate,
+                                          eurToUsdRate,
+                                          usdToSgdRate,
+                                        ),
+                                        "—",
+                                      )}
                                     </Label>
                                   </div>
                                 </div>
