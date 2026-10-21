@@ -503,7 +503,7 @@ export default function PageBody({
                   </div>
                   <div className="flex min-w-0 flex-col gap-2">
                     <Label className={headingStyling} htmlFor="importedBy">
-                      Imported By
+                      Import By
                     </Label>
                     <Select
                       value={importedBy}
@@ -1111,7 +1111,7 @@ export default function PageBody({
                     </div>
                   )}
                   <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2">
-                    <Label className={headingStyling}>Imported By</Label>
+                    <Label className={headingStyling}>Import By</Label>
                     <Label className="font-bold">
                       {importedBy || "Not selected"}
                     </Label>
