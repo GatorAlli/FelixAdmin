@@ -77,7 +77,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
             <label htmlFor={`${inputId}-${row.id}`} className="text-sm font-medium">Attach document {index + 1}</label>
             <div className="flex flex-wrap items-center gap-2">
               <Input id={`${inputId}-${row.id}`} type="file"
-                className="min-w-0 flex-1 basis-48" disabled={unavailable}
+                className="min-w-0 flex-1 basis-48 cursor-pointer py-0 pr-3 file:mr-3 file:h-full file:cursor-pointer file:rounded-lg file:bg-primary file:px-4 file:text-xs file:font-semibold file:tracking-widest file:text-primary-foreground file:uppercase file:transition-colors hover:file:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:file:cursor-not-allowed" disabled={unavailable}
                 onChange={(event) => {
                   const file = event.target.files?.[0] ?? null;
                   if (file && file.size > MAX_DOCUMENT_BYTES) {
@@ -127,11 +127,11 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
             </div>
           </div>
         ))}
-        <Button type="button" variant="outline" size="sm" disabled={unavailable}
+        <Button type="button" disabled={unavailable}
           aria-label="Add document field" onClick={() => {
             const id = nextId.current++;
             setDrafts((rows) => [...rows, { id, file: null }]);
-          }}>+ Add document</Button>
+          }}>+</Button>
       </> : <p className="text-sm text-muted-foreground">Save this order, then reopen it to attach documents.</p>)}
       <p role="status" aria-live="polite" className="text-sm">{busy ? "Working…" : message}</p>
     </section>
