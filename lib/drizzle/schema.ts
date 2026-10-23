@@ -111,23 +111,16 @@ export const orderDocuments = p.pgTable.withRLS(
   "order_documents",
   {
     id: p.uuid().primaryKey().defaultRandom(),
-
     orderId: p
       .integer()
       .notNull()
       .references(() => data.sl),
-
     title: p.varchar({ length: 120 }).notNull(),
-
     originalName: p.varchar({ length: 255 }).notNull(),
-
     storagePath: p.text().notNull().unique(),
-
     mimeType: p.varchar({ length: 100 }).notNull(),
     sizeBytes: p.integer().notNull(),
-
     uploadedBy: p.uuid().notNull(),
-
     createdAt: p.timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
