@@ -3,7 +3,7 @@ import { currentOrderDate } from "@/lib/drizzle/order-date";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import PageBody from "../PageBody";
-import { data, users } from "@/lib/drizzle/schema";
+import { data, users, orderDocuments } from "@/lib/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
@@ -29,6 +29,14 @@ export default async function OrderForm({
     .limit(1);
   if (!order[0]) notFound();
 
+  const documents = await db.select({
+    id: orderDocuments.id,
+    title: orderDocuments.title,
+    originalName: orderDocuments.originalName,
+    sizeBytes: orderDocuments.sizeBytes,
+  }).from(orderDocuments).where(eq(orderDocuments.orderId, order[0].sl))
+    .orderBy(orderDocuments.createdAt);
+
   const userArray = await db.select().from(users);
 
   userArray.forEach((e) => {
@@ -43,7 +51,7 @@ export default async function OrderForm({
 
   return (
     <div>
-      <PageBody {...datalists} orderDetails={order[0]} isAdmin={adminStatus} username={username} currentDate={currentOrderDate()} />
+      <PageBody {...datalists} orderDetails={order[0]} initialDocuments={documents} isAdmin={adminStatus} username={username} currentDate={currentOrderDate()} />
     </div>
   );
 }

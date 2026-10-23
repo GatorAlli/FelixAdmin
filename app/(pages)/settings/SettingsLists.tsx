@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useTransientMessage } from "@/lib/use-transient-message";
+import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,14 +36,9 @@ function SuggestionList({
   );
   const [dirty, setDirty] = useState(false);
   const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useTransientMessage();
   const [error, setError] = useState(false);
 
-  useEffect(() => {
-    if (!message) return;
-    const timer = window.setTimeout(() => setMessage(""), 5000);
-    return () => window.clearTimeout(timer);
-  }, [message]);
 
   function editRows(next: typeof rows) {
     setRows(next);

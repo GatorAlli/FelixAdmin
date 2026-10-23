@@ -1,13 +1,13 @@
 "use client";
 
+import { useTransientMessage } from "@/lib/use-transient-message";
 import { supabase } from "@/lib/supabase/actions";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export function SignOutButton() {
   const router = useRouter();
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useTransientMessage();
 
   return (
     <>

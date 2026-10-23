@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransientMessage } from "@/lib/use-transient-message";
 import Image from "next/image";
 import { Sora, Manrope } from "next/font/google";
 import { ArrowRight, Plus } from "lucide-react";
@@ -48,7 +49,7 @@ const FallingParticles = () => {
 export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useTransientMessage();
 
   const router = useRouter();
 
@@ -188,7 +189,7 @@ export default function App() {
                 </div>
               </div>
             </Button>
-            {message === "NULL" || <Label>{message}</Label>}
+            {message && <Label role="status">{message}</Label>}
           </form>
         </div>
       </div>

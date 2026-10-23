@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransientMessage } from "@/lib/use-transient-message";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Manrope, Sora } from "next/font/google";
@@ -26,7 +27,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [signOutError, setSignOutError] = useState("");
+  const [signOutError, setSignOutError] = useTransientMessage();
   return (
     <nav
       aria-label="Main navigation"

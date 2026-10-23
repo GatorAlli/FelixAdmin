@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useTransientMessage } from "@/lib/use-transient-message";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format-money";
@@ -29,7 +30,7 @@ export default function TableBody({
   const router = useRouter();
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [isSavingAccess, startAccessTransition] = useTransition();
-  const [accessMessage, setAccessMessage] = useState("");
+  const [accessMessage, setAccessMessage] = useTransientMessage();
   const [accessError, setAccessError] = useState(false);
   const [pendingAccess, setPendingAccess] = useState<Record<number, boolean>>(
     {},
@@ -41,11 +42,6 @@ export default function TableBody({
     }),
   );
 
-  useEffect(() => {
-    if (!accessMessage) return;
-    const timer = window.setTimeout(() => setAccessMessage(""), 5000);
-    return () => window.clearTimeout(timer);
-  }, [accessMessage]);
   // Derive rows from fresh server props so access changes survive year filtering.
   const orderArray =
     selectedYear === "all"

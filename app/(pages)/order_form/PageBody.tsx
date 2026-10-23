@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransientMessage } from "@/lib/use-transient-message";
 import { formatMoney } from "@/lib/format-money";
 import Navbar from "@/components/view/navbar/navbar";
 
@@ -13,7 +14,8 @@ import { cn } from "@/lib/utils";
 import { clsx } from "clsx";
 import Link from "next/link";
 import { createOrder, updateOrder } from "./actions";
-import { type Order } from "@/lib/drizzle/schema";
+import { type Order, type DocumentSummary } from "@/lib/drizzle/schema";
+import OrderDocuments from "./OrderDocuments";
 import { canEditOrder } from "@/lib/drizzle/order-access";
 
 import {
@@ -217,6 +219,7 @@ export default function PageBody({
   supplierSuggestions,
   customerSuggestions,
   expenseSuggestions,
+  initialDocuments = [],
 }: {
   orderDetails?: Order;
   isAdmin: string;
@@ -225,6 +228,7 @@ export default function PageBody({
   supplierSuggestions: string[];
   customerSuggestions: string[];
   expenseSuggestions: string[];
+  initialDocuments?: DocumentSummary[];
 }) {
   // Existing orders retain their recorded date; new orders display today's date.
   const [createdDate, setCreatedDate] = useState<string | null>(
@@ -257,7 +261,7 @@ export default function PageBody({
   ]);
   const nextExpenseId = useRef(2);
   const [paymentNotes, setPaymentNotes] = useState("");
-  const [submissionMessage, setSubmissionMessage] = useState("");
+  const [submissionMessage, setSubmissionMessage] = useTransientMessage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   // A ref blocks a second submit immediately, before React renders disabled buttons.
   const submissionInProgress = useRef(false);
@@ -1097,19 +1101,6 @@ export default function PageBody({
                       +
                     </Button>
                   </div>
-                  {/* Document Uploads */}
-                  <div className="space-y-4">
-                    <Label>Document Upload</Label>
-                    <div className="flex gap-4">
-                      <Label>1.</Label>
-                      <div className="flex flex-col gap-4">
-                        <Input />
-                        <Input type="file" />
-                      </div>
-                      <Button>-</Button>
-                    </div>
-                    <Button>+</Button>
-                  </div>
                 </div>
               </form>
             </div>
@@ -1373,6 +1364,13 @@ export default function PageBody({
             </div>
           )}
           <div className="min-w-0 flex flex-col gap-4">
+            <OrderDocuments
+              key={orderDetails?.sl ?? "new"}
+              orderId={orderDetails?.sl}
+              initialDocuments={initialDocuments}
+              editable={isEditing}
+              disabled={isSubmitting}
+            />
             <div className="flex flex-col gap-4 rounded-lg bg-primary p-5 text-white sm:p-6">
               <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
                 <Label className={headingStyling}>Created By:</Label>
