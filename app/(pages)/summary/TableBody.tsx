@@ -1,6 +1,7 @@
 "use client";
 
 import { formatMoney } from "@/lib/format-money";
+import { supplierColumns } from "@/lib/drizzle/currency";
 import type { Order } from "@/lib/drizzle/schema";
 import { expenseColumns, expenseUsdByName } from "@/lib/drizzle/expenses";
 import {
@@ -37,11 +38,17 @@ export default function TableBody({
       : orders.filter((order) =>
           order.felixOrderRef.startsWith(`FCL/FPO/${selectedYear}/`),
         );
-  const additionalSuppliers = customSupplierColumns(
-    orders,
-    supplierSuggestions,
+  // Use the filtered rows for both headers and cells. Zero is a recorded value.
+  const visibleSuppliers = Object.entries(supplierColumns).filter(([, key]) =>
+    orderArray.some((order) => formatMoney(order[key]) !== ""),
   );
   const supplierAmounts = orderArray.map(customSupplierUsdByName);
+  const additionalSuppliers = customSupplierColumns(
+    orderArray,
+    supplierSuggestions,
+  ).filter((name) =>
+    supplierAmounts.some((amounts) => formatMoney(amounts.get(name)) !== ""),
+  );
   const expenditureColumns = expenseColumns(orderArray);
   const expenditureAmounts = orderArray.map(expenseUsdByName);
 
@@ -77,38 +84,11 @@ export default function TableBody({
                   <th className={headerStyling}>END USER</th>
                   <th className={headerStyling}>SYSTEM TYPE</th>
                   <th className={headerStyling}>ORDER HANDLED BY</th>
-                  <th className={headerStyling}>SUPPLIERS</th>
-                  <th className={headerStyling}>TRANE</th>
-                  <th className={headerStyling}>BELIMO</th>
-                  <th className={headerStyling}>DANFOSS</th>
-                  <th className={headerStyling}>HONEYWELL</th>
-                  <th className={headerStyling}>REGELTECHNIK</th>
-                  <th className={headerStyling}>DWYER</th>
-                  <th className={headerStyling}>ALPS</th>
-                  <th className={headerStyling}>CONTROL 4</th>
-                  <th className={headerStyling}>LUTRON</th>
-                  <th className={headerStyling}>LANDIS+GYR</th>
-                  <th className={headerStyling}>RBH</th>
-                  <th className={headerStyling}>PROSTAR</th>
-                  <th className={headerStyling}>GISSMATIC</th>
-                  <th className={headerStyling}>ZKTECO</th>
-                  <th className={headerStyling}>ADTESHIA</th>
-                  <th className={headerStyling}>FIKE</th>
-                  <th className={headerStyling}>TECOFI</th>
-                  <th className={headerStyling}>SEWO</th>
-                  <th className={headerStyling}>EBELCO</th>
-                  <th className={headerStyling}>DOOYA</th>
-                  <th className={headerStyling}>POGO</th>
-                  <th className={headerStyling}>PARK HELP</th>
-                  <th className={headerStyling}>FOSHAN</th>
-                  <th className={headerStyling}>KELE</th>
-                  <th className={headerStyling}>MULTICABLE</th>
-                  <th className={headerStyling}>DEYZ</th>
-                  <th className={headerStyling}>SIMENS</th>
-                  <th className={headerStyling}>FLASH TURTLE</th>
-                  <th className={headerStyling}>SERVO</th>
-                  <th className={headerStyling}>HABOO</th>
-                  <th className={headerStyling}>OTHERS</th>
+                  {visibleSuppliers.map(([name, key]) => (
+                    <th className={headerStyling} key={key}>
+                      {name}
+                    </th>
+                  ))}
                   {additionalSuppliers.map((name) => (
                     <th className={headerStyling} key={`supplier-${name}`}>
                       {name} (USD)
@@ -146,38 +126,14 @@ export default function TableBody({
                     <td className={cellStyling}>{e.endUser}</td>
                     <td className={cellStyling}>{e.productSystem}</td>
                     <td className={cellStyling}>{e.orderHandledBy}</td>
-                    <td className={cellStyling}>{e.suppliers}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.trane)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.belimo)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.danfoss)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.honeywell)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.regeltechnik)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.dwyer)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.alps)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.control4)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.lutron)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.landisGyr)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.rbh)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.prostar)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.gissmatic)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.zkteco)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.adteshia)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.fike)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.tecofi)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.sewo)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.ebelco)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.dooya)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.pogo)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.parkHelp)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.foshan)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.kele)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.multicable)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.deyz)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.simens)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.flashTurtle)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.servo)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.haboo)}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.others)}</td>
+                    {visibleSuppliers.map(([, key]) => (
+                      <td
+                        className={clsx(cellStyling, "text-right tabular-nums")}
+                        key={key}
+                      >
+                        {formatMoney(e[key])}
+                      </td>
+                    ))}
                     {additionalSuppliers.map((name) => (
                       <td className={cellStyling} key={`supplier-${name}`}>
                         {formatMoney(supplierAmounts[index].get(name))}
