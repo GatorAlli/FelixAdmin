@@ -1,5 +1,15 @@
 const integerFormatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
+// Sum the displayed cents exactly, including totals larger than a single order.
+export function sumMoneyAmounts(values: (string | null | undefined)[]): string {
+  const cents = values.reduce((total, value) => {
+    const amount = formatMoney(value, "0.00").replace(/[,\.]/g, "");
+    return total + BigInt(amount);
+  }, BigInt(0));
+  const digits = (cents < BigInt(0) ? -cents : cents).toString().padStart(3, "0");
+  return `${cents < BigInt(0) ? "-" : ""}${digits.slice(0, -2)}.${digits.slice(-2)}`;
+}
+
 // Format decimal strings without losing cents on large database numeric values.
 export function formatMoney(value: string | null | undefined, fallback = ""): string {
   if (value == null || value.trim() === "") return fallback;

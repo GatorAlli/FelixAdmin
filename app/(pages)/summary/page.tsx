@@ -29,22 +29,24 @@ export default async function Summary() {
       <Navbar />
       {/* Main */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col p-6 md:p-10">
-        {/* Header */}
-        <div className="mb-6 flex shrink-0 flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h1
-              className={`text-[32px] text-black pr-4 py-1 ${sora.className}`}
-            >
-              Order Workspace
-            </h1>
-            <p className="text-black mt-1 text-[15px] font-medium">
-              Comprehensive overview of all engineering orders and supplier
-              costs.
-            </p>
-          </div>
-        </div>
-        {/* Table */}
-        <TableBody orders={orders} currentYear={currentYear} supplierSuggestions={supplierSuggestions} />
+        <TableBody
+          orders={orders}
+          currentYear={currentYear}
+          supplierSuggestions={supplierSuggestions}
+          heading={
+            <div>
+              <h1
+                className={`text-[32px] text-black pr-4 py-1 ${sora.className}`}
+              >
+                Order Workspace
+              </h1>
+              <p className="text-black mt-1 text-[15px] font-medium">
+                Comprehensive overview of all engineering orders and supplier
+                costs.
+              </p>
+            </div>
+          }
+        />
       </div>
     </div>
   );

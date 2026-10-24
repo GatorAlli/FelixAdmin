@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { formatMoney } from "./format-money";
+import { formatMoney, sumMoneyAmounts } from "./format-money";
+
+test("supplier totals sum exact cents, missing values and amounts beyond one order's limit", () => {
+  assert.equal(sumMoneyAmounts(["0.10", "0.20", null, undefined, ""]), "0.30");
+  assert.equal(sumMoneyAmounts(["9999999999999999.99", "0.02"]), "10000000000000000.01");
+  assert.equal(sumMoneyAmounts(["1.00", "-2.25"]), "-1.25");
+  assert.equal(sumMoneyAmounts([]), "0.00");
+});
 
 test("money displays grouping, two decimals, zero and negative amounts", () => {
   assert.equal(formatMoney("8900000"), "8,900,000.00");

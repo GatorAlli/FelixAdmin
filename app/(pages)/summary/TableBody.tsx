@@ -1,6 +1,6 @@
 "use client";
 
-import { formatMoney } from "@/lib/format-money";
+import { formatMoney, sumMoneyAmounts } from "@/lib/format-money";
 import { supplierColumns } from "@/lib/drizzle/currency";
 import type { Order } from "@/lib/drizzle/schema";
 import { expenseColumns, expenseUsdByName } from "@/lib/drizzle/expenses";
@@ -9,7 +9,7 @@ import {
   customSupplierUsdByName,
 } from "@/lib/drizzle/custom-suppliers";
 import { clsx } from "clsx";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Select,
   SelectTrigger,
@@ -22,10 +22,12 @@ export default function TableBody({
   orders,
   currentYear,
   supplierSuggestions,
+  heading,
 }: {
   orders: Order[];
   currentYear: number;
   supplierSuggestions: string[];
+  heading: ReactNode;
 }) {
   const years = Array.from(
     { length: currentYear - 2024 + 1 },
@@ -51,6 +53,16 @@ export default function TableBody({
   );
   const expenditureColumns = expenseColumns(orderArray);
   const expenditureAmounts = orderArray.map(expenseUsdByName);
+  const supplierTotals = [
+    ...visibleSuppliers.map(([name, key]) => ({
+      name,
+      total: sumMoneyAmounts(orderArray.map((order) => order[key])),
+    })),
+    ...additionalSuppliers.map((name) => ({
+      name,
+      total: sumMoneyAmounts(supplierAmounts.map((amounts) => amounts.get(name))),
+    })),
+  ];
 
   const headerStyling = clsx(
     "px-4 py-4 text-left text-[13px] font-bold text-black uppercase whitespace-nowrap bg-white border-b border-r border-gray-200 sticky top-0 z-10",
@@ -61,6 +73,36 @@ export default function TableBody({
 
   return (
     <>
+      <div className="mb-6 flex shrink-0 flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        {heading}
+        {/* Filter the original list so switching years restores the matching orders. */}
+        <Select
+          value={selectedYear}
+          items={[
+            { value: "all", label: "All Years" },
+            ...years.map((year) => ({
+              value: String(year),
+              label: String(year),
+            })),
+          ]}
+          onValueChange={(year) => {
+            if (year === null) return;
+            setSelectedYear(year);
+          }}
+        >
+          <SelectTrigger className="w-45 shrink-0 bg-white" aria-label="Select year">
+            <SelectValue placeholder="Select year" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Years</SelectItem>
+            {years.map((year) => (
+              <SelectItem key={year} value={String(year)}>
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div className="min-h-0 bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden flex flex-col">
         <div className="h-1.5 w-full shrink-0 bg-primary" />
         <div>
@@ -156,34 +198,25 @@ export default function TableBody({
           </div>
         </div>
       </div>
-      <div className="shrink-0 pt-4">
-        {/* Filter the original list so switching years restores the matching orders. */}
-        <Select
-          value={selectedYear}
-          items={[
-            { value: "all", label: "All Years" },
-            ...years.map((year) => ({
-              value: String(year),
-              label: String(year),
-            })),
-          ]}
-          onValueChange={(year) => {
-            if (year === null) return;
-            setSelectedYear(year);
-          }}
+      <div className="flex min-w-0 shrink-0 items-center gap-4 pt-4">
+
+        <div
+          className="h-10 w-max min-w-0 shrink overflow-x-auto overflow-y-hidden rounded-lg border border-input bg-white focus-visible:outline-2 focus-visible:outline-ring [scrollbar-width:thin]"
+          role="region"
+          aria-label="Supplier totals in USD for selected year"
+          tabIndex={0}
         >
-          <SelectTrigger className="w-45 bg-white" aria-label="Select year">
-            <SelectValue placeholder="Select year" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Years</SelectItem>
-            {years.map((year) => (
-              <SelectItem key={year} value={String(year)}>
-                {year}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <div className="flex h-full w-max items-center divide-x divide-border whitespace-nowrap text-sm">
+            {supplierTotals.length ? supplierTotals.map(({ name, total }) => (
+              <div key={name} className="flex shrink-0 items-center gap-2 px-4">
+                <span className="font-semibold">{name}</span>
+                <span className="tabular-nums">{formatMoney(total)} USD</span>
+              </div>
+            )) : (
+              <span className="px-4 text-muted-foreground">No supplier totals</span>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );
