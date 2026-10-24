@@ -16,3 +16,15 @@ export function formatOrderDate(date: string | null): string {
   const [year, month, day] = date.split("-");
   return `${day}/${month}/${year.slice(-2)}`;
 }
+
+export function formatOrderEditDate(date: Date | string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Dhaka",
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(date));
+}

@@ -38,7 +38,7 @@ import {
 } from "@/lib/drizzle/currency";
 
 import { restoreExpenses, type ExpenseRow } from "@/lib/drizzle/expenses";
-import { formatOrderDate } from "@/lib/drizzle/order-date";
+import { formatOrderDate, formatOrderEditDate } from "@/lib/drizzle/order-date";
 import {
   calculateOrderTotals,
   DEFAULT_PANEL_CURRENCIES,
@@ -1382,6 +1382,9 @@ export default function PageBody({
                 <Label className={headingStyling}>Last Edited By:</Label>
                 <Label className="font-bold">
                   {orderDetails?.lastEditedBy ?? "Not edited yet"}
+                  {orderDetails?.lastEditedBy && orderDetails.lastEditedAt && (
+                    <> | {formatOrderEditDate(orderDetails.lastEditedAt)}</>
+                  )}
                 </Label>
               </div>
               {felixOrderNo && (

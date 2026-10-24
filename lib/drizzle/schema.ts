@@ -12,6 +12,7 @@ export const data = p.pgTable.withRLS("data", {
   createdBy: p.varchar().notNull(),
   orderManagerAccess: p.boolean().notNull().default(true),
   lastEditedBy: p.varchar(),
+  lastEditedAt: p.timestamp({ withTimezone: true }),
   createdDate: p.date(),
   felixOrderRef: p.varchar().notNull(),
 

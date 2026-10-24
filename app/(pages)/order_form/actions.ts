@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data, users, suppliers } from "@/lib/drizzle/schema";
@@ -89,7 +89,7 @@ export async function updateOrder(orderId: number, formData: FormData) {
     const [updatedOrder] = await db
       .update(data)
       // The primary key, creator, order reference and creation date are excluded.
-      .set({ ...editableValues, lastEditedBy })
+      .set({ ...editableValues, lastEditedBy, lastEditedAt: sql`now()` })
       // Check the flag in the UPDATE itself, including for already-open forms.
       .where(and(
         eq(data.sl, orderId),
