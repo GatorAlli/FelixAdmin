@@ -413,6 +413,7 @@ export default function PageBody({
       </div>
       <div>
         <div className="grid grid-cols-1 items-start gap-4 p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div className="min-w-0 flex flex-col gap-4">
           {isEditing ? (
             <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
               <form
@@ -1363,7 +1364,6 @@ export default function PageBody({
               </div>
             </div>
           )}
-          <div className="min-w-0 flex flex-col gap-4">
             <OrderDocuments
               key={orderDetails?.sl ?? "new"}
               orderId={orderDetails?.sl}
@@ -1371,6 +1371,8 @@ export default function PageBody({
               editable={isEditing}
               disabled={isSubmitting}
             />
+          </div>
+          <div className="min-w-0 flex flex-col gap-4">
             <div className="flex flex-col gap-4 rounded-lg bg-primary p-5 text-white sm:p-6">
               <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
                 <Label className={headingStyling}>Created By:</Label>
