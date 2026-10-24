@@ -1383,7 +1383,11 @@ export default function PageBody({
                 <Label className="font-bold">
                   {orderDetails?.lastEditedBy ?? "Not edited yet"}
                   {orderDetails?.lastEditedBy && orderDetails.lastEditedAt && (
-                    <> | {formatOrderEditDate(orderDetails.lastEditedAt)}</>
+                    <>
+                      {" "}
+                      <span className="text-[24px] font-thin"> | </span>{" "}
+                      {formatOrderEditDate(orderDetails.lastEditedAt)}
+                    </>
                   )}
                 </Label>
               </div>
