@@ -44,11 +44,11 @@ export const authOptions = {
     enabled: true,
     storage: "database",
     window: 60,
-    max: 5,
+    max: 100,
     customRules: {
       "/sign-in/email": {
         window: 60,
-        max: 100,
+        max: 5,
       },
     },
   },
