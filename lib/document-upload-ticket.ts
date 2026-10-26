@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+// A signed receipt ties upload completion to one user, order, file and expiry time.
 export type DocumentUploadTicket = {
   orderId: number;
   userId: string;
@@ -16,6 +17,7 @@ export function signDocumentUpload(upload: DocumentUploadTicket, secret: string)
   return `${payload}.${signature}`;
 }
 
+// Reject changed, expired or reused-for-another-user tickets before saving metadata.
 export function verifyDocumentUpload(ticket: string, secret: string, orderId: number, userId: string): DocumentUploadTicket | null {
   try {
     if (typeof ticket !== "string" || ticket.length > 4096) return null;

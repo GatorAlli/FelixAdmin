@@ -27,6 +27,7 @@ export default function TableBody({
   currentYear: number;
   adminStatus: string;
 }) {
+  // Track the selected year and editing-access changes that have not been saved.
   const router = useRouter();
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [isSavingAccess, startAccessTransition] = useTransition();
@@ -50,6 +51,7 @@ export default function TableBody({
           order.felixOrderRef.startsWith(`FCL/FPO/${selectedYear}/`),
         );
 
+  // Only keep changes that differ from the saved order settings.
   function changeAccess(order: Order, revoked: boolean) {
     setAccessMessage("");
     setPendingAccess((current) => {
@@ -61,6 +63,7 @@ export default function TableBody({
     });
   }
 
+  // Send the pending batch to the admin-only server action.
   function saveAccess() {
     if (adminStatus !== "admin" || !accessChanges.length || isSavingAccess)
       return;
@@ -94,6 +97,7 @@ export default function TableBody({
     "px-4 py-3 text-sm text-black whitespace-nowrap border-b border-r border-gray-200 group-hover:bg-gray-50 transition-colors",
   );
 
+  // Render the filtered orders, access controls and year selector.
   return (
     <>
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">

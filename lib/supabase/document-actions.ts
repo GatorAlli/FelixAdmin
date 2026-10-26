@@ -18,6 +18,7 @@ const documentFields = {
   sizeBytes: orderDocuments.sizeBytes,
 };
 
+// Downloads require a session; uploads and removals also check editing permission.
 async function requireOrderAccess(orderId: number, editing: boolean) {
   const user = await requireUser();
 
@@ -56,6 +57,7 @@ function ticketSecret() {
   return secret;
 }
 
+// Authorize the upload and issue a Storage URL plus a signed completion ticket.
 export async function prepareDocumentUpload(orderId: number, metadata: DocumentUploadMetadata) {
   const access = await requireOrderAccess(orderId, true);
   if (!access.ok) return access;
@@ -77,6 +79,7 @@ export async function prepareDocumentUpload(orderId: number, metadata: DocumentU
   return { ok: true as const, storagePath, token: signed.token, ticket, mimeType: parsed.mimeType };
 }
 
+// Verify the uploaded object before adding its metadata to the order.
 export async function completeDocumentUpload(orderId: number, ticket: string) {
   const access = await requireOrderAccess(orderId, true);
   if (!access.ok) return access;
@@ -124,6 +127,7 @@ export async function cancelDocumentUpload(orderId: number, ticket: string) {
     : { ok: true as const };
 }
 
+// Return a temporary download URL after checking access to the order.
 export async function getDocumentDownload(orderId: number, documentId: string) {
   const access = await requireOrderAccess(orderId, false);
   if (!access.ok) return access;

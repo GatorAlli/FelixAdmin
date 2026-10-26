@@ -1,5 +1,6 @@
 import { convertToUsd, type Currency } from "./currency";
 
+// Expense rows retain their original currency; totals are calculated separately in USD.
 export type MiscellaneousExpense = {
   name: string;
   amount: string;

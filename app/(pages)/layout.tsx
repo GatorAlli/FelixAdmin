@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import IdleSessionMonitor from "@/components/auth/idle-session-monitor";
 import { createClient } from "@/lib/supabase/server";
 
+// Checks the session before rendering protected pages and starts their idle timer.
 export default async function PagesLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();

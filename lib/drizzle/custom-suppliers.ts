@@ -7,7 +7,7 @@ type SupplierOrder = {
   usdToSgdRate?: string | null;
 };
 
-// Include unused catalog entries immediately and retain historical names.
+// Build candidate names from Settings and saved orders; Summary filters out blank columns.
 export function customSupplierColumns(orders: SupplierOrder[], suggestions: string[]) {
   return [...new Set([
     ...suggestions,
@@ -17,6 +17,7 @@ export function customSupplierColumns(orders: SupplierOrder[], suggestions: stri
     .sort((a, b) => a.localeCompare(b));
 }
 
+// Convert custom rows to a name-to-USD lookup for Summary cells and totals.
 export function customSupplierUsdByName(order: SupplierOrder) {
   return new Map((order.customSupplierDetails ?? []).map(detail => [
     detail.name.trim().toUpperCase(),

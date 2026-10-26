@@ -17,6 +17,7 @@ export function formatOrderDate(date: string | null): string {
   return `${day}/${month}/${year.slice(-2)}`;
 }
 
+// Use a fixed timezone so the server and browser display the same edit timestamp.
 export function formatOrderEditDate(date: Date | string): string {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Dhaka",

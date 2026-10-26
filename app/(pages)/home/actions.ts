@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/supabase/auth";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data, users } from "@/lib/drizzle/schema";
 
+// Checks admin permission, validates the batch and saves order editing access.
 export async function saveOrderManagerAccess(
   changes: { orderId: number; access: boolean }[],
 ) {

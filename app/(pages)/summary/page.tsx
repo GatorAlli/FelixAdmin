@@ -15,6 +15,7 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+// Fetch the orders and supplier catalog after checking the session.
 export default async function Summary() {
   await requireUser();
   const currentYear = new Date().getFullYear();

@@ -2,6 +2,7 @@ export const MAX_DOCUMENT_BYTES = 300 * 1024 * 1024;
 
 export type DocumentUploadMetadata = { name: string; type: string; size: number };
 
+// Validate file size and clean the stored name before issuing an upload URL.
 export function readDocumentMetadata(value: DocumentUploadMetadata) {
   if (!value || typeof value.name !== "string" || !value.name.trim() ||
       typeof value.type !== "string" || !Number.isSafeInteger(value.size) || value.size <= 0) {

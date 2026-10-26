@@ -7,6 +7,7 @@ import type {
 import type { MiscellaneousExpense } from "./expenses";
 import type { PanelCurrencies } from "./order-calculations";
 
+// Order fields and USD costs; original currencies are kept alongside converted values.
 export const data = p.pgTable.withRLS("data", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   createdBy: p.varchar().notNull(),
@@ -83,6 +84,7 @@ export const data = p.pgTable.withRLS("data", {
   miscellaneousHandlingFee: p.numeric({ precision: 18, scale: 4 }),
 });
 
+// Application profiles and roles; Supabase currently stores the login credentials.
 export const users = p.pgTable.withRLS("users", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   name: p.varchar(),
@@ -90,6 +92,7 @@ export const users = p.pgTable.withRLS("users", {
   status: p.varchar(),
 });
 
+// Suggestion catalogs used by Settings and the order form.
 export const suppliers = p.pgTable.withRLS("suppliers", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   supplierName: p.varchar(),
@@ -108,6 +111,7 @@ export const miscellaneousExpenditures = p.pgTable.withRLS(
   },
 );
 
+// Document metadata only; the actual files live in the private Storage bucket.
 export const orderDocuments = p.pgTable.withRLS(
   "order_documents",
   {

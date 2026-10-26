@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { prepareDocumentUpload, completeDocumentUpload, cancelDocumentUpload, getDocumentDownload, removeDocument } from "@/lib/supabase/document-actions";
 
+// Draft rows hold local files; saved documents contain metadata returned by the server.
 type Draft = { id: number; file: File | null };
 
 export default function OrderDocuments({ orderId, initialDocuments, editable, disabled }: {
@@ -26,6 +27,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
   const [message, setMessage] = useTransientMessage();
   const unavailable = busy || disabled;
 
+  // Serialize document operations and share their loading/error state.
   async function run(task: () => Promise<void>) {
     if (locked.current || disabled) return;
     locked.current = true;
@@ -41,6 +43,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
     }
   }
 
+  // Upload bytes directly to Storage; server actions authorize and record the result.
   return (
     <section aria-labelledby={`${inputId}-heading`} aria-busy={busy}
       className="space-y-4 rounded-lg border bg-card p-5 sm:p-6">

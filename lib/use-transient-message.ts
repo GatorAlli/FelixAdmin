@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+// Share a short-lived success/error message between forms and action buttons.
 export function useTransientMessage() {
   // A new object restarts the timer even when the same message appears again.
   const [notice, setNotice] = useState({ text: "" });

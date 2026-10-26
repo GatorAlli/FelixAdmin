@@ -13,6 +13,7 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+// Only admins can load the editable supplier, customer and expense lists.
 export default async function Settings() {
   const user = await requireUser();
   const [profile] = user.email

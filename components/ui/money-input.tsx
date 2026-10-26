@@ -9,6 +9,7 @@ type MoneyInputProps = Omit<ComponentProps<"input">,
   "value" | "defaultValue" | "onChange" | "type" | "min" | "step"
 > & { value: string; onValueChange: (value: string) => void };
 
+// Show grouping in the input while keeping the submitted value as a decimal string.
 export function MoneyInput({ value, onValueChange, name, form, disabled, className,
   onFocus, onBlur, ...props }: MoneyInputProps) {
   const [focused, setFocused] = useState(false);

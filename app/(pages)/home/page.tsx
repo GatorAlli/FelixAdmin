@@ -18,6 +18,7 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+// Loads the signed-in profile and orders; the client table handles filtering.
 export default async function Home() {
   const user = await requireUser();
   let name = "";

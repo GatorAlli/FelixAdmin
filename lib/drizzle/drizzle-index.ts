@@ -14,6 +14,7 @@ if (!databaseUrl) {
 
 const baseRelations = defineRelations(authSchema);
 
+// Server-side database connection shared by page loaders and save actions.
 export const db = drizzle({
   connection: { url: databaseUrl, prepare: false },
   relations: {

@@ -55,6 +55,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     return { ok: false, message: "Enter a valid order value (up to 2 decimal places and within the supported range)." };
   }
 
+  // Validate supplier rows and keep both original currency details and USD amounts.
   const supplierNames = formData.getAll("supplier");
   const supplierAmounts = formData.getAll("supplierAmount");
   const supplierCurrencies = formData.getAll("supplierCurrency");
@@ -113,6 +114,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     selectedSuppliers.push(name);
   }
 
+  // Expenses follow the same original-amount and USD-total split as suppliers.
   const expenseNames = formData.getAll("expenseName");
   const expenseAmounts = formData.getAll("expenseAmount");
   const expenseCurrencies = formData.getAll("expenseCurrency");
@@ -156,6 +158,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
   if (materialTotal === null) {
     return { ok: false, message: "The combined material cost exceeds the supported range." };
   }
+  // Display currencies affect the panel only; stored totals remain in USD.
   const calculationCurrencies = { ...DEFAULT_PANEL_CURRENCIES };
   for (const [key] of panelFields) {
     const currency = formData.get(`panelCurrency-${key}`) ?? "USD";
@@ -170,6 +173,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     return { ok: false, message: "Choose Felix or Customer for Imported By." };
   }
 
+  // Build the database fields explicitly; unrelated browser fields are ignored.
   const values = {
     importedBy: importedBy ? importedBy as "Felix" | "Customer" : null,
     createdBy,

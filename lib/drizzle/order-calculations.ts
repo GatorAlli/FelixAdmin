@@ -1,6 +1,7 @@
 import { convertToUsd, type Currency } from "./currency";
 import { sumUsdAmounts } from "./expenses";
 
+// These keys identify the six totals and their selected display currencies.
 export const panelFields = [
   ["projectValue", "PROJECT VALUE"],
   ["materialCost", "MATERIAL COST"],
@@ -58,6 +59,7 @@ function percentageOf(amount: string | null, percentage: string): string | null 
   return formatCents((cents * units + divisor / BigInt(2)) / divisor);
 }
 
+// Calculate in USD first; the form converts these results for display if requested.
 export function calculateOrderTotals(input: CalculationInputs): Record<PanelKey, string | null> {
   function total(rows: AmountRow[]) {
     const amounts: string[] = [];
@@ -74,6 +76,7 @@ export function calculateOrderTotals(input: CalculationInputs): Record<PanelKey,
   const miscellaneousCost = total(input.expenses);
   const orderHandlingCost = percentageOf(materialCost, input.orderHandlingFee);
   const miscellaneousHandlingCost = percentageOf(miscellaneousCost, input.miscellaneousHandlingFee);
+  // Commission is the project value minus costs and their respective handling fees.
   const deductions = [materialCost, miscellaneousCost, orderHandlingCost, miscellaneousHandlingCost];
   const commission = projectValue !== null && deductions.every(value => value !== null)
     ? formatCents(BigInt(projectValue.replace(".", "")) - deductions.reduce(

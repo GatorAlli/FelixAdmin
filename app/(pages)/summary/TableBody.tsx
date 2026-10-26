@@ -29,6 +29,7 @@ export default function TableBody({
   supplierSuggestions: string[];
   heading: ReactNode;
 }) {
+  // Year filtering drives the rows, visible supplier columns and supplier totals.
   const years = Array.from(
     { length: currentYear - 2024 + 1 },
     (_, index) => 2024 + index,
@@ -53,6 +54,7 @@ export default function TableBody({
   );
   const expenditureColumns = expenseColumns(orderArray);
   const expenditureAmounts = orderArray.map(expenseUsdByName);
+  // Sum only suppliers visible in the current year; custom amounts are already USD.
   const supplierTotals = [
     ...visibleSuppliers.map(([name, key]) => ({
       name,
@@ -71,6 +73,7 @@ export default function TableBody({
     "px-4 py-3 text-sm text-black whitespace-nowrap border-b border-r border-gray-200 group-hover:bg-gray-50 transition-colors",
   );
 
+  // Render the year selector, scrollable table and compact supplier totals.
   return (
     <>
       <div className="mb-6 flex shrink-0 flex-col gap-4 md:flex-row md:items-end md:justify-between">

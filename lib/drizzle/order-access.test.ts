@@ -29,3 +29,16 @@ test("a forged order form cannot grant or revoke manager access", () => {
     assert.equal(Object.hasOwn(parsed.values, "orderManagerAccess"), false);
   }
 });
+
+// Attribution is supplied by the server, even when the browser submits a name.
+test("the form cannot impersonate another creator", () => {
+  const form = new FormData();
+  form.set("gbpToUsdRate", "1.40");
+  form.set("eurToUsdRate", "1.20");
+  form.set("usdToSgdRate", "1.30");
+  form.set("createdBy", "Forged name");
+  const result = readOrderValues(form, "Current user");
+  assert.ok(result.ok);
+  assert.equal(result.values.createdBy, "Current user");
+  assert.equal(readOrderValues(form, "").ok, false);
+});

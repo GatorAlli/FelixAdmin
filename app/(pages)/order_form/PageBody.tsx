@@ -234,7 +234,7 @@ export default function PageBody({
   const [createdDate, setCreatedDate] = useState<string | null>(
     orderDetails ? orderDetails.createdDate : currentDate,
   );
-  // States
+  // Editable field values are kept here until the form is submitted.
 
   const [felixOrderNo, setFelixOrderNo] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
@@ -280,6 +280,7 @@ export default function PageBody({
   const nextSupplierId = useRef(32);
   const [loadedOrderDetails, setLoadedOrderDetails] = useState<Order>();
 
+  // The role and per-order flag decide whether editing controls are available.
   const canEdit = canEditOrder(
     isAdmin,
     orderDetails?.orderManagerAccess ?? true,
@@ -386,6 +387,7 @@ export default function PageBody({
     (row) => row.name.trim() !== "" || row.amount.trim() !== "",
   );
 
+  // The page switches between editable fields and a read-only order summary.
   return (
     <div className={manrope.className}>
       <Navbar />
@@ -425,6 +427,7 @@ export default function PageBody({
                   submissionInProgress.current = true;
                   setIsSubmitting(true);
                   setSubmissionMessage("");
+                  // The server action validates these fields and recomputes saved USD values.
                   const formData = new FormData(e.currentTarget);
                   try {
                     if (orderDetails) {
@@ -1364,6 +1367,7 @@ export default function PageBody({
               </div>
             </div>
           )}
+            {/* Attachments are saved separately from the order form. */}
             <OrderDocuments
               key={orderDetails?.sl ?? "new"}
               orderId={orderDetails?.sl}

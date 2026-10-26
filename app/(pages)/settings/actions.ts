@@ -7,6 +7,7 @@ import { db } from "@/lib/drizzle/drizzle-index";
 import { miscellaneousExpenditures, suppliers, customers, users } from "@/lib/drizzle/schema";
 import { readCustomerAddresses, readDatalistValues, type DatalistKind } from "@/lib/drizzle/datalist-values";
 
+// Read helpers require a session; changing a list below additionally requires admin.
 export async function fetchSuppliersList() {
   await requireUser();
   return db.select().from(suppliers).orderBy(asc(suppliers.sl));
@@ -17,6 +18,7 @@ export async function fetchExpensesList() {
   return db.select().from(miscellaneousExpenditures).orderBy(asc(miscellaneousExpenditures.sl));
 }
 
+// Validate the replacement list, then save all rows in a single transaction.
 export async function saveDatalist(kind: DatalistKind, input: string[], addresses: string[] = []) {
   const user = await requireUser();
   const [profile] = user.email

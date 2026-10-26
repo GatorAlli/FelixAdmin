@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase/actions";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
+// Clears the Supabase session before returning to the login screen.
 export function SignOutButton() {
   const router = useRouter();
   const [message, setMessage] = useTransientMessage();

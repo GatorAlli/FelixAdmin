@@ -21,7 +21,7 @@ export function readIdleRecord(value: unknown, now: number): IdleRecord | null {
   return { lastActivity: record.lastActivity, expired: record.expired };
 }
 
-// No browser dependencies: clock and shared storage are injected for deterministic tests.
+// Tracks the last activity time and notifies the UI when warning or expiry is due.
 export class IdleSession {
   private record: IdleRecord;
   private view: IdleView | undefined;

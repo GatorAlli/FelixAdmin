@@ -16,6 +16,7 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+// Shared page links; the sign-out button below clears the current session.
 const navigationLinks = [
   { href: "/home", label: "Home" },
   { href: "/summary", label: "Summary" },

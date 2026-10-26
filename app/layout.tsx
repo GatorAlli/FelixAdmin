@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Figtree, Outfit } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
+// Shared fonts and styles apply to both the login and protected pages.
 const outfitHeading = Outfit({subsets:['latin'],variable:'--font-heading'});
 
 const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});

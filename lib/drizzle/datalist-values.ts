@@ -12,6 +12,7 @@ export const defaultExpenseSuggestions = [
   "UPS Cost",
 ];
 
+// Trim suggestions and reject duplicates before Settings replaces the stored list.
 export function readDatalistValues(kind: DatalistKind, input: unknown):
   | { ok: true; values: string[] }
   | { ok: false; message: string } {

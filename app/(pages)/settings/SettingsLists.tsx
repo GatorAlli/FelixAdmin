@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { saveDatalist } from "./actions";
 import type { DatalistKind } from "@/lib/drizzle/datalist-values";
 
+// Each list keeps local edits until Save sends the full list to the server.
 function SuggestionList({
   kind,
   title,
@@ -40,6 +41,7 @@ function SuggestionList({
   const [error, setError] = useState(false);
 
 
+  // Mark local changes so the Save button becomes available.
   function editRows(next: typeof rows) {
     setRows(next);
     setDirty(true);
@@ -184,6 +186,7 @@ function SuggestionList({
   );
 }
 
+// Display the three suggestion editors using the same list component.
 export default function SettingsLists({
   supplierSuggestions,
   customerSuggestions,

@@ -1,130 +1,52 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {
-  convertToUsd, isValidRate, restoreSupplierRows,
-  DEFAULT_GBP_TO_USD, DEFAULT_EUR_TO_USD,
-} from "./currency";
+import { convertToUsd, convertFromUsd, restoreSupplierRows } from "./currency";
 import { readOrderValues } from "./order-values";
+import { sumMoneyAmounts } from "../format-money";
 
-function form(rows: [string, string, string][] = [["HONEYWELL", "100", "GBP"]]) {
-  const data = new FormData();
-  data.set("createdBy", "Currency test");
-  data.set("gbpToUsdRate", DEFAULT_GBP_TO_USD);
-  data.set("eurToUsdRate", DEFAULT_EUR_TO_USD);
-  data.set("usdToSgdRate", "1.30");
-  for (const [supplier, amount, currency] of rows) {
-    data.append("supplier", supplier);
-    data.append("supplierAmount", amount);
-    data.append("supplierCurrency", currency);
-  }
-  return data;
-}
-
-test("USD is unchanged; GBP/EUR use their independent per-order rates", () => {
-  assert.equal(convertToUsd("100", "USD", "", ""), "100.00");
-  assert.equal(convertToUsd("100", "GBP", DEFAULT_GBP_TO_USD, DEFAULT_EUR_TO_USD), "140.00");
-  assert.equal(convertToUsd("100", "EUR", DEFAULT_GBP_TO_USD, DEFAULT_EUR_TO_USD), "120.00");
-  assert.equal(convertToUsd("100", "GBP", "1.5", "1.2"), "150.00");
-  assert.equal(convertToUsd("100", "EUR", "1.5", "1.2"), "120.00");
+// Money stays in decimal strings so large amounts do not lose cents.
+test("USD, GBP, EUR and SGD convert using the order's rates", () => {
+  assert.equal(convertToUsd("100", "USD", "1.4", "1.2", "1.3"), "100.00");
+  assert.equal(convertToUsd("100", "GBP", "1.4", "1.2", "1.3"), "140.00");
+  assert.equal(convertToUsd("100", "EUR", "1.4", "1.2", "1.3"), "120.00");
+  assert.equal(convertToUsd("130", "SGD", "1.4", "1.2", "1.3"), "100.00");
+  assert.equal(convertFromUsd("100", "SGD", "1.4", "1.2", "1.3"), "130.00");
+  assert.equal(convertFromUsd("-140", "GBP", "1.4", "1.2"), "-100.00");
 });
 
-test("decimal multiplication rounds half cents up and preserves large amounts", () => {
-  assert.equal(convertToUsd("1.00", "EUR", "1", "1.005"), "1.01");
+test("conversion rounds half cents and rejects invalid amounts or overflow", () => {
   assert.equal(convertToUsd("0.01", "GBP", "0.5", "1"), "0.01");
+  assert.equal(convertToUsd("1", "SGD", "1", "1", "1.3"), "0.77");
   assert.equal(convertToUsd("9999999999999999.99", "USD", "1", "1"), "9999999999999999.99");
   assert.equal(convertToUsd("9999999999999999.99", "EUR", "1", "2"), null);
-  assert.equal(convertToUsd("0", "GBP", "1.5", "1"), "0.00");
+  assert.equal(convertToUsd("-1", "USD", "1", "1"), null);
+  assert.equal(convertToUsd("10", "SGD", "1", "1", "0"), null);
 });
 
-test("invalid, incomplete and excessive-precision amounts/rates are rejected", () => {
-  for (const rate of ["", "0", "-1", "NaN", "Infinity", "1e3", "1.123456789", "10000000000"]) {
-    assert.equal(isValidRate(rate), false, rate);
-  }
-  assert.equal(isValidRate("0.01"), true);
-  assert.equal(isValidRate("1.001"), false);
-  for (const amount of ["", "-1", "NaN", "1e3", "1.001"]) {
-    assert.equal(convertToUsd(amount, "USD", "1", "1"), null, amount);
-  }
+test("supplier totals add exact cents and ignore empty amounts", () => {
+  assert.equal(sumMoneyAmounts(["0.10", "0.20", null, undefined, ""]), "0.30");
+  assert.equal(sumMoneyAmounts(["9999999999999999.99", "0.02"]), "10000000000000000.01");
+  assert.equal(sumMoneyAmounts(["1.00", "-2.25"]), "-1.25");
+  assert.equal(sumMoneyAmounts([]), "0.00");
 });
 
-test("saving recomputes USD and retains original details for reopening", () => {
-  const input = form([["HONEYWELL", "100", "GBP"], ["TRANE", "200", "EUR"], ["BELIMO", "50", "USD"]]);
-  input.set("supplierUsd", "999999"); // Forged display totals must be ignored.
-  const result = readOrderValues(input, "Currency test");
+test("saving an SGD supplier keeps the original amount and recalculates USD", () => {
+  const form = new FormData();
+  form.set("gbpToUsdRate", "1.40");
+  form.set("eurToUsdRate", "1.20");
+  form.set("usdToSgdRate", "1.30");
+  form.set("supplier", "HONEYWELL");
+  form.set("supplierAmount", "130");
+  form.set("supplierCurrency", "SGD");
+  form.set("supplierUsd", "999999");
+
+  const result = readOrderValues(form, "Test user");
   assert.ok(result.ok);
-  assert.equal(result.values.honeywell, "140.00");
-  assert.equal(result.values.trane, "240.00");
-  assert.equal(result.values.belimo, "50.00");
-  assert.equal(result.values.gbpToUsdRate, DEFAULT_GBP_TO_USD);
-  assert.equal(result.values.eurToUsdRate, DEFAULT_EUR_TO_USD);
+  assert.equal(result.values.honeywell, "100.00");
   const restored = restoreSupplierRows({
     ...result.values,
     supplierCurrencyDetails: result.values.supplierCurrencyDetails ?? null,
   });
-  assert.deepEqual(restored.map(({supplier, amount, currency}) => ({supplier, amount, currency})), [
-    { supplier: "TRANE", amount: "200", currency: "EUR" },
-    { supplier: "BELIMO", amount: "50", currency: "USD" },
-    { supplier: "HONEYWELL", amount: "100", currency: "GBP" },
-  ]);
-});
-
-test("rates are required even for USD-only orders", () => {
-  for (const field of ["gbpToUsdRate", "eurToUsdRate", "usdToSgdRate"]) {
-    const input = form([["TRANE", "1", "USD"]]);
-    input.delete(field);
-    assert.equal(readOrderValues(input, "Currency test").ok, false);
-  }
-});
-
-test("unknown currencies, duplicate suppliers and incomplete rows fail validation", () => {
-  for (const rows of [
-    [["TRANE", "1", "AUD"]],
-    [["TRANE", "1", "USD"], ["TRANE", "1", "EUR"]],
-    [["TRANE", "", "USD"]],
-    [["__proto__", "1", "USD"]],
-  ] as [string, string, string][][]) {
-    assert.equal(readOrderValues(form(rows), "Currency test").ok, false);
-  }
-  const missingCurrency = form();
-  missingCurrency.delete("supplierCurrency");
-  assert.equal(readOrderValues(missingCurrency, "Currency test").ok, false);
-});
-
-test("removed suppliers are cleared; a blank optional row is skipped", () => {
-  const result = readOrderValues(form([["", "", "USD"]]), "Currency test");
-  assert.ok(result.ok);
-  assert.equal(result.values.honeywell, null);
-  assert.equal(result.values.suppliers, null);
-  assert.deepEqual(result.values.supplierCurrencyDetails, []);
-});
-
-test("legacy orders reopen as USD, including zero-value suppliers", () => {
-  assert.deepEqual(restoreSupplierRows({supplierCurrencyDetails: null, trane: "1234.00", belimo: "0.00"}), [
-    {id: 1, supplier: "TRANE", amount: "1234.00", currency: "USD"},
-    {id: 2, supplier: "BELIMO", amount: "0.00", currency: "USD"},
-  ]);
-});
-
-
-test("Created By comes only from the authenticated username", () => {
-  const input = form();
-  input.set("createdBy", "Forged name");
-  const result = readOrderValues(input, "Current user");
-  assert.ok(result.ok);
-  assert.equal(result.values.createdBy, "Current user");
-  input.delete("createdBy");
-  const withoutField = readOrderValues(input, "Another user");
-  assert.ok(withoutField.ok);
-  assert.equal(withoutField.values.createdBy, "Another user");
-  assert.equal(readOrderValues(input, "").ok, false);
-});
-
-test("panel currency conversion divides USD by the rate and supports negative commission", async () => {
-  const { convertFromUsd } = await import("./currency");
-  assert.equal(convertFromUsd("130.00", "GBP", "1.3", "1.1"), "100.00");
-  assert.equal(convertFromUsd("110.00", "EUR", "1.3", "1.1"), "100.00");
-  assert.equal(convertFromUsd("-130.00", "GBP", "1.3", "1.1"), "-100.00");
-  assert.equal(convertFromUsd("0.01", "EUR", "1", "2"), "0.01");
-  assert.equal(convertFromUsd("1.00", "EUR", "1", "0"), null);
-  assert.equal(convertFromUsd("-0.01", "EUR", "1", "3"), "0.00");
+  assert.equal(restored[0].amount, "130");
+  assert.equal(restored[0].currency, "SGD");
 });

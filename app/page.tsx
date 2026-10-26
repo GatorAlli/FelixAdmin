@@ -21,6 +21,7 @@ const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
+// Decorative background for the login screen.
 const FallingParticles = () => {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -46,6 +47,7 @@ const FallingParticles = () => {
     </div>
   );
 };
+// Holds the login fields and signs in through the current Supabase client.
 export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,6 +55,7 @@ export default function App() {
 
   const router = useRouter();
 
+  // Visitors with an existing session go straight to the order list.
   useEffect(() => {
     let active = true;
     async function checkUser() {

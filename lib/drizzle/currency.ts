@@ -1,3 +1,4 @@
+// Built-in supplier labels map to their stored USD amount columns.
 export const supplierColumns = {
   TRANE: "trane",
   BELIMO: "belimo",
@@ -98,6 +99,7 @@ export function convertToUsd(
   return `${text.slice(0, -2)}.${text.slice(-2)}`;
 }
 
+// Restore original amounts when available; older orders only have USD columns.
 export function restoreSupplierRows(order: {
   supplierCurrencyDetails: SupplierCurrencyDetail[] | null;
   customSupplierDetails?: CustomSupplierDetail[] | null;

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/actions";
 import { IdleSession, IdleSignOut, IDLE_STORAGE_PREFIX, type IdleRecord, type IdleView } from "@/lib/supabase/idle-session";
 
+// Connect the idle timer to browser activity, shared tab state and Supabase logout.
 export default function IdleSessionMonitor({ sessionId, children }: { sessionId: string; children: ReactNode }) {
   const [view, setView] = useState<IdleView | null>(null);
   const [signOutError, setSignOutError] = useState(false);
@@ -79,6 +80,7 @@ export default function IdleSessionMonitor({ sessionId, children }: { sessionId:
     };
   }, [sessionId]);
 
+  // Show the warning/expiry dialog and restore focus when it closes.
   const open = view !== null && view.status !== "active";
   useEffect(() => {
     const element = dialog.current;
