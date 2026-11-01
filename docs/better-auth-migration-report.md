@@ -180,16 +180,16 @@ Temporary verification accounts, sessions and the uploaded file were removed. Th
 
 The full authenticated browser editing flow was not exercised. Server permission tests and HTTP checks passed; the existing idle engine’s timing and retries were verified by its tests.
 
-## 7. Account setup still belongs to you
+## 7. Creating accounts (updated after the follow-up request)
 
-The final database check found **3 permission profiles and 0 Better Auth login accounts**. Profiles alone cannot sign in. Create your login accounts with the same email addresses as the profiles, and manage roles manually in `public.users` as planned.
-
-The existing optional helper is ready if you want to use it:
+Run:
 
 ```sh
 npx tsx scripts/create-user.ts
 ```
 
-It prompts for credentials; no email/password environment variables are needed. It does not assign permissions. Existing Supabase login sessions cannot authenticate the migrated app; users will need a Better Auth login.
+The script asks for name, email, permission, password and confirmation. Permissions are Read only (`guest`, the default), Order manager (`order`), or Admin (`admin`). It saves the login and application profile in one transaction. An existing profile with the same email is updated with the entered name, normalized email and selected permission. Duplicate matching profiles cause a rollback instead of an ambiguous permission assignment. Existing login accounts are left unchanged.
 
-The code is implemented locally. Deployment and permanent account creation were not performed.
+Passwords are hashed; no email/password environment variables are needed. A live CLI check confirmed the name, read-only role and password hash, then removed the temporary login and profile. TypeScript and script lint checks passed.
+
+Deployment and permanent account creation were not performed.

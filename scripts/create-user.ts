@@ -1,7 +1,8 @@
-import { input, password as passwordPrompt } from "@inquirer/prompts";
+import { input, select, password as passwordPrompt } from "@inquirer/prompts";
 import * as authSchema from "../lib/drizzle/auth-schema";
+import { users } from "../lib/drizzle/schema";
 import { loadEnvConfig } from "@next/env";
-import { defineRelations, eq } from "drizzle-orm";
+import { defineRelations, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { betterAuth } from "better-auth";
@@ -31,7 +32,7 @@ async function main() {
   const email = (
     await input({
       message: "Email:",
-      validate: (value) => Boolean(value.trim()),
+      validate: (value) => Boolean(value.trim()) || "Enter an email.",
     })
   )
     .trim()
@@ -48,6 +49,16 @@ async function main() {
     console.info("An account with this email already exists.");
     return;
   }
+
+  const permission = await select({
+    message: "Permission:",
+    default: "guest",
+    choices: [
+      { name: "Read only", value: "guest", description: "View orders and download documents." },
+      { name: "Order manager", value: "order", description: "Create orders and edit orders with manager access enabled." },
+      { name: "Admin", value: "admin", description: "Edit all orders, manage access and change Settings." },
+    ],
+  });
 
   const password = await passwordPrompt({
     message: "Password:",
@@ -69,35 +80,53 @@ async function main() {
     validate: (value) => value === password || "Passwords don't match",
   });
 
-  const setupAuth = betterAuth({
-    ...authOptions,
+  // Save credentials and the application profile as one unit.
+  const result = await setupDb.transaction(async (transaction) => {
+    const setupAuth = betterAuth({
+      ...authOptions,
 
-    database: drizzleAdapter(setupDb, {
-      provider: "pg",
-      schemaName: "better_auth",
-      schema: authSchema,
-      transaction: true,
-    }),
+      database: drizzleAdapter(transaction, {
+        provider: "pg",
+        schemaName: "better_auth",
+        schema: authSchema,
+        transaction: true,
+      }),
 
-    emailAndPassword: {
-      ...authOptions.emailAndPassword,
+      emailAndPassword: {
+        ...authOptions.emailAndPassword,
 
-      disableSignUp: false,
+        disableSignUp: false,
 
-      autoSignIn: false,
-    },
-  });
+        autoSignIn: false,
+      },
+    });
 
-  const result = await setupAuth.api.signUpEmail({
-    body: {
-      name,
-      email,
-      password,
-    },
+    const result = await setupAuth.api.signUpEmail({
+      body: {
+        name,
+        email,
+        password,
+      },
+    });
+
+    // Reuse a manually entered profile, including mixed-case or padded emails.
+    const profiles = await transaction.select({ sl: users.sl }).from(users)
+      .where(sql`lower(trim(${users.email})) = ${email}`);
+    if (profiles.length > 1) {
+      throw new Error("Multiple profiles have this email. Resolve duplicates first.");
+    }
+    const profile = { name, email, status: permission };
+    if (profiles.length) {
+      await transaction.update(users).set(profile).where(eq(users.sl, profiles[0].sl));
+    } else {
+      await transaction.insert(users).values(profile);
+    }
+    return result;
   });
 
   console.info("Account created:", result.user.email);
   console.info("User ID:", result.user.id);
+  console.info("Profile saved. Permission:", permission);
 }
 
 main()
