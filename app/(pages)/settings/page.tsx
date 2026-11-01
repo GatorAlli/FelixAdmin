@@ -1,5 +1,5 @@
 import Navbar from "@/components/view/navbar/navbar";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireUser } from "@/lib/betterAuth/session";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { users } from "@/lib/drizzle/schema";
 import { eq } from "drizzle-orm";

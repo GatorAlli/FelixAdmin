@@ -2,7 +2,7 @@
 
 import { eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireUser } from "@/lib/betterAuth/session";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { data, users } from "@/lib/drizzle/schema";
 

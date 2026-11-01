@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
-import { supabase } from "@/lib/supabase/actions";
+import { authClient } from "@/lib/betterAuth/auth-client";
 
 import { useRouter } from "next/navigation";
 
@@ -47,30 +47,20 @@ const FallingParticles = () => {
     </div>
   );
 };
-// Holds the login fields and signs in through the current Supabase client.
+// Holds the login fields and signs in through Better Auth.
 export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useTransientMessage();
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const { data: session } = authClient.useSession();
 
   const router = useRouter();
 
   // Visitors with an existing session go straight to the order list.
   useEffect(() => {
-    let active = true;
-    async function checkUser() {
-      const user = await supabase.auth.getUser();
-      if (active && !user.error && user.data.user) {
-        router.replace("/home");
-      }
-    }
-
-    void checkUser();
-
-    return () => {
-      active = false;
-    };
-  }, [router]);
+    if (session) router.replace("/home");
+  }, [router, session]);
 
   return (
     <div className={`min-h-screen flex w-full bg-muted ${manrope.className}`}>
@@ -118,19 +108,31 @@ export default function App() {
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              if (email !== "" && password !== "") {
-                const loginResult = await supabase.auth.signInWithPassword({
-                  email,
-                  password,
-                });
-                if (loginResult.error) {
-                  setMessage("Invalid Credentials");
-                } else if (loginResult.data) {
-                  setMessage("Signed In Successfully");
-                  router.push("/home");
-                  router.refresh();
+              if (isSigningIn) return;
+              const loginEmail = email.trim().toLowerCase();
+              if (loginEmail && password) {
+                setIsSigningIn(true);
+                setMessage("");
+                try {
+                  const { error } = await authClient.signIn.email({
+                    email: loginEmail,
+                    password,
+                  });
+                  if (error) {
+                    setMessage(error.status === 429
+                      ? "Too many attempts. Please wait a minute and try again."
+                      : "Invalid Credentials");
+                  } else {
+                    setMessage("Signed In Successfully");
+                    router.replace("/home");
+                    router.refresh();
+                  }
+                } catch {
+                  setMessage("Could not sign in. Please try again.");
+                } finally {
+                  setIsSigningIn(false);
                 }
-              } else if (!email && !password) {
+              } else if (!loginEmail && !password) {
                 setMessage("Enter email and password");
               } else if (!password) {
                 setMessage("Enter a password");
@@ -179,10 +181,12 @@ export default function App() {
             {/* animated button */}
             <Button
               type="submit"
+              disabled={isSigningIn}
+              aria-busy={isSigningIn}
               className="w-full normal-case bg-primary hover:bg-primary/90 text-white mt-4 py-7 px-6 text-[17px] font-semibold rounded-lg transition-colors group"
             >
               <div className="relative flex w-full items-center justify-between">
-                <span className="relative z-10">Sign In</span>
+                <span className="relative z-10">{isSigningIn ? "Signing in…" : "Sign In"}</span>
                 {/* Arrow moving */}
                 <div className="bg-black/10 p-1.5 rounded-lg group-hover:bg-black/20 transition-all duration-300 group-hover:translate-x-1 shrink-0 z-10">
                   <ArrowRight

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Manrope, Sora } from "next/font/google";
 import { ChartNoAxesCombined, House, LogOut } from "lucide-react";
 import { GearSixIcon } from "@phosphor-icons/react";
-import { supabase } from "@/lib/supabase/actions";
+import { authClient } from "@/lib/betterAuth/auth-client";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -171,7 +171,7 @@ export default function Navbar() {
             setIsSigningOut(true);
             setSignOutError("");
             try {
-              const { error } = await supabase.auth.signOut();
+              const { error } = await authClient.signOut();
               if (error) {
                 setSignOutError("Could not sign out. Please try again.");
                 return;

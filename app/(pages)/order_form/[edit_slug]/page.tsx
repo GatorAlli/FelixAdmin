@@ -1,6 +1,6 @@
 import { getOrderDatalists } from "@/lib/drizzle/order-datalists";
 import { currentOrderDate } from "@/lib/drizzle/order-date";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireUser } from "@/lib/betterAuth/session";
 import { db } from "@/lib/drizzle/drizzle-index";
 import PageBody from "../PageBody";
 import { data, users, orderDocuments } from "@/lib/drizzle/schema";

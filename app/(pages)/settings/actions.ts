@@ -2,7 +2,7 @@
 
 import { asc, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/supabase/auth";
+import { requireUser } from "@/lib/betterAuth/session";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { miscellaneousExpenditures, suppliers, customers, users } from "@/lib/drizzle/schema";
 import { readCustomerAddresses, readDatalistValues, type DatalistKind } from "@/lib/drizzle/datalist-values";

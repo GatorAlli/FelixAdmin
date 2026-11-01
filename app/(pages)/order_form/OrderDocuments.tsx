@@ -4,7 +4,7 @@ import { useTransientMessage } from "@/lib/use-transient-message";
 import { useId, useRef, useState } from "react";
 import type { DocumentSummary } from "@/lib/drizzle/schema";
 import { MAX_DOCUMENT_BYTES } from "@/lib/document-files";
-import { supabase } from "@/lib/supabase/actions";
+import { storageClient } from "@/lib/supabase/storage-client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { prepareDocumentUpload, completeDocumentUpload, cancelDocumentUpload, getDocumentDownload, removeDocument } from "@/lib/supabase/document-actions";
@@ -102,7 +102,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
                   let completed = false;
                   try {
                     // File bytes go straight to Storage, avoiding server request limits.
-                    const { error } = await supabase.storage.from("order-documents")
+                    const { error } = await storageClient.storage.from("order-documents")
                       .uploadToSignedUrl(prepared.storagePath, prepared.token, row.file, {
                         contentType: prepared.mimeType,
                       });

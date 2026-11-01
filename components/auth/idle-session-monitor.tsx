@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase/actions";
-import { IdleSession, IdleSignOut, IDLE_STORAGE_PREFIX, type IdleRecord, type IdleView } from "@/lib/supabase/idle-session";
+import { authClient } from "@/lib/betterAuth/auth-client";
+import { IdleSession, IdleSignOut, IDLE_STORAGE_PREFIX, type IdleRecord, type IdleView } from "@/lib/betterAuth/idle-session";
 
-// Connect the idle timer to browser activity, shared tab state and Supabase logout.
+// Connect the existing idle timer to browser activity and Better Auth logout.
 export default function IdleSessionMonitor({ sessionId, children }: { sessionId: string; children: ReactNode }) {
+  const { data: session, isPending, error } = authClient.useSession();
   const [view, setView] = useState<IdleView | null>(null);
   const [signOutError, setSignOutError] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -24,7 +25,7 @@ export default function IdleSessionMonitor({ sessionId, children }: { sessionId:
       if (!disposed) window.location.replace("/");
     }
     const logout = new IdleSignOut({
-      signOut: () => supabase.auth.signOut({ scope: "local" }),
+      signOut: () => authClient.signOut(),
       onSuccess: redirectToLogin,
       onError: failed => { if (!disposed) setSignOutError(failed); },
       schedule: (retry, delay) => {
@@ -61,15 +62,10 @@ export default function IdleSessionMonitor({ sessionId, children }: { sessionId:
     document.addEventListener("visibilitychange", check);
     if (channel) channel.onmessage = event => idle.receive(event.data);
     const timer = setInterval(check, 1000);
-    // Supabase broadcasts session-scoped sign-out to the other tabs as well.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(event => {
-      if (event === "SIGNED_OUT" && !idle.isExpired()) redirectToLogin();
-    });
     return () => {
       disposed = true;
       clearInterval(timer);
       logout.dispose();
-      subscription.unsubscribe();
       channel?.close();
       events.forEach(name => window.removeEventListener(name, activity, true));
       window.removeEventListener("storage", storage);
@@ -79,6 +75,13 @@ export default function IdleSessionMonitor({ sessionId, children }: { sessionId:
       controller.current = null;
     };
   }, [sessionId]);
+
+  // Better Auth refetches on tab broadcasts, focus and reconnection, without polling.
+  useEffect(() => {
+    if (isPending || error) return;
+    if (!session) window.location.replace("/");
+    else if (session.session.id !== sessionId) window.location.reload();
+  }, [session, isPending, error, sessionId]);
 
   // Show the warning/expiry dialog and restore focus when it closes.
   const open = view !== null && view.status !== "active";

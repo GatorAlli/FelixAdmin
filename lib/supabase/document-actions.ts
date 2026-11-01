@@ -7,7 +7,7 @@ import { db } from "@/lib/drizzle/drizzle-index";
 import { data, users, orderDocuments } from "@/lib/drizzle/schema";
 import { canEditOrder } from "@/lib/drizzle/order-access";
 import { readDocumentMetadata, type DocumentUploadMetadata } from "@/lib/document-files";
-import { requireUser } from "./auth";
+import { requireUser } from "@/lib/betterAuth/session";
 import { getStorageAdmin } from "./storage-admin";
 
 const BUCKET = "order-documents";
