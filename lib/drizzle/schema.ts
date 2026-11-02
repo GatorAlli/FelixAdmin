@@ -1,4 +1,7 @@
 import * as p from "drizzle-orm/pg-core";
+
+import { randomUUID } from "node:crypto";
+
 import type {
   Currency,
   SupplierCurrencyDetail,
@@ -115,7 +118,10 @@ export const miscellaneousExpenditures = p.pgTable.withRLS(
 export const orderDocuments = p.pgTable.withRLS(
   "order_documents",
   {
-    id: p.uuid().primaryKey().defaultRandom(),
+    id: p
+      .uuid()
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
     orderId: p
       .integer()
       .notNull()
