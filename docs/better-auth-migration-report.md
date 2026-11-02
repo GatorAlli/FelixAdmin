@@ -1,5 +1,7 @@
 # Better Auth migration report
 
+> Historical report. Supabase document storage was subsequently replaced. See [current local testing and Namecheap setup](local-testing-and-namecheap.md).
+
 Implemented on November 1, 2026. The application now uses Better Auth for authentication and keeps Supabase for document storage.
 
 ## 1. Browser authentication

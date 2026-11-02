@@ -20,6 +20,8 @@ test("guests and unknown profiles cannot edit, regardless of the access flag", (
 test("a forged order form cannot grant or revoke manager access", () => {
   for (const access of ["true", "false"]) {
     const form = new FormData();
+  form.set("projectName", "Test project");
+  form.set("clientName", "Test customer");
     form.set("gbpToUsdRate", "1.40");
     form.set("eurToUsdRate", "1.20");
     form.set("usdToSgdRate", "1.30");
@@ -33,6 +35,8 @@ test("a forged order form cannot grant or revoke manager access", () => {
 // Attribution is supplied by the server, even when the browser submits a name.
 test("the form cannot impersonate another creator", () => {
   const form = new FormData();
+  form.set("projectName", "Test project");
+  form.set("clientName", "Test customer");
   form.set("gbpToUsdRate", "1.40");
   form.set("eurToUsdRate", "1.20");
   form.set("usdToSgdRate", "1.30");
@@ -41,4 +45,24 @@ test("the form cannot impersonate another creator", () => {
   assert.ok(result.ok);
   assert.equal(result.values.createdBy, "Current user");
   assert.equal(readOrderValues(form, "").ok, false);
+});
+
+
+test("only project and customer names are mandatory user-entered fields", () => {
+  const form = new FormData();
+  assert.equal(readOrderValues(form, "Current user").ok, false);
+  form.set("projectName", "   ");
+  form.set("clientName", "Customer");
+  assert.equal(readOrderValues(form, "Current user").ok, false);
+  form.set("projectName", "Project");
+  form.set("clientName", "  ");
+  assert.equal(readOrderValues(form, "Current user").ok, false);
+  form.set("clientName", "Customer");
+  const result = readOrderValues(form, "Current user");
+  assert.ok(result.ok);
+  assert.equal(result.values.projectName, "Project");
+  assert.equal(result.values.clientName, "Customer");
+  assert.ok(result.values.gbpToUsdRate);
+  form.set("gbpToUsdRate", "0");
+  assert.equal(readOrderValues(form, "Current user").ok, false);
 });

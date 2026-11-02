@@ -32,6 +32,8 @@ test("supplier totals add exact cents and ignore empty amounts", () => {
 
 test("saving an SGD supplier keeps the original amount and recalculates USD", () => {
   const form = new FormData();
+  form.set("projectName", "Test project");
+  form.set("clientName", "Test customer");
   form.set("gbpToUsdRate", "1.40");
   form.set("eurToUsdRate", "1.20");
   form.set("usdToSgdRate", "1.30");

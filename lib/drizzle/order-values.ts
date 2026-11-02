@@ -2,7 +2,7 @@ import type { NewOrder } from "./schema";
 import { DEFAULT_PANEL_CURRENCIES, panelFields } from "./order-calculations";
 import { sumUsdAmounts, type MiscellaneousExpense } from "./expenses";
 import { supplierColumns, type SupplierKey, type SupplierCurrencyDetail, type CustomSupplierDetail,
-  isCurrency, isValidRate, convertToUsd } from "./currency";
+  DEFAULT_GBP_TO_USD, DEFAULT_EUR_TO_USD, DEFAULT_USD_TO_SGD, isCurrency, isValidRate, convertToUsd } from "./currency";
 
 function readText(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -30,9 +30,14 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     return { ok: false, message: "Created by is required." };
   }
 
-  const gbpToUsdRate = readText(formData, "gbpToUsdRate");
-  const eurToUsdRate = readText(formData, "eurToUsdRate");
-  const usdToSgdRate = readText(formData, "usdToSgdRate");
+  const projectName = readText(formData, "projectName");
+  const clientName = readText(formData, "clientName");
+  if (!projectName) return { ok: false, message: "Project Name is required." };
+  if (!clientName) return { ok: false, message: "Customer Name is required." };
+
+  const gbpToUsdRate = readText(formData, "gbpToUsdRate") || DEFAULT_GBP_TO_USD;
+  const eurToUsdRate = readText(formData, "eurToUsdRate") || DEFAULT_EUR_TO_USD;
+  const usdToSgdRate = readText(formData, "usdToSgdRate") || DEFAULT_USD_TO_SGD;
   if (!isValidRate(gbpToUsdRate) || !isValidRate(eurToUsdRate) || !isValidRate(usdToSgdRate)) {
     return { ok: false, message: "All three exchange rates must be positive decimals with at most 2 decimal places." };
   }
@@ -187,11 +192,11 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     clientOrderValue: clientOrderUsdValue,
     clientOrderOriginalValue: clientOrderOriginalValue || null,
     clientOrderCurrency,
-    projectName: readText(formData, "projectName") || null,
+    projectName,
     projectNotes: readText(formData, "projectNotes") || null,
     orderHandlingFee: orderHandlingFee.value,
     miscellaneousHandlingFee: miscellaneousHandlingFee.value,
-    clientName: readText(formData, "clientName") || null,
+    clientName,
     endUser: readText(formData, "endUser") || null,
     productSystem: readText(formData, "productSystem") || null,
     orderHandledBy: readText(formData, "orderHandledBy") || null,

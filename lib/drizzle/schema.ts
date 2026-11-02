@@ -87,7 +87,7 @@ export const data = p.pgTable.withRLS("data", {
   miscellaneousHandlingFee: p.numeric({ precision: 18, scale: 4 }),
 });
 
-// Application profiles and roles; Supabase currently stores the login credentials.
+// Application profiles and roles; Better Auth stores login credentials separately.
 export const users = p.pgTable.withRLS("users", {
   sl: p.integer().primaryKey().generatedAlwaysAsIdentity(),
   name: p.varchar(),
@@ -114,7 +114,7 @@ export const miscellaneousExpenditures = p.pgTable.withRLS(
   },
 );
 
-// Document metadata only; the actual files live in the private Storage bucket.
+// Document metadata only; file bytes live in DOCUMENTS_DIRECTORY.
 export const orderDocuments = p.pgTable.withRLS(
   "order_documents",
   {

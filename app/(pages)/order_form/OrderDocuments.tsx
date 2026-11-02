@@ -4,10 +4,8 @@ import { useTransientMessage } from "@/lib/use-transient-message";
 import { useId, useRef, useState } from "react";
 import type { DocumentSummary } from "@/lib/drizzle/schema";
 import { MAX_DOCUMENT_BYTES } from "@/lib/document-files";
-import { storageClient } from "@/lib/supabase/storage-client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { prepareDocumentUpload, completeDocumentUpload, cancelDocumentUpload, getDocumentDownload, removeDocument } from "@/lib/supabase/document-actions";
 
 // Draft rows hold local files; saved documents contain metadata returned by the server.
 type Draft = { id: number; file: File | null };
@@ -43,7 +41,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
     }
   }
 
-  // Upload bytes directly to Storage; server actions authorize and record the result.
+  // Private Node.js endpoints authenticate each upload, download and removal.
   return (
     <section aria-labelledby={`${inputId}-heading`} aria-busy={busy}
       className="space-y-4 rounded-lg border bg-card p-5 sm:p-6">
@@ -53,19 +51,19 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
         {documents.map((document) => (
           <li key={document.id} className="flex min-w-0 flex-wrap items-center gap-2 rounded-lg border p-3">
             <span className="min-w-0 flex-1 break-words text-sm">{document.originalName}</span>
-            <Button type="button" variant="outline" size="sm" disabled={unavailable}
-              onClick={() => void run(async () => {
-                if (!orderId) return;
-                const result = await getDocumentDownload(orderId, document.id);
-                if (!result.ok) { setMessage(result.message); return; }
-                window.location.assign(result.url);
-              })}>Download</Button>
+            <Button nativeButton={false} variant="outline" size="sm" disabled={unavailable}
+              render={<a href={"/api/orders/" + orderId + "/documents/" + document.id} download />}>
+              Download
+            </Button>
             {editable && <Button type="button" variant="destructive" size="sm" disabled={unavailable}
               aria-label={`Remove ${document.originalName}`}
               onClick={() => void run(async () => {
                 if (!orderId) return;
-                const result = await removeDocument(orderId, document.id);
-                if (!result.ok) { setMessage(result.message); return; }
+                const response = await fetch("/api/orders/" + orderId + "/documents/" + document.id, {
+                  method: "DELETE",
+                });
+                const result = await response.json() as { ok: boolean; message?: string };
+                if (!response.ok || !result.ok) { setMessage(result.message || "Could not remove the document."); return; }
                 setDocuments((rows) => rows.filter((row) => row.id !== document.id));
                 setMessage("Document removed. You can attach a replacement below.");
                 const id = nextId.current++;
@@ -95,34 +93,26 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
               <Button type="button" size="sm" disabled={unavailable || !row.file}
                 onClick={() => void run(async () => {
                   if (!row.file) return;
-                  const prepared = await prepareDocumentUpload(orderId, {
-                    name: row.file.name, type: row.file.type, size: row.file.size,
+                  // Send the raw file body so the server can stream it without buffering.
+                  const response = await fetch("/api/orders/" + orderId + "/documents", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": row.file.type || "application/octet-stream",
+                      "X-File-Name": encodeURIComponent(row.file.name),
+                      "X-File-Size": String(row.file.size),
+                    },
+                    body: row.file,
                   });
-                  if (!prepared.ok) { setMessage(prepared.message); return; }
-                  let completed = false;
-                  try {
-                    // File bytes go straight to Storage, avoiding server request limits.
-                    const { error } = await storageClient.storage.from("order-documents")
-                      .uploadToSignedUrl(prepared.storagePath, prepared.token, row.file, {
-                        contentType: prepared.mimeType,
-                      });
-                    if (error) {
-                      console.error("Document upload failed", error);
-                      setMessage("Upload failed. Check your connection and the project's Storage limit.");
-                      return;
-                    }
-                    const result = await completeDocumentUpload(orderId, prepared.ticket);
-                    if (!result.ok) { setMessage(result.message); return; }
-                    completed = true;
-                    setDocuments((rows) => [...rows, result.document]);
-                    setDrafts((rows) => rows.filter((draft) => draft.id !== row.id));
-                    setMessage("Document attached.");
-                  } finally {
-                    if (!completed) {
-                      try { await cancelDocumentUpload(orderId, prepared.ticket); }
-                      catch (error) { console.error("Unfinished upload cleanup failed", error); }
-                    }
+                  const result = await response.json() as
+                    | { ok: true; document: DocumentSummary }
+                    | { ok: false; message: string };
+                  if (!response.ok || !result.ok) {
+                    setMessage(result.ok ? "Could not upload the document." : result.message);
+                    return;
                   }
+                  setDocuments((rows) => [...rows, result.document]);
+                  setDrafts((rows) => rows.filter((draft) => draft.id !== row.id));
+                  setMessage("Document attached.");
                 })}>Attach</Button>
               <Button type="button" variant="outline" size="sm" disabled={unavailable}
                 aria-label={`Remove attachment row ${index + 1}`}

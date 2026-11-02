@@ -51,12 +51,24 @@ const manrope = Manrope({
 });
 
 // Override the shared uppercase label style only within this form.
-function Label(props: React.ComponentProps<typeof FormLabel>) {
+function Label({
+  required = false,
+  children,
+  ...props
+}: React.ComponentProps<typeof FormLabel> & { required?: boolean }) {
   return (
     <FormLabel
       {...props}
       className={cn("min-w-0 wrap-break-words", props.className, "normal-case")}
-    />
+    >
+      {children}
+      {required && (
+        <>
+          <span aria-hidden="true" className="text-destructive">*</span>
+          <span className="sr-only"> (required)</span>
+        </>
+      )}
+    </FormLabel>
   );
 }
 
@@ -199,7 +211,6 @@ function PaymentModeField({
                       placeholder="Specify payment method"
                       value={value}
                       onChange={(event) => onOtherChange?.(event.target.value)}
-                      required
                     />
                   </div>
                 ))}
@@ -498,7 +509,6 @@ export default function PageBody({
                             placeholder="Specify order handler"
                             value={orderHandledBy}
                             onChange={(e) => setOrderHandledBy(e.target.value)}
-                            required
                           />
                         </div>
                       )}
@@ -581,7 +591,6 @@ export default function PageBody({
                               placeholder="Specify system type"
                               value={productSystem}
                               onChange={(e) => setProductSystem(e.target.value)}
-                              required
                             />
                           </div>
                         )}
@@ -594,12 +603,13 @@ export default function PageBody({
                       />
                     </div>
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling} htmlFor="projectName">
+                      <Label className={headingStyling} required htmlFor="projectName">
                         Project Name
                       </Label>
                       <Input
                         id="projectName"
                         name="projectName"
+                        required
                         type="text"
                         value={projectName}
                         className={inputStyling}
@@ -607,13 +617,14 @@ export default function PageBody({
                       />
                     </div>
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling} htmlFor="clientName">
-                        Customer
+                      <Label className={headingStyling} required htmlFor="clientName">
+                        Customer Name
                       </Label>
                       <Input
                         className={inputStyling}
                         id="clientName"
                         name="clientName"
+                        required
                         list="customer-options"
                         type="text"
                         value={clientName}
@@ -795,7 +806,7 @@ export default function PageBody({
                             {index + 1}.
                           </Label>
                           <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
-                            <Label className={headingStyling}>Supplier</Label>
+                            <Label className={headingStyling} htmlFor={`supplier-${row.id}`}>Supplier</Label>
                             <Input
                               className={inputStyling}
                               id={`supplier-${row.id}`}
@@ -962,7 +973,7 @@ export default function PageBody({
                             {index + 1}.
                           </Label>
                           <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
-                            <Label className={headingStyling}>
+                            <Label className={headingStyling} htmlFor={`expense-${row.id}`}>
                               Expenditure
                             </Label>
                             <Input
@@ -1581,7 +1592,6 @@ export default function PageBody({
                         type="number"
                         min="0.01"
                         step="0.01"
-                        required
                         value={gbpToUsdRate}
                         onChange={(e) => {
                           if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) {
@@ -1611,7 +1621,6 @@ export default function PageBody({
                         type="number"
                         min="0.01"
                         step="0.01"
-                        required
                         value={eurToUsdRate}
                         onChange={(e) => {
                           if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) {
@@ -1641,7 +1650,6 @@ export default function PageBody({
                         type="number"
                         min="0.01"
                         step="0.01"
-                        required
                         value={usdToSgdRate}
                         onChange={(e) => {
                           if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) {
