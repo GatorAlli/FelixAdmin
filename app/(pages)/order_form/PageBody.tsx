@@ -462,6 +462,9 @@ export default function PageBody({
     (row) => row.name.trim() !== "" || row.amount.trim() !== "",
   );
 
+  const showSupplierUsd = visibleSuppliers.some(row => row.currency !== "USD");
+  const showExpenseUsd = visibleExpenses.some(row => row.currency !== "USD");
+
   // The page switches between editable fields and a read-only order summary.
   return (
     <div className={manrope.className}>
@@ -1294,7 +1297,7 @@ export default function PageBody({
                       {projectNotes.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 @xl:col-span-2 [&>label:first-child]:min-h-6">
                           <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Project Notes:</strong>{" "}
+                            <strong>Project Notes:</strong><br />
                             {projectNotes}
                           </p>
                         </div>
@@ -1357,141 +1360,83 @@ export default function PageBody({
                       </div>
                     </div>
                     {visibleSuppliers.length > 0 && (
-                      <div className="flex flex-col gap-4">
-                        <Label className={headingStyling}>Material Cost</Label>
-                        <div className="flex flex-col gap-2 border px-4 py-2 rounded-lg">
-                          {visibleSuppliers.map((row, index) => (
-                            <div
-                              key={row.id}
-                              className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(5.5rem,0.65fr)_minmax(5.5rem,0.55fr)_minmax(0,2fr)]"
-                            >
-                              <Label>{index + 1}.</Label>
-                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                                <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                  <Label className="font-bold">
-                                    {row.supplier}
-                                  </Label>
-                                </div>
-                              </div>
-                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                                <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                  <Label className={headingStyling}>
-                                    Amount ({row.currency})
-                                  </Label>
-                                  <Label className="font-bold">
-                                    {formatMoney(row.amount)}
-                                  </Label>
-                                </div>
-                              </div>
-                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                                <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                  <Label className={headingStyling}>
-                                    Currency
-                                  </Label>
-                                  <Label className="font-bold">
-                                    {row.currency === "EUR"
-                                      ? "Euro"
-                                      : row.currency}
-                                  </Label>
-                                </div>
-                              </div>
-                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                                <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId} rowKey={row.rowKey}
-                                  pendingFile={pendingSupplierFiles[row.rowKey ?? `new:${row.id}`]}
-                                  onFileChange={file => stageSupplierFile(row.rowKey ?? `new:${row.id}`, file)}
-                                  document={supplierDocuments.find(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
-                                  editable={false} disabled={isSubmitting || documentBusy}
-                                  onBusyChange={setDocumentBusyState}
-                                  onChange={document => changeSupplierDocument(row.rowKey ?? `new:${row.id}`, document)} />
-                              </div>
-                              {row.currency !== "USD" && (
-                                <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
-                                  <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                    <Label className={headingStyling}>
-                                      Amount (USD)
-                                    </Label>
-                                    <Label className="font-bold">
-                                      {formatMoney(
-                                        convertToUsd(
-                                          row.amount,
-                                          row.currency,
-                                          gbpToUsdRate,
-                                          eurToUsdRate,
-                                          usdToSgdRate,
-                                        ),
-                                        "—",
-                                      )}
-                                    </Label>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                      <section className="min-w-0 space-y-4" aria-labelledby="material-cost-heading">
+                        <h3 id="material-cost-heading" className={headingStyling}>Material Cost</h3>
+                        <div role="region" aria-label="Material cost table" tabIndex={0}
+                          className="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-ring">
+                          <table className="w-full min-w-[36rem] text-left text-sm">
+                            <thead className="border-b bg-muted/50">
+                              <tr>
+                                <th scope="col" aria-label="Row number" className="w-12 px-4 py-3">&nbsp;</th>
+                                <th scope="col" className="px-4 py-3">Supplier</th>
+                                <th scope="col" className="px-4 py-3">Amount</th>
+                                <th scope="col" className="px-4 py-3">Currency</th>
+                                {showSupplierUsd && <th scope="col" className="whitespace-nowrap px-4 py-3">Amount (USD)</th>}
+                                <th scope="col" className="px-4 py-3">Document</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                              {visibleSuppliers.map((row, index) => {
+                                const document = supplierDocuments.find(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`));
+                                return (
+                                  <tr key={row.id} className="align-top">
+                                    <td className="px-4 py-3">{index + 1}.</td>
+                                    <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 font-semibold">{row.supplier}</th>
+                                    <td className="whitespace-nowrap px-4 py-3 tabular-nums">{formatMoney(row.amount)}</td>
+                                    <td className="px-4 py-3">{row.currency === "EUR" ? "Euro" : row.currency}</td>
+                                    {showSupplierUsd && (
+                                      <td className="whitespace-nowrap px-4 py-3 tabular-nums">
+                                        {formatMoney(convertToUsd(row.amount, row.currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate), "—")}
+                                      </td>
+                                    )}
+                                    <td className="max-w-72 px-4 py-3">
+                                      {document ? (
+                                        <a className="break-all underline" href={`/api/orders/${orderDetails?.sl ?? createdOrderId}/documents/${document.id}`} download>
+                                          {document.originalName}
+                                        </a>
+                                      ) : <span className="text-muted-foreground">No document</span>}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
                         </div>
-                      </div>
+                      </section>
                     )}
                     {visibleExpenses.length > 0 && (
-                      <div className="flex flex-col gap-4">
-                        <Label className={headingStyling}>
-                          Miscellaneous Costs
-                        </Label>
-                        <div className="flex flex-col gap-2 border px-4 py-2 rounded-lg">
-                          {visibleExpenses.map((row, index) => (
-                            <div
-                              key={row.id}
-                              className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
-                            >
-                              <Label>{index + 1}.</Label>
-                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                                <Label className="font-bold">{row.name}</Label>
-                              </div>
-                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                                <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                  <Label className={headingStyling}>
-                                    Amount ({row.currency})
-                                  </Label>
-                                  <Label className="font-bold">
-                                    {formatMoney(row.amount)}
-                                  </Label>
-                                </div>
-                              </div>
-                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                                <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                  <Label className={headingStyling}>
-                                    Currency
-                                  </Label>
-                                  <Label className="font-bold">
-                                    {row.currency === "EUR"
-                                      ? "Euro"
-                                      : row.currency}
-                                  </Label>
-                                </div>
-                              </div>
-                              {row.currency !== "USD" && (
-                                <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
-                                  <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                    <Label className={headingStyling}>
-                                      Amount (USD)
-                                    </Label>
-                                    <Label className="font-bold">
-                                      {formatMoney(
-                                        convertToUsd(
-                                          row.amount,
-                                          row.currency,
-                                          gbpToUsdRate,
-                                          eurToUsdRate,
-                                          usdToSgdRate,
-                                        ),
-                                        "—",
-                                      )}
-                                    </Label>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                      <section className="min-w-0 space-y-4" aria-labelledby="miscellaneous-cost-heading">
+                        <h3 id="miscellaneous-cost-heading" className={headingStyling}>Miscellaneous Costs</h3>
+                        <div role="region" aria-label="Miscellaneous costs table" tabIndex={0}
+                          className="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-ring">
+                          <table className="w-full min-w-[28rem] text-left text-sm">
+                            <thead className="border-b bg-muted/50">
+                              <tr>
+                                <th scope="col" aria-label="Row number" className="w-12 px-4 py-3">&nbsp;</th>
+                                <th scope="col" className="px-4 py-3">Expenditure</th>
+                                <th scope="col" className="px-4 py-3">Amount</th>
+                                <th scope="col" className="px-4 py-3">Currency</th>
+                                {showExpenseUsd && <th scope="col" className="whitespace-nowrap px-4 py-3">Amount (USD)</th>}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                              {visibleExpenses.map((row, index) => (
+                                <tr key={row.id} className="align-top">
+                                  <td className="px-4 py-3">{index + 1}.</td>
+                                  <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 font-semibold">{row.name}</th>
+                                  <td className="whitespace-nowrap px-4 py-3 tabular-nums">{formatMoney(row.amount)}</td>
+                                  <td className="px-4 py-3">{row.currency === "EUR" ? "Euro" : row.currency}</td>
+                                  {showExpenseUsd && (
+                                    <td className="whitespace-nowrap px-4 py-3 tabular-nums">
+                                      {formatMoney(convertToUsd(row.amount, row.currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate), "—")}
+                                    </td>
+                                  )}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
-                      </div>
+                      </section>
                     )}
                   </div>
                 )}
