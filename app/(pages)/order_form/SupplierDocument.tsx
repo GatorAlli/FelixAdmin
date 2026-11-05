@@ -46,7 +46,7 @@ export default function SupplierDocument({ orderId, documents, editable, disable
   }
 
   return <Dialog.Root>
-    <Dialog.Trigger render={<Button type="button" variant="outline" disabled={disabled} />}>
+    <Dialog.Trigger render={<Button type="button" variant="outline" className={editable ? "h-10 px-3" : "h-8 px-3"} disabled={disabled} />}>
       Documents ({count})
     </Dialog.Trigger>
     <Dialog.Portal>

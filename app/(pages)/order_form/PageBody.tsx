@@ -1375,13 +1375,13 @@ export default function PageBody({
                                 <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Amount</th>
                                 <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Currency</th>
                                 {showSupplierUsd && <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Amount (USD)</th>}
-                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Documents</th>
+                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Documents</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y">
                               {visibleSuppliers.map((row, index) => {
                                 return (
-                                  <tr key={row.id} className="align-top">
+                                  <tr key={row.id} className="align-middle">
                                     <td className="w-12 px-3 py-3 text-center text-base font-semibold tracking-normal tabular-nums">{index + 1}.</td>
                                     <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 font-semibold">{row.supplier}</th>
                                     <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{formatMoney(row.amount)}</td>
@@ -1391,7 +1391,7 @@ export default function PageBody({
                                         {formatMoney(convertToUsd(row.amount, row.currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate), "—")}
                                       </td>
                                     )}
-                                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                                    <td className="whitespace-nowrap px-4 py-3 text-center">
                                       <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId}
                                         documents={supplierDocuments.filter(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
                                         editable={false} disabled={false} onBusyChange={setDocumentBusyState}
@@ -1422,7 +1422,7 @@ export default function PageBody({
                             </thead>
                             <tbody className="divide-y">
                               {visibleExpenses.map((row, index) => (
-                                <tr key={row.id} className="align-top">
+                                <tr key={row.id} className="align-middle">
                                   <td className="w-12 px-3 py-3 text-center text-base font-semibold tracking-normal tabular-nums">{index + 1}.</td>
                                   <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 font-semibold">{row.name}</th>
                                   <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{formatMoney(row.amount)}</td>
