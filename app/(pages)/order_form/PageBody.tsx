@@ -1234,19 +1234,20 @@ export default function PageBody({
                   {orderHandledBy.trim() !== "" && (
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Order Handled By:</strong>{" "}
+                            <strong className="block">Order Handled By</strong>
                             {orderHandledBy}
                           </p>
                     </div>
                   )}
                   <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2">
                     <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                      <strong>Reference Number:</strong>{" "}{referenceNumber || "Not specified"}
+                      <strong className="block">Reference Number</strong>
+                      {referenceNumber || "Not specified"}
                     </p>
                   </div>
                   <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2 @lg:col-start-3">
                     <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Import By:</strong>{" "}
+                            <strong className="block">Import By</strong>
                             {importedBy || "Not selected"}
                           </p>
                   </div>
