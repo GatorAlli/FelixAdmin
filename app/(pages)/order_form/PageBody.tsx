@@ -879,11 +879,10 @@ export default function PageBody({
                         >
                           Payment Notes
                         </Label>
-                        <Input
-                          className={inputStyling}
+                        <textarea
+                          className={cn(inputStyling, "border")}
                           id="paymentNotes"
                           name="paymentNotes"
-                          type="text"
                           value={paymentNotes}
                           onChange={(e) => setPaymentNotes(e.target.value)}
                         />
@@ -1358,7 +1357,7 @@ export default function PageBody({
                             <Label className={headingStyling}>
                               Payment Notes
                             </Label>
-                            <Label className="font-bold">{paymentNotes}</Label>
+                            <p className="min-w-0 whitespace-pre-wrap wrap-break-words font-bold">{paymentNotes}</p>
                           </div>
                         )}
                       </div>
@@ -1372,11 +1371,11 @@ export default function PageBody({
                             <thead className="border-b bg-muted/50">
                               <tr>
                                 <th scope="col" aria-label="Row number" className="w-12 px-4 py-3">&nbsp;</th>
-                                <th scope="col" className="px-4 py-3">Supplier</th>
-                                <th scope="col" className="px-4 py-3">Amount</th>
-                                <th scope="col" className="px-4 py-3">Currency</th>
-                                {showSupplierUsd && <th scope="col" className="whitespace-nowrap px-4 py-3">Amount (USD)</th>}
-                                <th scope="col" className="px-4 py-3">Documents</th>
+                                <th scope="col" className="w-full px-4 py-3">Supplier</th>
+                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Amount</th>
+                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Currency</th>
+                                {showSupplierUsd && <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Amount (USD)</th>}
+                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Documents</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y">
@@ -1385,14 +1384,14 @@ export default function PageBody({
                                   <tr key={row.id} className="align-top">
                                     <td className="px-4 py-3">{index + 1}.</td>
                                     <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 font-semibold">{row.supplier}</th>
-                                    <td className="whitespace-nowrap px-4 py-3 tabular-nums">{formatMoney(row.amount)}</td>
-                                    <td className="px-4 py-3">{row.currency === "EUR" ? "Euro" : row.currency}</td>
+                                    <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{formatMoney(row.amount)}</td>
+                                    <td className="whitespace-nowrap px-4 py-3 text-right">{row.currency === "EUR" ? "Euro" : row.currency}</td>
                                     {showSupplierUsd && (
-                                      <td className="whitespace-nowrap px-4 py-3 tabular-nums">
+                                      <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">
                                         {formatMoney(convertToUsd(row.amount, row.currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate), "—")}
                                       </td>
                                     )}
-                                    <td className="max-w-72 px-4 py-3">
+                                    <td className="whitespace-nowrap px-4 py-3 text-right">
                                       <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId}
                                         documents={supplierDocuments.filter(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
                                         editable={false} disabled={false} onBusyChange={setDocumentBusyState}
@@ -1415,10 +1414,10 @@ export default function PageBody({
                             <thead className="border-b bg-muted/50">
                               <tr>
                                 <th scope="col" aria-label="Row number" className="w-12 px-4 py-3">&nbsp;</th>
-                                <th scope="col" className="px-4 py-3">Expenditure</th>
-                                <th scope="col" className="px-4 py-3">Amount</th>
-                                <th scope="col" className="px-4 py-3">Currency</th>
-                                {showExpenseUsd && <th scope="col" className="whitespace-nowrap px-4 py-3">Amount (USD)</th>}
+                                <th scope="col" className="w-full px-4 py-3">Expenditure</th>
+                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Amount</th>
+                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Currency</th>
+                                {showExpenseUsd && <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Amount (USD)</th>}
                               </tr>
                             </thead>
                             <tbody className="divide-y">
@@ -1426,10 +1425,10 @@ export default function PageBody({
                                 <tr key={row.id} className="align-top">
                                   <td className="px-4 py-3">{index + 1}.</td>
                                   <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 font-semibold">{row.name}</th>
-                                  <td className="whitespace-nowrap px-4 py-3 tabular-nums">{formatMoney(row.amount)}</td>
-                                  <td className="px-4 py-3">{row.currency === "EUR" ? "Euro" : row.currency}</td>
+                                  <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{formatMoney(row.amount)}</td>
+                                  <td className="whitespace-nowrap px-4 py-3 text-right">{row.currency === "EUR" ? "Euro" : row.currency}</td>
                                   {showExpenseUsd && (
-                                    <td className="whitespace-nowrap px-4 py-3 tabular-nums">
+                                    <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">
                                       {formatMoney(convertToUsd(row.amount, row.currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate), "—")}
                                     </td>
                                   )}
