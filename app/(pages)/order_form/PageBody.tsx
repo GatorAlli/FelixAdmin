@@ -574,7 +574,7 @@ export default function PageBody({
                     >
                       Order Handled By
                     </Label>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <Select
                         value={orderHandlerChoice}
                         onValueChange={(value) => {
@@ -583,7 +583,7 @@ export default function PageBody({
                           setOrderHandledBy(value === "OTHERS" ? "" : value);
                         }}
                       >
-                        <SelectTrigger id="orderHandlerChoice">
+                        <SelectTrigger id="orderHandlerChoice" className="shrink-0">
                           <SelectValue placeholder="Select order handler" />
                         </SelectTrigger>
                         <SelectContent>
@@ -596,21 +596,14 @@ export default function PageBody({
                         </SelectContent>
                       </Select>
                       {orderHandlerChoice === "OTHERS" && (
-                        <div className="flex flex-col gap-2">
-                          <Label
-                            className={headingStyling}
-                            htmlFor="otherOrderHandler"
-                          >
-                            Other Order Handler
-                          </Label>
-                          <Input
-                            className={inputStyling}
-                            id="otherOrderHandler"
-                            placeholder="Specify order handler"
-                            value={orderHandledBy}
-                            onChange={(e) => setOrderHandledBy(e.target.value)}
-                          />
-                        </div>
+                        <Input
+                          className={cn(inputStyling, "min-w-0 flex-1")}
+                          id="otherOrderHandler"
+                          aria-label="Other order handler"
+                          placeholder="Specify order handler"
+                          value={orderHandledBy}
+                          onChange={(e) => setOrderHandledBy(e.target.value)}
+                        />
                       )}
                     </div>
                     <input
