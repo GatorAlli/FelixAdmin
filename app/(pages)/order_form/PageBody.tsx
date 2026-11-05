@@ -654,8 +654,8 @@ export default function PageBody({
                 </div>
                 {/* Project information */}
                 <div className="space-y-4">
-                  <Label className={headingStyling}>Project Information</Label>
-                  <div className="grid grid-cols-1 gap-8 border rounded-lg p-4 @xl:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-x-8 gap-y-3 border rounded-lg p-4 @xl:grid-cols-2">
+                      <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">Project Information</h2>
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label
                         htmlFor="systemTypeChoice"
@@ -773,10 +773,8 @@ export default function PageBody({
                 {/* Order value, payment and costs */}
                 <div className="flex flex-col gap-8">
                   <div className="flex flex-col gap-2">
-                    <Label className={headingStyling}>
-                      Payment Information
-                    </Label>
-                    <div className="flex flex-col gap-8 border rounded-lg p-4">
+                    <div className="flex flex-col gap-3 border rounded-lg p-4">
+                      <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">Payment Information</h2>
                       <div className="space-y-4">
                         <div className="grid grid-cols-1 items-end gap-4 @xl:grid-cols-[minmax(0,1fr)_8rem]">
                           <div className="flex min-w-0 flex-col gap-2 [&>label]:min-h-6">
@@ -902,7 +900,7 @@ export default function PageBody({
                       ))}
                     </datalist>
 
-                    <Label className={headingStyling}>Material Cost</Label>
+                    <h3 className="text-[1.21em] font-extrabold underline underline-offset-4">Material Cost</h3>
                     <div className="flex flex-col gap-4 border px-4 py-2 rounded-lg">
                       {suppliers.map((row, index) => (
                         <div
@@ -1079,9 +1077,7 @@ export default function PageBody({
                         <option key={name} value={name} />
                       ))}
                     </datalist>
-                    <Label className={headingStyling}>
-                      Miscellaneous Costs
-                    </Label>
+                    <h3 className="text-[1.21em] font-extrabold underline underline-offset-4">Miscellaneous Costs</h3>
                     <div className="flex flex-col gap-4 border px-4 py-2 rounded-lg">
                       {expenses.map((row, index) => (
                         <div
@@ -1271,10 +1267,8 @@ export default function PageBody({
                   projectNotes,
                 ].some((value) => value.trim() !== "") && (
                   <div className="flex flex-col gap-2">
-                    <Label className={headingStyling}>
-                      Project Information
-                    </Label>
-                    <div className="grid grid-cols-1 gap-8 border rounded-lg p-4 @xl:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-x-8 gap-y-3 border rounded-lg p-4 @xl:grid-cols-2">
+                      <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">Project Information</h2>
                       {productSystem.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                           <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
@@ -1327,10 +1321,8 @@ export default function PageBody({
                   visibleExpenses.length > 0) && (
                   <div className="flex flex-col gap-8">
                     <div className="flex flex-col gap-2">
-                      <Label className={headingStyling}>
-                        Payment Information
-                      </Label>
-                      <div className="flex flex-col gap-8 border rounded-lg p-4">
+                      <div className="flex flex-col gap-3 border rounded-lg p-4">
+                      <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">Payment Information</h2>
                         {clientOrderValue.trim() !== "" && (
                           <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                             <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
@@ -1375,7 +1367,7 @@ export default function PageBody({
                     </div>
                     {visibleSuppliers.length > 0 && (
                       <section className="min-w-0 space-y-4" aria-labelledby="material-cost-heading">
-                        <h3 id="material-cost-heading" className={headingStyling}>Material Cost</h3>
+                        <h3 id="material-cost-heading" className="text-[1.21em] font-extrabold underline underline-offset-4">Material Cost</h3>
                         <div role="region" aria-label="Material cost table" tabIndex={0}
                           className="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-ring">
                           <table className="w-full min-w-[36rem] text-left text-sm">
@@ -1420,7 +1412,7 @@ export default function PageBody({
                     )}
                     {visibleExpenses.length > 0 && (
                       <section className="min-w-0 space-y-4" aria-labelledby="miscellaneous-cost-heading">
-                        <h3 id="miscellaneous-cost-heading" className={headingStyling}>Miscellaneous Costs</h3>
+                        <h3 id="miscellaneous-cost-heading" className="text-[1.21em] font-extrabold underline underline-offset-4">Miscellaneous Costs</h3>
                         <div role="region" aria-label="Miscellaneous costs table" tabIndex={0}
                           className="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-ring">
                           <table className="w-full min-w-[28rem] text-left text-sm">

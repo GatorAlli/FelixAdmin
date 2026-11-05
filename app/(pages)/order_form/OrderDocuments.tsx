@@ -50,7 +50,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
   return (
     <section aria-labelledby={`${inputId}-heading`} aria-busy={busy}
       className="space-y-4 rounded-lg border bg-card p-5 sm:p-6">
-      <h2 id={`${inputId}-heading`} className="font-bold">Documents</h2>
+      <h2 id={`${inputId}-heading`} className="text-[1.21em] font-extrabold underline underline-offset-4">Documents</h2>
       {documents.length === 0 && <p className="text-sm text-muted-foreground">No documents attached.</p>}
       <ul className="space-y-3">
         {documents.map((document, index) => (
