@@ -107,7 +107,7 @@ export default function SupplierDocument({ orderId, documents, editable, disable
             onClick={() => {
               const rowId = nextRowId.current++;
               setEmptyRows(rows => [...rows, rowId]);
-            }}>+</Button>
+            }}><span className="text-xl leading-none">+</span></Button>
         </>}
         <p role="status" className="text-sm">{busy ? "Working…" : message}</p>
         <Dialog.Close render={<Button type="button" className="self-end" disabled={busy} />}>Done</Dialog.Close>

@@ -904,10 +904,10 @@ export default function PageBody({
                           key={row.id}
                           className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_calc((100%_-_9rem)*5/11)_minmax(5.5rem,0.65fr)_minmax(5.5rem,0.55fr)_auto_3.5rem]"
                         >
-                          <Label className="mt-8 h-10 self-start justify-center">
+                          <Label className="mt-8 h-10 self-start justify-center text-base tabular-nums">
                             {index + 1}.
                           </Label>
-                          <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
+                          <div className="-ml-2 col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
                             <Label className={headingStyling} htmlFor={`supplier-${row.id}`}>Supplier</Label>
                             <Input
                               className={inputStyling}
@@ -1015,7 +1015,7 @@ export default function PageBody({
                                 )
                               }
                             >
-                              −
+                              <span className="text-xl leading-none">−</span>
                             </Button>
                           </div>
                           {row.currency !== "USD" && (
@@ -1064,7 +1064,7 @@ export default function PageBody({
                         ]);
                       }}
                     >
-                      +
+                      <span className="text-xl leading-none">+</span>
                     </Button>
                   </div>
                   <div className="space-y-4">
@@ -1080,10 +1080,10 @@ export default function PageBody({
                           key={row.id}
                           className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_3.5rem]"
                         >
-                          <Label className="h-10 self-end justify-center">
+                          <Label className="h-10 self-end justify-center text-base tabular-nums">
                             {index + 1}.
                           </Label>
-                          <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
+                          <div className="-ml-2 col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
                             <Label className={headingStyling} htmlFor={`expense-${row.id}`}>
                               Expenditure
                             </Label>
@@ -1182,7 +1182,7 @@ export default function PageBody({
                                 )
                               }
                             >
-                              −
+                              <span className="text-xl leading-none">−</span>
                             </Button>
                           </div>
                           {row.currency !== "USD" && (
@@ -1224,7 +1224,7 @@ export default function PageBody({
                         ]);
                       }}
                     >
-                      +
+                      <span className="text-xl leading-none">+</span>
                     </Button>
                   </div>
                 </div>

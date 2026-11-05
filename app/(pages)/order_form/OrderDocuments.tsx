@@ -107,7 +107,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
           aria-label="Add document field" onClick={() => {
             const id = nextId.current++;
             setDrafts((rows) => [...rows, { id, file: null }]);
-          }}>+</Button>
+          }}><span className="text-xl leading-none">+</span></Button>
       </>}
       <p role="status" aria-live="polite" className="text-sm">{busy ? "Working…" : message}</p>
     </section>
