@@ -40,7 +40,7 @@ Only Project Name and Customer Name have required markers and browser validation
 
 ## Documents
 
-Save a new order first, reopen it, and enter edit mode to attach files.
+Select files while editing an order, including a new order. Files are staged in the browser and uploaded only after Submit successfully saves the order. Failed uploads remain selected for retry; completed uploads are not sent again. Discard Changes clears pending selections. Existing-document removal still takes effect immediately.
 
 - Upload: POST /api/orders/:orderId/documents, raw file body.
 - Download: GET /api/orders/:orderId/documents/:documentId.
@@ -57,7 +57,7 @@ Downloads require a current session and are sent as attachments with private/no-
 Each saved material-cost row supports one document, using the same endpoints and
 `orders/<orderId>/<UUID>` folder as general documents. `X-Supplier-Row-Key` is the
 URL-encoded permanent row reference. Original filenames are preserved for display
-and download. New rows must be saved before uploading. Renaming or reordering rows
+and download. Files can be selected on new rows and upload after the order is saved. Renaming or reordering rows
 preserves their attachments; removing a row deletes its attachment after the order
 save succeeds. General documents remain separate in the interface.
 

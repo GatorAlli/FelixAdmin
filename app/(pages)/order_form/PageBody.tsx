@@ -15,7 +15,8 @@ import { clsx } from "clsx";
 import Link from "next/link";
 import { createOrder, updateOrder } from "./actions";
 import { type Order, type DocumentSummary } from "@/lib/drizzle/schema";
-import OrderDocuments from "./OrderDocuments";
+import OrderDocuments, { type DocumentDraft } from "./OrderDocuments";
+import { uploadOrderDocument } from "@/lib/document-uploads";
 import SupplierDocument from "./SupplierDocument";
 import { useRouter } from "next/navigation";
 import { canEditOrder } from "@/lib/drizzle/order-access";
@@ -246,11 +247,11 @@ export default function PageBody({
   initialDocuments?: DocumentSummary[];
 }) {
   const router = useRouter();
-  const [supplierDocuments, setSupplierDocuments] = useState(() => initialDocuments.filter(document => document.supplierRowKey !== null));
+  const [supplierDocuments, setSupplierDocuments] = useState(() => initialDocuments);
   const [loadedDocuments, setLoadedDocuments] = useState(initialDocuments);
   if (initialDocuments !== loadedDocuments) {
     setLoadedDocuments(initialDocuments);
-    setSupplierDocuments(initialDocuments.filter(document => document.supplierRowKey !== null));
+    setSupplierDocuments(initialDocuments);
   }
   const [documentBusy, setDocumentBusy] = useState(false);
   const documentBusyRef = useRef(false);
@@ -261,7 +262,17 @@ export default function PageBody({
   function changeSupplierDocument(rowKey: string | undefined, document: DocumentSummary | null) {
     setSupplierDocuments(rows => [...rows.filter(row => row.supplierRowKey !== rowKey), ...(document ? [document] : [])]);
   }
-  const savedSupplierKeys = new Set(orderDetails ? restoreSupplierRows(orderDetails).map(row => row.rowKey) : []);
+  const [pendingSupplierFiles, setPendingSupplierFiles] = useState<Record<string, File>>({});
+  const [documentDrafts, setDocumentDrafts] = useState<DocumentDraft[]>([{ id: 0, file: null }]);
+  const [createdOrderId, setCreatedOrderId] = useState<number>();
+  function stageSupplierFile(key: string, file: File | null) {
+    setPendingSupplierFiles(files => {
+      const next = { ...files };
+      if (file) next[key] = file;
+      else delete next[key];
+      return next;
+    });
+  }
   // Existing orders retain their recorded date; new orders display today's date.
   const [createdDate, setCreatedDate] = useState<string | null>(
     orderDetails ? orderDetails.createdDate : currentDate,
@@ -462,24 +473,51 @@ export default function PageBody({
                   // The server action validates these fields and recomputes saved USD values.
                   const formData = new FormData(e.currentTarget);
                   try {
-                    if (orderDetails) {
-                      const result = await updateOrder(
-                        orderDetails.sl,
-                        formData,
-                      );
-                      setSubmissionMessage(result.message);
-                      // Validation failures must leave the user's edits on screen.
-                      if (result.ok) {
-                        setIsEditing(false);
-                        router.refresh();
-                      }
-                    } else {
-                      const result = await createOrder(formData);
-                      if (result.ok && result.createdDate)
-                        setCreatedDate(result.createdDate);
-                      setSubmissionMessage(result.message);
-                      if (result.ok && result.orderId) router.push(`/order_form/${result.orderId}`);
+                    if (suppliers.some(row => pendingSupplierFiles[row.rowKey ?? `new:${row.id}`] && (!row.supplier.trim() || !row.amount.trim()))) {
+                      setSubmissionMessage("Complete the supplier and amount for each selected supplier document.");
+                      return;
                     }
+                    const existingId = orderDetails?.sl ?? createdOrderId;
+                    const result = existingId
+                      ? await updateOrder(existingId, formData)
+                      : await createOrder(formData);
+                    setSubmissionMessage(result.message);
+                    if (!result.ok) return;
+                    const savedId = existingId ?? ("orderId" in result && typeof result.orderId === "number" ? result.orderId : undefined);
+                    if (!savedId) throw new Error("The saved order reference is missing.");
+                    // Retain the new ID even if an upload fails, so retry updates this order.
+                    if (!orderDetails) setCreatedOrderId(savedId);
+                    if ("createdDate" in result && typeof result.createdDate === "string") setCreatedDate(result.createdDate);
+                    const failures: string[] = [];
+                    const activeKeys = new Set(suppliers.filter(row => row.supplier.trim() && row.amount.trim()).map(row => row.rowKey ?? `new:${row.id}`));
+                    for (const [key, file] of Object.entries(pendingSupplierFiles)) {
+                      if (!activeKeys.has(key)) continue;
+                      try {
+                        const document = await uploadOrderDocument(savedId, file, key);
+                        changeSupplierDocument(key, document);
+                        stageSupplierFile(key, null);
+                      } catch (error) {
+                        failures.push(`${file.name}: ${error instanceof Error ? error.message : "Upload failed."}`);
+                      }
+                    }
+                    for (const draft of documentDrafts) {
+                      if (!draft.file) continue;
+                      try {
+                        const document = await uploadOrderDocument(savedId, draft.file);
+                        setSupplierDocuments(documents => [...documents, document]);
+                        setDocumentDrafts(rows => rows.filter(row => row.id !== draft.id));
+                      } catch (error) {
+                        failures.push(`${draft.file.name}: ${error instanceof Error ? error.message : "Upload failed."}`);
+                      }
+                    }
+                    if (failures.length) {
+                      setSubmissionMessage(`${result.message}. Order saved, but some documents failed to upload. Submit again to retry. ${failures.join(" ")}`);
+                      return;
+                    }
+                    setPendingSupplierFiles({});
+                    setIsEditing(false);
+                    if (orderDetails) router.refresh();
+                    else router.push(`/order_form/${savedId}`);
                   } catch {
                     setSubmissionMessage(
                       "Could not save the order. Please try again.",
@@ -573,7 +611,7 @@ export default function PageBody({
                 {/* Project information */}
                 <div className="space-y-4">
                   <Label className={headingStyling}>Project Information</Label>
-                  <div className="flex flex-col gap-8 border rounded-lg p-4">
+                  <div className="grid grid-cols-1 gap-8 border rounded-lg p-4 @xl:grid-cols-2">
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label
                         htmlFor="systemTypeChoice"
@@ -590,7 +628,7 @@ export default function PageBody({
                             setProductSystem(value === "OTHER" ? "" : value);
                           }}
                         >
-                          <SelectTrigger id="systemTypeChoice">
+                          <SelectTrigger id="systemTypeChoice" className="w-full">
                             <SelectValue placeholder="Select system type" />
                           </SelectTrigger>
                           <SelectContent>
@@ -674,7 +712,7 @@ export default function PageBody({
                         onChange={(e) => setEndUser(e.target.value)}
                       />
                     </div>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                    <div className="flex min-w-0 flex-col gap-2 @xl:col-span-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling} htmlFor="projectNotes">
                         Project Notes
                       </Label>
@@ -913,12 +951,14 @@ export default function PageBody({
                             </Select>
                           </div>
                           <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                            <SupplierDocument orderId={orderDetails?.sl}
-                              rowKey={savedSupplierKeys.has(row.rowKey) ? row.rowKey : undefined}
-                              document={supplierDocuments.find(document => document.supplierRowKey === row.rowKey)}
+                            <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId}
+                              rowKey={row.rowKey ?? `new:${row.id}`}
+                              pendingFile={pendingSupplierFiles[row.rowKey ?? `new:${row.id}`]}
+                              onFileChange={file => stageSupplierFile(row.rowKey ?? `new:${row.id}`, file)}
+                              document={supplierDocuments.find(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
                               editable disabled={isSubmitting || documentBusy}
                               onBusyChange={setDocumentBusyState}
-                              onChange={document => changeSupplierDocument(row.rowKey, document)} />
+                              onChange={document => changeSupplierDocument(row.rowKey ?? `new:${row.id}`, document)} />
                           </div>
                           <input type="hidden" name="supplierRowKey" value={row.rowKey ?? `new:${row.id}`} />
                           <input
@@ -1320,11 +1360,13 @@ export default function PageBody({
                                 </div>
                               </div>
                               <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                                <SupplierDocument orderId={orderDetails?.sl} rowKey={row.rowKey}
-                                  document={supplierDocuments.find(document => document.supplierRowKey === row.rowKey)}
+                                <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId} rowKey={row.rowKey}
+                                  pendingFile={pendingSupplierFiles[row.rowKey ?? `new:${row.id}`]}
+                                  onFileChange={file => stageSupplierFile(row.rowKey ?? `new:${row.id}`, file)}
+                                  document={supplierDocuments.find(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
                                   editable={false} disabled={isSubmitting || documentBusy}
                                   onBusyChange={setDocumentBusyState}
-                                  onChange={document => changeSupplierDocument(row.rowKey, document)} />
+                                  onChange={document => changeSupplierDocument(row.rowKey ?? `new:${row.id}`, document)} />
                               </div>
                               {row.currency !== "USD" && (
                                 <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
@@ -1420,11 +1462,14 @@ export default function PageBody({
               </div>
             </div>
           )}
-            {/* Attachments are saved separately from the order form. */}
+            {/* File selections are staged here and uploaded by the form submit handler. */}
             <OrderDocuments
               key={orderDetails?.sl ?? "new"}
-              orderId={orderDetails?.sl}
-              initialDocuments={initialDocuments.filter(document => document.supplierRowKey === null)}
+              orderId={orderDetails?.sl ?? createdOrderId}
+              initialDocuments={supplierDocuments.filter(document => document.supplierRowKey === null)}
+              drafts={documentDrafts} setDrafts={setDocumentDrafts}
+              onBusyChange={setDocumentBusyState}
+              onUploadedDocumentRemoved={id => setSupplierDocuments(rows => rows.filter(row => row.id !== id))}
               editable={isEditing}
               disabled={isSubmitting || documentBusy}
             />
@@ -1557,6 +1602,12 @@ export default function PageBody({
                       disabled={isSubmitting || documentBusy}
                       onClick={() => {
                         setSubmissionMessage("");
+                        setPendingSupplierFiles({});
+                        setDocumentDrafts([{ id: 0, file: null }]);
+                        if (createdOrderId && !orderDetails) {
+                          router.push(`/order_form/${createdOrderId}`);
+                          return;
+                        }
                         // Restore saved fields and currencies before leaving edit mode.
                         if (orderDetails) setLoadedOrderDetails(undefined);
                         setIsEditing(false);

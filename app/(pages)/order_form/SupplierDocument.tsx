@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { MAX_DOCUMENT_BYTES } from "@/lib/document-files";
 import type { DocumentSummary } from "@/lib/drizzle/schema";
 
-export default function SupplierDocument({ orderId, rowKey, document, editable, disabled, onChange, onBusyChange }: {
+export default function SupplierDocument({ orderId, document, editable, disabled, onChange, onBusyChange, pendingFile, onFileChange }: {
+  pendingFile?: File;
+  onFileChange: (file: File | null) => void;
   orderId?: number;
   rowKey?: string;
   document?: DocumentSummary;
@@ -49,30 +51,17 @@ export default function SupplierDocument({ orderId, rowKey, document, editable, 
           onChange(null);
         })}>Remove</Button>}
     </div> : editable ? <>
-      <Input id={id} type="file" disabled={busy || disabled || !orderId || !rowKey}
+      <Input id={id} type="file" disabled={busy || disabled}
         className="min-w-0 cursor-pointer py-0 file:mr-2 file:h-full file:cursor-pointer file:bg-primary file:px-3 file:text-primary-foreground"
         onChange={(event) => {
           const file = event.target.files?.[0];
           event.target.value = "";
           if (!file) return;
           if (!file.size || file.size > MAX_DOCUMENT_BYTES) { setMessage("Choose a non-empty file no larger than 300 MB."); return; }
-          void run(async () => {
-            const response = await fetch(`/api/orders/${orderId}/documents`, {
-              method: "POST",
-              headers: {
-                "Content-Type": file.type || "application/octet-stream",
-                "X-File-Name": encodeURIComponent(file.name),
-                "X-File-Size": String(file.size),
-                "X-Supplier-Row-Key": encodeURIComponent(rowKey!),
-              },
-              body: file,
-            });
-            const result = await response.json();
-            if (!response.ok || !result.ok) { setMessage(result.message || "Could not upload the document."); return; }
-            onChange(result.document);
-          });
+          setMessage("");
+          onFileChange(file);
         }} />
-      {(!orderId || !rowKey) && <p className="text-xs text-muted-foreground">Save this row to attach a document.</p>}
+      {pendingFile && <p className="break-all text-xs text-muted-foreground">{pendingFile.name} — uploads on save</p>}
     </> : <span className="text-sm text-muted-foreground">No document</span>}
     {(busy || message) && <p role="status" className="text-xs">{busy ? "Working…" : message}</p>}
   </div>;

@@ -8,17 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 // Draft rows hold local files; saved documents contain metadata returned by the server.
-type Draft = { id: number; file: File | null };
+export type DocumentDraft = { id: number; file: File | null };
 
-export default function OrderDocuments({ orderId, initialDocuments, editable, disabled }: {
+export default function OrderDocuments({ orderId, initialDocuments, editable, disabled, drafts, setDrafts, onUploadedDocumentRemoved, onBusyChange }: {
+  drafts: DocumentDraft[];
+  setDrafts: React.Dispatch<React.SetStateAction<DocumentDraft[]>>;
+  onUploadedDocumentRemoved: (id: string) => void;
+  onBusyChange: (busy: boolean) => void;
   orderId?: number;
   initialDocuments: DocumentSummary[];
   editable: boolean;
   disabled: boolean;
 }) {
   const inputId = useId();
-  const [documents, setDocuments] = useState(initialDocuments);
-  const [drafts, setDrafts] = useState<Draft[]>([{ id: 0, file: null }]);
+  const documents = initialDocuments;
   const nextId = useRef(1);
   const locked = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -30,6 +33,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
     if (locked.current || disabled) return;
     locked.current = true;
     setBusy(true);
+    onBusyChange(true);
     setMessage("");
     try {
       await task();
@@ -38,6 +42,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
     } finally {
       locked.current = false;
       setBusy(false);
+      onBusyChange(false);
     }
   }
 
@@ -64,7 +69,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
                 });
                 const result = await response.json() as { ok: boolean; message?: string };
                 if (!response.ok || !result.ok) { setMessage(result.message || "Could not remove the document."); return; }
-                setDocuments((rows) => rows.filter((row) => row.id !== document.id));
+                onUploadedDocumentRemoved(document.id);
                 setMessage("Document removed. You can attach a replacement below.");
                 const id = nextId.current++;
                 setDrafts((rows) => rows.length ? rows : [{ id, file: null }]);
@@ -72,7 +77,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
           </li>
         ))}
       </ul>
-      {editable && (orderId ? <>
+      {editable && <>
         {drafts.map((row, index) => (
           <div key={row.id} className="space-y-2">
             <label htmlFor={`${inputId}-${row.id}`} className="text-sm font-medium">Attach document {index + 1}</label>
@@ -81,39 +86,16 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
                 className="min-w-0 flex-1 basis-48 cursor-pointer py-0 pr-3 file:mr-3 file:h-full file:cursor-pointer file:rounded-lg file:bg-primary file:px-4 file:text-xs file:font-semibold file:tracking-widest file:text-primary-foreground file:uppercase file:transition-colors hover:file:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:file:cursor-not-allowed" disabled={unavailable}
                 onChange={(event) => {
                   const file = event.target.files?.[0] ?? null;
-                  if (file && file.size > MAX_DOCUMENT_BYTES) {
+                  if (file && (!file.size || file.size > MAX_DOCUMENT_BYTES)) {
                     event.target.value = "";
-                    setMessage("Maximum file size is 300 MB.");
+                    setMessage("Choose a non-empty file no larger than 300 MB.");
                     setDrafts((rows) => rows.map((draft) => draft.id === row.id ? { ...draft, file: null } : draft));
                     return;
                   }
                   setMessage("");
                   setDrafts((rows) => rows.map((draft) => draft.id === row.id ? { ...draft, file } : draft));
                 }} />
-              <Button type="button" size="sm" disabled={unavailable || !row.file}
-                onClick={() => void run(async () => {
-                  if (!row.file) return;
-                  // Send the raw file body so the server can stream it without buffering.
-                  const response = await fetch("/api/orders/" + orderId + "/documents", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": row.file.type || "application/octet-stream",
-                      "X-File-Name": encodeURIComponent(row.file.name),
-                      "X-File-Size": String(row.file.size),
-                    },
-                    body: row.file,
-                  });
-                  const result = await response.json() as
-                    | { ok: true; document: DocumentSummary }
-                    | { ok: false; message: string };
-                  if (!response.ok || !result.ok) {
-                    setMessage(result.ok ? "Could not upload the document." : result.message);
-                    return;
-                  }
-                  setDocuments((rows) => [...rows, result.document]);
-                  setDrafts((rows) => rows.filter((draft) => draft.id !== row.id));
-                  setMessage("Document attached.");
-                })}>Attach</Button>
+              {row.file && <span className="text-xs text-muted-foreground">Uploads on save</span>}
               <Button type="button" variant="outline" size="sm" disabled={unavailable}
                 aria-label={`Remove attachment row ${index + 1}`}
                 onClick={() => setDrafts((rows) => rows.filter((draft) => draft.id !== row.id))}>−</Button>
@@ -125,7 +107,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
             const id = nextId.current++;
             setDrafts((rows) => [...rows, { id, file: null }]);
           }}>+</Button>
-      </> : <p className="text-sm text-muted-foreground">Save this order, then reopen it to attach documents.</p>)}
+      </>}
       <p role="status" aria-live="polite" className="text-sm">{busy ? "Working…" : message}</p>
     </section>
   );
