@@ -4,7 +4,7 @@ import { useTransientMessage } from "@/lib/use-transient-message";
 import { useId, useRef, useState } from "react";
 import type { DocumentSummary } from "@/lib/drizzle/schema";
 import { MAX_DOCUMENT_BYTES } from "@/lib/document-files";
-import { Input } from "@/components/ui/input";
+import DocumentFileInput from "./DocumentFileInput";
 import { Button } from "@/components/ui/button";
 
 // Draft rows hold local files; saved documents contain metadata returned by the server.
@@ -55,13 +55,13 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
       <ul className="space-y-3">
         {documents.map((document, index) => (
           <li key={document.id} className="flex min-w-0 flex-wrap items-center gap-2 rounded-lg border p-3">
-            <span className="shrink-0 text-sm font-medium">{index + 1}.</span>
+            <span className="flex w-6 shrink-0 items-center justify-center text-base font-semibold tracking-normal tabular-nums">{index + 1}.</span>
             <span className="min-w-0 flex-1 break-words text-sm">{document.originalName}</span>
-            <Button nativeButton={false} className="h-10 px-4" disabled={unavailable}
+            <Button nativeButton={false} className="h-10 w-32 px-4" disabled={unavailable}
               render={<a href={"/api/orders/" + orderId + "/documents/" + document.id} download />}>
               Download
             </Button>
-            {editable && <Button type="button" variant="destructive" size="sm" disabled={unavailable}
+            {editable && <Button type="button" variant="destructive" size="sm" className="h-10" disabled={unavailable}
               aria-label={`Remove ${document.originalName}`}
               onClick={() => void run(async () => {
                 if (!orderId) return;
@@ -81,10 +81,10 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
       {editable && <>
         {drafts.map((row, index) => (
           <div key={row.id} className="flex min-w-0 items-center gap-2 rounded-lg border p-3">
-            <label htmlFor={`${inputId}-${row.id}`} className="flex h-10 shrink-0 items-center text-sm font-medium"><span aria-hidden="true">{documents.length + index + 1}.</span><span className="sr-only">Attach document {documents.length + index + 1}</span></label>
+            <label htmlFor={`${inputId}-${row.id}`} className="flex h-10 w-6 shrink-0 items-center justify-center text-base font-semibold tracking-normal tabular-nums"><span aria-hidden="true">{documents.length + index + 1}.</span><span className="sr-only">Attach document {documents.length + index + 1}</span></label>
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-              <Input id={`${inputId}-${row.id}`} type="file"
-                className="min-w-0 flex-1 basis-48 cursor-pointer py-0 pr-3 file:mr-3 file:h-full file:cursor-pointer file:rounded-lg file:bg-primary file:px-4 file:text-xs file:font-semibold file:tracking-widest file:text-primary-foreground file:uppercase file:transition-colors hover:file:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:file:cursor-not-allowed" disabled={unavailable}
+              <DocumentFileInput id={`${inputId}-${row.id}`}
+                className="min-w-0 flex-1 basis-48" disabled={unavailable}
                 onChange={(event) => {
                   const file = event.target.files?.[0] ?? null;
                   if (file && (!file.size || file.size > MAX_DOCUMENT_BYTES)) {
@@ -97,7 +97,7 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
                   setDrafts((rows) => rows.map((draft) => draft.id === row.id ? { ...draft, file } : draft));
                 }} />
               {row.file && <span className="text-xs text-muted-foreground">Uploads on save</span>}
-              <Button type="button" variant="destructive" size="sm" disabled={unavailable}
+              <Button type="button" variant="destructive" size="sm" className="h-10" disabled={unavailable}
                 aria-label={`Remove attachment row ${documents.length + index + 1}`}
                 onClick={() => setDrafts((rows) => rows.filter((draft) => draft.id !== row.id))}>Remove</Button>
             </div>

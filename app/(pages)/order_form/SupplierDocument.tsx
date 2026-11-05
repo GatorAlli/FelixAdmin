@@ -3,7 +3,7 @@
 import { useId, useRef, useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import DocumentFileInput from "./DocumentFileInput";
 import { MAX_DOCUMENT_BYTES } from "@/lib/document-files";
 import type { DocumentSummary } from "@/lib/drizzle/schema";
 
@@ -59,33 +59,33 @@ export default function SupplierDocument({ orderId, documents, editable, disable
         {count === 0 && !editable && <p className="text-sm text-muted-foreground">No documents attached.</p>}
         <ul className="space-y-3">
           {documents.map((document, index) => <li key={document.id} className="flex flex-wrap items-center gap-2 rounded-lg border p-3">
-            <span className="shrink-0 text-sm font-medium">{index + 1}.</span>
+            <span className="flex w-6 shrink-0 items-center justify-center text-base font-semibold tracking-normal tabular-nums">{index + 1}.</span>
             <span className="min-w-0 flex-1 break-words text-sm">{document.originalName}</span>
-            <Button nativeButton={false} className="h-10 px-4" disabled={unavailable} render={<a href={`/api/orders/${orderId}/documents/${document.id}`} download />}>
+            <Button nativeButton={false} className="h-10 w-32 px-4" disabled={unavailable} render={<a href={`/api/orders/${orderId}/documents/${document.id}`} download />}>
               Download
             </Button>
-            {editable && <Button type="button" variant="destructive" size="sm" disabled={unavailable}
+            {editable && <Button type="button" variant="destructive" size="sm" className="h-10" disabled={unavailable}
               aria-label={`Remove ${document.originalName}`} onClick={() => void remove(document)}>Remove</Button>}
           </li>)}
           {pendingFiles.map((file, index) => <li key={index} className="flex flex-wrap items-center gap-2 rounded-lg border p-3">
-            <span className="shrink-0 text-sm font-medium">{documents.length + index + 1}.</span>
+            <span className="flex w-6 shrink-0 items-center justify-center text-base font-semibold tracking-normal tabular-nums">{documents.length + index + 1}.</span>
             <div className="min-w-0 flex-1">
               <p className="break-all text-sm">{file.name}</p>
               <p className="text-xs text-muted-foreground">Uploads on save</p>
             </div>
-            <Button type="button" variant="destructive" size="sm" disabled={unavailable}
+            <Button type="button" variant="destructive" size="sm" className="h-10" disabled={unavailable}
               aria-label={`Remove pending ${file.name}`} onClick={() => onFilesChange(pendingFiles.filter((_, i) => i !== index))}>Remove</Button>
           </li>)}
         </ul>
         {editable && <>
           {emptyRows.map((rowId, index) => <div key={rowId} className="flex min-w-0 items-center gap-2 rounded-lg border p-3">
-            <label htmlFor={`${id}-${rowId}`} className="flex h-10 shrink-0 items-center text-sm font-medium">
+            <label htmlFor={`${id}-${rowId}`} className="flex h-10 w-6 shrink-0 items-center justify-center text-base font-semibold tracking-normal tabular-nums">
               <span aria-hidden="true">{count + index + 1}.</span>
               <span className="sr-only">Attach document {count + index + 1}</span>
             </label>
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-              <Input id={`${id}-${rowId}`} type="file" disabled={unavailable}
-                className="min-w-0 flex-1 basis-48 cursor-pointer py-0 pr-3 file:mr-3 file:h-full file:cursor-pointer file:rounded-lg file:bg-primary file:px-4 file:text-xs file:font-semibold file:tracking-widest file:text-primary-foreground file:uppercase file:transition-colors hover:file:bg-primary/80 disabled:cursor-not-allowed disabled:file:cursor-not-allowed"
+              <DocumentFileInput id={`${id}-${rowId}`} disabled={unavailable}
+                className="min-w-0 flex-1 basis-48"
                 onChange={event => {
                   const file = event.target.files?.[0];
                   if (!file) return;
@@ -98,7 +98,7 @@ export default function SupplierDocument({ orderId, documents, editable, disable
                   onFilesChange([...pendingFiles, file]);
                   setEmptyRows(rows => rows.filter(row => row !== rowId));
                 }} />
-              <Button type="button" variant="destructive" size="sm" disabled={unavailable}
+              <Button type="button" variant="destructive" size="sm" className="h-10" disabled={unavailable}
                 aria-label={`Remove attachment row ${count + index + 1}`}
                 onClick={() => setEmptyRows(rows => rows.filter(row => row !== rowId))}>Remove</Button>
             </div>
