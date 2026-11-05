@@ -1223,7 +1223,7 @@ export default function PageBody({
                     <Label className={headingStyling}>
                       Project Information
                     </Label>
-                    <div className="flex flex-col gap-8 border rounded-lg p-4">
+                    <div className="grid grid-cols-1 gap-8 border rounded-lg p-4 @xl:grid-cols-2">
                       {productSystem.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                           <Label className={headingStyling}>System Type</Label>
@@ -1250,7 +1250,7 @@ export default function PageBody({
                         </div>
                       )}
                       {projectNotes.trim() !== "" && (
-                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                        <div className="flex min-w-0 flex-col gap-2 @xl:col-span-2 [&>label:first-child]:min-h-6">
                           <Label className={headingStyling}>
                             Project Notes
                           </Label>
