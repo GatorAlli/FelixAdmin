@@ -53,10 +53,11 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
       <h2 id={`${inputId}-heading`} className="font-bold">Documents</h2>
       {documents.length === 0 && <p className="text-sm text-muted-foreground">No documents attached.</p>}
       <ul className="space-y-3">
-        {documents.map((document) => (
+        {documents.map((document, index) => (
           <li key={document.id} className="flex min-w-0 flex-wrap items-center gap-2 rounded-lg border p-3">
+            <span className="shrink-0 text-sm font-medium">{index + 1}.</span>
             <span className="min-w-0 flex-1 break-words text-sm">{document.originalName}</span>
-            <Button nativeButton={false} variant="outline" size="sm" disabled={unavailable}
+            <Button nativeButton={false} className="h-10 px-4" disabled={unavailable}
               render={<a href={"/api/orders/" + orderId + "/documents/" + document.id} download />}>
               Download
             </Button>
@@ -79,9 +80,9 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
       </ul>
       {editable && <>
         {drafts.map((row, index) => (
-          <div key={row.id} className="space-y-2">
-            <label htmlFor={`${inputId}-${row.id}`} className="text-sm font-medium">Attach document {index + 1}</label>
-            <div className="flex flex-wrap items-center gap-2">
+          <div key={row.id} className="flex min-w-0 items-center gap-2 rounded-lg border p-3">
+            <label htmlFor={`${inputId}-${row.id}`} className="flex h-10 shrink-0 items-center text-sm font-medium"><span aria-hidden="true">{documents.length + index + 1}.</span><span className="sr-only">Attach document {documents.length + index + 1}</span></label>
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
               <Input id={`${inputId}-${row.id}`} type="file"
                 className="min-w-0 flex-1 basis-48 cursor-pointer py-0 pr-3 file:mr-3 file:h-full file:cursor-pointer file:rounded-lg file:bg-primary file:px-4 file:text-xs file:font-semibold file:tracking-widest file:text-primary-foreground file:uppercase file:transition-colors hover:file:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:file:cursor-not-allowed" disabled={unavailable}
                 onChange={(event) => {
@@ -96,9 +97,9 @@ export default function OrderDocuments({ orderId, initialDocuments, editable, di
                   setDrafts((rows) => rows.map((draft) => draft.id === row.id ? { ...draft, file } : draft));
                 }} />
               {row.file && <span className="text-xs text-muted-foreground">Uploads on save</span>}
-              <Button type="button" variant="outline" size="sm" disabled={unavailable}
-                aria-label={`Remove attachment row ${index + 1}`}
-                onClick={() => setDrafts((rows) => rows.filter((draft) => draft.id !== row.id))}>−</Button>
+              <Button type="button" variant="destructive" size="sm" disabled={unavailable}
+                aria-label={`Remove attachment row ${documents.length + index + 1}`}
+                onClick={() => setDrafts((rows) => rows.filter((draft) => draft.id !== row.id))}>Remove</Button>
             </div>
           </div>
         ))}

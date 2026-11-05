@@ -62,6 +62,11 @@ test("only project and customer names are mandatory user-entered fields", () => 
   assert.ok(result.ok);
   assert.equal(result.values.projectName, "Project");
   assert.equal(result.values.clientName, "Customer");
+  assert.equal(result.values.referenceNumber, null);
+  form.set("referenceNumber", "  REF / 001-A  ");
+  const referenced = readOrderValues(form, "Current user");
+  assert.ok(referenced.ok);
+  assert.equal(referenced.values.referenceNumber, "REF / 001-A");
   assert.ok(result.values.gbpToUsdRate);
   form.set("gbpToUsdRate", "0");
   assert.equal(readOrderValues(form, "Current user").ok, false);

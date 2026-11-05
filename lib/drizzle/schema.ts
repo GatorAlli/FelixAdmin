@@ -33,6 +33,7 @@ export const data = p.pgTable.withRLS("data", {
   productSystem: p.text(),
 
   orderHandledBy: p.varchar(),
+  referenceNumber: p.text(),
   importedBy: p.varchar().$type<"Felix" | "Customer">(),
   suppliers: p.text(),
   gbpToUsdRate: p.numeric({ precision: 18, scale: 8 }),

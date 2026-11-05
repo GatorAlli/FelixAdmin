@@ -25,6 +25,7 @@ CREATE TABLE "data" (
 	"endUser" varchar,
 	"productSystem" text,
 	"orderHandledBy" varchar,
+	"referenceNumber" text,
 	"importedBy" varchar,
 	"suppliers" text,
 	"gbpToUsdRate" numeric(18,8),

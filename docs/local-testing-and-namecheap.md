@@ -93,3 +93,10 @@ Existing remote Supabase resources have not been deleted. The code and local con
 - Browser inspection confirmed that projectName and clientName are the only required inputs, and no browser errors/warnings were recorded on the form.
 - The browser file picker stalled during the attachment UI smoke check, so the complete click-through upload flow was not verified in-browser. Its HTTP endpoint and streaming behavior were verified separately.
 - Temporary verification users, permission profiles, orders and document files were removed. Existing local test accounts/orders were preserved.
+
+## Reference Number
+
+The optional Reference Number is free text, separate from the generated Felix order
+reference. For existing databases, apply
+`lib/drizzle/migrations/20261105171827_order_reference_number/migration.sql` before
+deploying. Fresh databases include the column in `docker/postgres/schema.sql`.

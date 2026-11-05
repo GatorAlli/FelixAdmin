@@ -281,6 +281,7 @@ export default function PageBody({
 
   const [felixOrderNo, setFelixOrderNo] = useState("");
   const [paymentMode, setPaymentMode] = useState("");
+  const [referenceNumber, setReferenceNumber] = useState("");
   const [importedBy, setImportedBy] = useState<"" | "Felix" | "Customer">("");
   const [clientOrderValue, setClientOrderValue] = useState("");
   const [clientOrderCurrency, setClientOrderCurrency] =
@@ -337,7 +338,7 @@ export default function PageBody({
   };
   // Compare submitted information, excluding UI choices and temporary row IDs.
   const formSnapshot = JSON.stringify({
-    felixOrderNo: felixOrderNo.trim(), paymentMode: paymentMode.trim(), importedBy,
+    felixOrderNo: felixOrderNo.trim(), paymentMode: paymentMode.trim(), referenceNumber: referenceNumber.trim(), importedBy,
     clientOrderValue: normalizeNumber(clientOrderValue), clientOrderCurrency,
     projectName: projectName.trim(), projectNotes: projectNotes.trim(),
     orderHandlingFee: normalizeNumber(orderHandlingFee),
@@ -375,6 +376,7 @@ export default function PageBody({
     // Database nulls become empty strings so the inputs can display them.
     setPaymentMode(orderDetails.paymentMode ?? "");
     setImportedBy(orderDetails.importedBy ?? "");
+    setReferenceNumber(orderDetails.referenceNumber ?? "");
     setClientOrderValue(
       orderDetails.clientOrderOriginalValue ??
         orderDetails.clientOrderValue ??
@@ -564,7 +566,7 @@ export default function PageBody({
                 }}
                 className="flex flex-col gap-8"
               >
-                <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2">
+                <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2 @lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(8rem,0.5fr)]">
                   <div className="flex min-w-0 flex-col gap-2">
                     <Label
                       className={headingStyling}
@@ -616,6 +618,13 @@ export default function PageBody({
                       name="orderHandledBy"
                       value={orderHandledBy}
                     />
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <Label className={headingStyling} htmlFor="referenceNumber">Reference Number</Label>
+                    <Input id="referenceNumber" name="referenceNumber" className={inputStyling}
+                      value={referenceNumber} placeholder="Reference number"
+                      disabled={isSubmitting || documentBusy}
+                      onChange={event => setReferenceNumber(event.target.value)} />
                   </div>
                   <div className="flex min-w-0 flex-col gap-2">
                     <Label className={headingStyling} htmlFor="importedBy">
@@ -1232,7 +1241,7 @@ export default function PageBody({
           ) : (
             <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
               <div className="flex flex-col gap-8">
-                <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2">
+                <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2 @lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(8rem,0.5fr)]">
                   {orderHandledBy.trim() !== "" && (
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
@@ -1242,6 +1251,11 @@ export default function PageBody({
                     </div>
                   )}
                   <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2">
+                    <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                      <strong>Reference Number:</strong>{" "}{referenceNumber || "Not specified"}
+                    </p>
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2 @lg:col-start-3">
                     <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
                             <strong>Import By:</strong>{" "}
                             {importedBy || "Not selected"}

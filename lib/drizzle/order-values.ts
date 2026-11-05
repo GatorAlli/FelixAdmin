@@ -187,6 +187,7 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
 
   // Build the database fields explicitly; unrelated browser fields are ignored.
   const values = {
+    referenceNumber: readText(formData, "referenceNumber") || null,
     importedBy: importedBy ? importedBy as "Felix" | "Customer" : null,
     createdBy,
     calculationCurrencies,
