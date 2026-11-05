@@ -331,8 +331,40 @@ export default function PageBody({
   const [editingRequested, setIsEditing] = useState(!orderDetails);
   const isEditing = canEdit && editingRequested;
 
+  const normalizeNumber = (value: string) => {
+    const text = value.trim();
+    return text && Number.isFinite(Number(text)) ? String(Number(text)) : text;
+  };
+  // Compare submitted information, excluding UI choices and temporary row IDs.
+  const formSnapshot = JSON.stringify({
+    felixOrderNo: felixOrderNo.trim(), paymentMode: paymentMode.trim(), importedBy,
+    clientOrderValue: normalizeNumber(clientOrderValue), clientOrderCurrency,
+    projectName: projectName.trim(), projectNotes: projectNotes.trim(),
+    orderHandlingFee: normalizeNumber(orderHandlingFee),
+    miscellaneousHandlingFee: normalizeNumber(miscellaneousHandlingFee),
+    clientName: clientName.trim(), endUser: endUser.trim(),
+    productSystem: productSystem.trim(), orderHandledBy: orderHandledBy.trim(),
+    expenses: expenses.filter(row => row.name.trim() || row.amount.trim()).map(row => ({
+      name: row.name.trim().toUpperCase(), amount: normalizeNumber(row.amount), currency: row.currency,
+    })),
+    paymentNotes: paymentNotes.trim(), panelCurrencies,
+    suppliers: suppliers.filter(row => row.supplier.trim() || row.amount.trim()).map(row => ({
+      supplier: row.supplier.trim().toUpperCase(), amount: normalizeNumber(row.amount), currency: row.currency,
+    })),
+    gbpToUsdRate: normalizeNumber(gbpToUsdRate),
+    eurToUsdRate: normalizeNumber(eurToUsdRate), usdToSgdRate: normalizeNumber(usdToSgdRate),
+  });
+  const [savedFormSnapshot, setSavedFormSnapshot] = useState<string | null>(null);
+  if (savedFormSnapshot === null && (!orderDetails || orderDetails === loadedOrderDetails)) {
+    setSavedFormSnapshot(formSnapshot);
+  }
+  const hasChanges = (savedFormSnapshot !== null && formSnapshot !== savedFormSnapshot)
+    || Object.values(pendingSupplierFiles).some(Boolean)
+    || documentDrafts.some(draft => draft.file !== null);
+
   // Only load a new order once. Without this guard, the setters cause a render loop.
   if (orderDetails && orderDetails !== loadedOrderDetails) {
+    setSavedFormSnapshot(null);
     setLoadedOrderDetails(orderDetails);
     setCreatedDate(orderDetails.createdDate);
     setPanelCurrencies({
@@ -466,7 +498,7 @@ export default function PageBody({
                 onSubmit={async (e) => {
                   e.preventDefault();
 
-                  if (submissionInProgress.current || documentBusyRef.current) return;
+                  if (!hasChanges || submissionInProgress.current || documentBusyRef.current) return;
                   submissionInProgress.current = true;
                   setIsSubmitting(true);
                   setSubmissionMessage("");
@@ -1482,17 +1514,18 @@ export default function PageBody({
                   {orderDetails?.createdBy ?? username}
                 </Label>
               </div>
-              <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
+              <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_max-content] items-center gap-4">
                 <Label className={headingStyling}>Last Edited By:</Label>
-                <Label className="font-bold">
+                <Label className="justify-end text-right font-bold whitespace-nowrap">
                   {orderDetails?.lastEditedBy ?? "Not edited yet"}
-                  {orderDetails?.lastEditedBy && orderDetails.lastEditedAt && (
-                    <>
-                      {" "}
-                      <span className="text-[24px] font-thin"> | </span>{" "}
-                      {formatOrderEditDate(orderDetails.lastEditedAt)}
-                    </>
-                  )}
+                </Label>
+              </div>
+              <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_max-content] items-center gap-4">
+                <Label className={headingStyling}>Last Edited At:</Label>
+                <Label className="justify-end text-right font-bold whitespace-nowrap">
+                  {orderDetails?.lastEditedAt
+                    ? formatOrderEditDate(orderDetails.lastEditedAt)
+                    : "Not edited yet"}
                 </Label>
               </div>
               {felixOrderNo && (
@@ -1589,9 +1622,9 @@ export default function PageBody({
                     <Button
                       key="submit-order"
                       type="submit"
-                      disabled={isSubmitting || documentBusy}
+                      disabled={!hasChanges || isSubmitting || documentBusy}
                       form="order-form"
-                      className={actionButtonStyling}
+                      className={cn(actionButtonStyling, "disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-100")}
                     >
                       {isSubmitting ? "Saving…" : "Submit"}
                     </Button>
