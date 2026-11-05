@@ -1232,15 +1232,17 @@ export default function PageBody({
                 <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2">
                   {orderHandledBy.trim() !== "" && (
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling}>Order Handled By</Label>
-                      <Label className="">{orderHandledBy}</Label>
+                      <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                            <strong>Order Handled By:</strong>{" "}
+                            {orderHandledBy}
+                          </p>
                     </div>
                   )}
                   <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2">
-                    <Label className={headingStyling}>Import By</Label>
-                    <Label className="font-bold">
-                      {importedBy || "Not selected"}
-                    </Label>
+                    <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                            <strong>Import By:</strong>{" "}
+                            {importedBy || "Not selected"}
+                          </p>
                   </div>
                 </div>
                 {/* Project information */}
@@ -1258,37 +1260,43 @@ export default function PageBody({
                     <div className="grid grid-cols-1 gap-8 border rounded-lg p-4 @xl:grid-cols-2">
                       {productSystem.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <Label className={headingStyling}>System Type</Label>
-                          <Label className="font-bold">{productSystem}</Label>
+                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                            <strong>System Type:</strong>{" "}
+                            {productSystem}
+                          </p>
                         </div>
                       )}
 
                       {projectName.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <Label className={headingStyling}>Project Name</Label>
-                          <Label className="font-bold">{projectName}</Label>
+                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                            <strong>Project Name:</strong>{" "}
+                            {projectName}
+                          </p>
                         </div>
                       )}
                       {clientName.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <Label className={headingStyling}>Customer</Label>
-                          <Label className="font-bold">{clientName}</Label>
+                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                            <strong>Customer:</strong>{" "}
+                            {clientName}
+                          </p>
                         </div>
                       )}
                       {endUser.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <Label className={headingStyling}>End User</Label>
-                          <Label className="font-bold">{endUser}</Label>
+                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                            <strong>End User:</strong>{" "}
+                            {endUser}
+                          </p>
                         </div>
                       )}
                       {projectNotes.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 @xl:col-span-2 [&>label:first-child]:min-h-6">
-                          <Label className={headingStyling}>
-                            Project Notes
-                          </Label>
-                          <Label className="font-bold whitespace-pre-wrap">
+                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                            <strong>Project Notes:</strong>{" "}
                             {projectNotes}
-                          </Label>
+                          </p>
                         </div>
                       )}
                     </div>
@@ -1308,19 +1316,15 @@ export default function PageBody({
                       <div className="flex flex-col gap-8 border rounded-lg p-4">
                         {clientOrderValue.trim() !== "" && (
                           <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                            <Label className={headingStyling}>
-                              Client Order Value ({clientOrderCurrency})
-                            </Label>
-                            <Label className="font-bold">
-                              {formatMoney(clientOrderValue)}
-                            </Label>
+                            <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                            <strong>Client Order Value ({clientOrderCurrency}):</strong>{" "}
+                            {formatMoney(clientOrderValue)}
+                          </p>
                             {clientOrderCurrency !== "USD" && (
                               <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                                <Label className={headingStyling}>
-                                  Order Value (USD)
-                                </Label>
-                                <Label className="font-bold">
-                                  {formatMoney(
+                                <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                            <strong>Order Value (USD):</strong>{" "}
+                            {formatMoney(
                                     convertToUsd(
                                       clientOrderValue,
                                       clientOrderCurrency,
@@ -1330,7 +1334,7 @@ export default function PageBody({
                                     ),
                                     "—",
                                   )}
-                                </Label>
+                          </p>
                               </div>
                             )}
                           </div>
