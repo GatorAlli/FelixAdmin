@@ -53,14 +53,14 @@ function SuggestionList({
       className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6"
       aria-labelledby={`${kind}-heading`}
     >
-      <h1
+      <h2
         id={`${kind}-heading`}
-        className="font-bold text-1.5xl tracking-wide whitespace-normal"
+        className="text-[1.21em] font-extrabold"
       >
         {title}
-      </h1>
+      </h2>
       <form
-        className="mt-4 flex flex-col gap-8"
+        className="mt-4 flex flex-col gap-4"
         onSubmit={(event) => {
           event.preventDefault();
           if (pending || !dirty) return;
@@ -95,12 +95,15 @@ function SuggestionList({
             {rows.map((row, index) => (
               <div
                 key={row.id}
-                className="grid min-w-0 grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2"
+                className="grid min-w-0 grid-cols-[1.5rem_minmax(0,1fr)_3.5rem] items-start gap-x-4 gap-y-4 py-2"
               >
-                <Label className="h-10 justify-center normal-case">
+                <Label className="mt-8 h-10 justify-center text-base font-semibold tracking-normal tabular-nums">
                   {index + 1}.
                 </Label>
-                <div className="min-w-0 flex-1 space-y-2">
+                <div className="-ml-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6">
+                  <Label htmlFor={`${kind}-${row.id}`} className="font-bold text-1.5xl whitespace-normal">
+                    {itemLabel}
+                  </Label>
                   <Input
                     id={`${kind}-${row.id}`}
                     ref={index === rows.length - 1 ? newInput : undefined}
@@ -121,7 +124,10 @@ function SuggestionList({
                     }
                   />
                   {kind === "customers" && (
-                    <div className="space-y-2">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label]:min-h-6">
+                      <Label htmlFor={`customer-address-${row.id}`} className="font-bold text-1.5xl whitespace-normal">
+                        Address
+                      </Label>
                       <Input
                         id={`customer-address-${row.id}`}
                         className="rounded-lg p-2"
@@ -143,14 +149,14 @@ function SuggestionList({
                   )}
                 </div>
                 <Button
-                  className="h-10"
+                  className="mt-8 h-10 w-full"
                   type="button"
                   aria-label={`Remove ${itemLabel.toLowerCase()} ${index + 1}`}
                   onClick={() =>
                     editRows(rows.filter((item) => item.id !== row.id))
                   }
                 >
-                  −
+                  <span className="text-xl leading-none">−</span>
                 </Button>
               </div>
             ))}
@@ -169,7 +175,7 @@ function SuggestionList({
                 requestAnimationFrame(() => newInput.current?.focus());
               }}
             >
-              +
+              <span className="text-xl leading-none">+</span>
             </Button>
             <Button type="submit" disabled={!dirty || pending}>
               {pending ? "Saving…" : "Save changes"}
@@ -199,7 +205,9 @@ export default function SettingsLists({
   expenseSuggestions: string[];
 }) {
   return (
-    <div className="grid grid-cols-1 items-start gap-4 p-4 md:grid-cols-2">
+    <div className="p-4">
+      <section aria-labelledby="datalist-elements-heading" className="grid grid-cols-1 items-start gap-4 rounded-lg border bg-card p-5 sm:p-6 md:grid-cols-2">
+      <h1 id="datalist-elements-heading" className="col-span-full text-2xl font-extrabold underline underline-offset-4">Datalist Elements</h1>
       <div className="grid min-w-0 grid-cols-1 gap-4">
         <SuggestionList
           kind="customers"
@@ -218,6 +226,7 @@ export default function SettingsLists({
         title="Suppliers"
         initialValues={supplierSuggestions}
       />
+      </section>
     </div>
   );
 }
