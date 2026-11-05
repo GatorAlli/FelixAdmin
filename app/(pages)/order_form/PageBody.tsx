@@ -15,10 +15,7 @@ import { clsx } from "clsx";
 import Link from "next/link";
 import { createOrder, updateOrder } from "./actions";
 import { type Order, type DocumentSummary } from "@/lib/drizzle/schema";
-import OrderDocuments, { type DocumentDraft } from "./OrderDocuments";
-import { uploadOrderDocument } from "@/lib/document-uploads";
-import SupplierDocument from "./SupplierDocument";
-import { useRouter } from "next/navigation";
+import OrderDocuments from "./OrderDocuments";
 import { canEditOrder } from "@/lib/drizzle/order-access";
 
 import {
@@ -225,8 +222,6 @@ function PaymentModeField({
   );
 }
 
-const EMPTY_DOCUMENTS: DocumentSummary[] = [];
-
 export default function PageBody({
   orderDetails,
   isAdmin,
@@ -235,7 +230,7 @@ export default function PageBody({
   supplierSuggestions,
   customerSuggestions,
   expenseSuggestions,
-  initialDocuments = EMPTY_DOCUMENTS,
+  initialDocuments = [],
 }: {
   orderDetails?: Order;
   isAdmin: string;
@@ -246,33 +241,6 @@ export default function PageBody({
   expenseSuggestions: string[];
   initialDocuments?: DocumentSummary[];
 }) {
-  const router = useRouter();
-  const [supplierDocuments, setSupplierDocuments] = useState(() => initialDocuments);
-  const [loadedDocuments, setLoadedDocuments] = useState(initialDocuments);
-  if (initialDocuments !== loadedDocuments) {
-    setLoadedDocuments(initialDocuments);
-    setSupplierDocuments(initialDocuments);
-  }
-  const [documentBusy, setDocumentBusy] = useState(false);
-  const documentBusyRef = useRef(false);
-  function setDocumentBusyState(busy: boolean) {
-    documentBusyRef.current = busy;
-    setDocumentBusy(busy);
-  }
-  function changeSupplierDocument(rowKey: string | undefined, document: DocumentSummary | null) {
-    setSupplierDocuments(rows => [...rows.filter(row => row.supplierRowKey !== rowKey), ...(document ? [document] : [])]);
-  }
-  const [pendingSupplierFiles, setPendingSupplierFiles] = useState<Record<string, File>>({});
-  const [documentDrafts, setDocumentDrafts] = useState<DocumentDraft[]>([{ id: 0, file: null }]);
-  const [createdOrderId, setCreatedOrderId] = useState<number>();
-  function stageSupplierFile(key: string, file: File | null) {
-    setPendingSupplierFiles(files => {
-      const next = { ...files };
-      if (file) next[key] = file;
-      else delete next[key];
-      return next;
-    });
-  }
   // Existing orders retain their recorded date; new orders display today's date.
   const [createdDate, setCreatedDate] = useState<string | null>(
     orderDetails ? orderDetails.createdDate : currentDate,
@@ -331,40 +299,8 @@ export default function PageBody({
   const [editingRequested, setIsEditing] = useState(!orderDetails);
   const isEditing = canEdit && editingRequested;
 
-  const normalizeNumber = (value: string) => {
-    const text = value.trim();
-    return text && Number.isFinite(Number(text)) ? String(Number(text)) : text;
-  };
-  // Compare submitted information, excluding UI choices and temporary row IDs.
-  const formSnapshot = JSON.stringify({
-    felixOrderNo: felixOrderNo.trim(), paymentMode: paymentMode.trim(), importedBy,
-    clientOrderValue: normalizeNumber(clientOrderValue), clientOrderCurrency,
-    projectName: projectName.trim(), projectNotes: projectNotes.trim(),
-    orderHandlingFee: normalizeNumber(orderHandlingFee),
-    miscellaneousHandlingFee: normalizeNumber(miscellaneousHandlingFee),
-    clientName: clientName.trim(), endUser: endUser.trim(),
-    productSystem: productSystem.trim(), orderHandledBy: orderHandledBy.trim(),
-    expenses: expenses.filter(row => row.name.trim() || row.amount.trim()).map(row => ({
-      name: row.name.trim().toUpperCase(), amount: normalizeNumber(row.amount), currency: row.currency,
-    })),
-    paymentNotes: paymentNotes.trim(), panelCurrencies,
-    suppliers: suppliers.filter(row => row.supplier.trim() || row.amount.trim()).map(row => ({
-      supplier: row.supplier.trim().toUpperCase(), amount: normalizeNumber(row.amount), currency: row.currency,
-    })),
-    gbpToUsdRate: normalizeNumber(gbpToUsdRate),
-    eurToUsdRate: normalizeNumber(eurToUsdRate), usdToSgdRate: normalizeNumber(usdToSgdRate),
-  });
-  const [savedFormSnapshot, setSavedFormSnapshot] = useState<string | null>(null);
-  if (savedFormSnapshot === null && (!orderDetails || orderDetails === loadedOrderDetails)) {
-    setSavedFormSnapshot(formSnapshot);
-  }
-  const hasChanges = (savedFormSnapshot !== null && formSnapshot !== savedFormSnapshot)
-    || Object.values(pendingSupplierFiles).some(Boolean)
-    || documentDrafts.some(draft => draft.file !== null);
-
   // Only load a new order once. Without this guard, the setters cause a render loop.
   if (orderDetails && orderDetails !== loadedOrderDetails) {
-    setSavedFormSnapshot(null);
     setLoadedOrderDetails(orderDetails);
     setCreatedDate(orderDetails.createdDate);
     setPanelCurrencies({
@@ -498,58 +434,27 @@ export default function PageBody({
                 onSubmit={async (e) => {
                   e.preventDefault();
 
-                  if (!hasChanges || submissionInProgress.current || documentBusyRef.current) return;
+                  if (submissionInProgress.current) return;
                   submissionInProgress.current = true;
                   setIsSubmitting(true);
                   setSubmissionMessage("");
                   // The server action validates these fields and recomputes saved USD values.
                   const formData = new FormData(e.currentTarget);
                   try {
-                    if (suppliers.some(row => pendingSupplierFiles[row.rowKey ?? `new:${row.id}`] && (!row.supplier.trim() || !row.amount.trim()))) {
-                      setSubmissionMessage("Complete the supplier and amount for each selected supplier document.");
-                      return;
+                    if (orderDetails) {
+                      const result = await updateOrder(
+                        orderDetails.sl,
+                        formData,
+                      );
+                      setSubmissionMessage(result.message);
+                      // Validation failures must leave the user's edits on screen.
+                      if (result.ok) setIsEditing(false);
+                    } else {
+                      const result = await createOrder(formData);
+                      if (result.ok && result.createdDate)
+                        setCreatedDate(result.createdDate);
+                      setSubmissionMessage(result.message);
                     }
-                    const existingId = orderDetails?.sl ?? createdOrderId;
-                    const result = existingId
-                      ? await updateOrder(existingId, formData)
-                      : await createOrder(formData);
-                    setSubmissionMessage(result.message);
-                    if (!result.ok) return;
-                    const savedId = existingId ?? ("orderId" in result && typeof result.orderId === "number" ? result.orderId : undefined);
-                    if (!savedId) throw new Error("The saved order reference is missing.");
-                    // Retain the new ID even if an upload fails, so retry updates this order.
-                    if (!orderDetails) setCreatedOrderId(savedId);
-                    if ("createdDate" in result && typeof result.createdDate === "string") setCreatedDate(result.createdDate);
-                    const failures: string[] = [];
-                    const activeKeys = new Set(suppliers.filter(row => row.supplier.trim() && row.amount.trim()).map(row => row.rowKey ?? `new:${row.id}`));
-                    for (const [key, file] of Object.entries(pendingSupplierFiles)) {
-                      if (!activeKeys.has(key)) continue;
-                      try {
-                        const document = await uploadOrderDocument(savedId, file, key);
-                        changeSupplierDocument(key, document);
-                        stageSupplierFile(key, null);
-                      } catch (error) {
-                        failures.push(`${file.name}: ${error instanceof Error ? error.message : "Upload failed."}`);
-                      }
-                    }
-                    for (const draft of documentDrafts) {
-                      if (!draft.file) continue;
-                      try {
-                        const document = await uploadOrderDocument(savedId, draft.file);
-                        setSupplierDocuments(documents => [...documents, document]);
-                        setDocumentDrafts(rows => rows.filter(row => row.id !== draft.id));
-                      } catch (error) {
-                        failures.push(`${draft.file.name}: ${error instanceof Error ? error.message : "Upload failed."}`);
-                      }
-                    }
-                    if (failures.length) {
-                      setSubmissionMessage(`${result.message}. Order saved, but some documents failed to upload. Submit again to retry. ${failures.join(" ")}`);
-                      return;
-                    }
-                    setPendingSupplierFiles({});
-                    setIsEditing(false);
-                    if (orderDetails) router.refresh();
-                    else router.push(`/order_form/${savedId}`);
                   } catch {
                     setSubmissionMessage(
                       "Could not save the order. Please try again.",
@@ -628,7 +533,7 @@ export default function PageBody({
                       <SelectTrigger
                         id="importedBy"
                         className="w-full"
-                        disabled={isSubmitting || documentBusy}
+                        disabled={isSubmitting}
                       >
                         <SelectValue placeholder="Select importer" />
                       </SelectTrigger>
@@ -643,7 +548,7 @@ export default function PageBody({
                 {/* Project information */}
                 <div className="space-y-4">
                   <Label className={headingStyling}>Project Information</Label>
-                  <div className="grid grid-cols-1 gap-8 border rounded-lg p-4 @xl:grid-cols-2">
+                  <div className="flex flex-col gap-8 border rounded-lg p-4">
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label
                         htmlFor="systemTypeChoice"
@@ -660,7 +565,7 @@ export default function PageBody({
                             setProductSystem(value === "OTHER" ? "" : value);
                           }}
                         >
-                          <SelectTrigger id="systemTypeChoice" className="w-full">
+                          <SelectTrigger id="systemTypeChoice">
                             <SelectValue placeholder="Select system type" />
                           </SelectTrigger>
                           <SelectContent>
@@ -744,7 +649,7 @@ export default function PageBody({
                         onChange={(e) => setEndUser(e.target.value)}
                       />
                     </div>
-                    <div className="flex min-w-0 flex-col gap-2 @xl:col-span-2 [&>label:first-child]:min-h-6">
+                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                       <Label className={headingStyling} htmlFor="projectNotes">
                         Project Notes
                       </Label>
@@ -851,7 +756,7 @@ export default function PageBody({
                       <PaymentModeField
                         value={paymentMode}
                         isOther={paymentModeOther === "Other"}
-                        disabled={isSubmitting || documentBusy}
+                        disabled={isSubmitting}
                         onChoiceChange={(choice) => {
                           if (choice === "Other") {
                             if (paymentModeOther !== "Other")
@@ -895,9 +800,9 @@ export default function PageBody({
                       {suppliers.map((row, index) => (
                         <div
                           key={row.id}
-                          className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(5.5rem,0.65fr)_minmax(5.5rem,0.55fr)_minmax(0,2fr)_auto]"
+                          className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_auto]"
                         >
-                          <Label className="mt-8 h-10 self-start justify-center">
+                          <Label className="h-10 self-end justify-center">
                             {index + 1}.
                           </Label>
                           <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
@@ -982,27 +887,15 @@ export default function PageBody({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                            <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId}
-                              rowKey={row.rowKey ?? `new:${row.id}`}
-                              pendingFile={pendingSupplierFiles[row.rowKey ?? `new:${row.id}`]}
-                              onFileChange={file => stageSupplierFile(row.rowKey ?? `new:${row.id}`, file)}
-                              document={supplierDocuments.find(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
-                              editable disabled={isSubmitting || documentBusy}
-                              onBusyChange={setDocumentBusyState}
-                              onChange={document => changeSupplierDocument(row.rowKey ?? `new:${row.id}`, document)} />
-                          </div>
-                          <input type="hidden" name="supplierRowKey" value={row.rowKey ?? `new:${row.id}`} />
                           <input
                             type="hidden"
                             name="supplierCurrency"
                             value={row.currency}
                           />
-                          <div className="col-start-3 row-start-1 self-start pt-8 @2xl:col-start-6">
+                          <div className="col-start-3 row-start-1 self-end @2xl:col-start-5">
                             <Button
                               type="button"
                               aria-label={`Remove supplier ${index + 1}`}
-                              disabled={isSubmitting || documentBusy}
                               onClick={() =>
                                 setSuppliers((rows) =>
                                   rows.filter((item) => item.id !== row.id),
@@ -1054,7 +947,7 @@ export default function PageBody({
                         nextSupplierId.current = id + 1;
                         setSuppliers((rows) => [
                           ...rows,
-                          { id, rowKey: crypto.randomUUID(), supplier: "", amount: "", currency: "USD" },
+                          { id, supplier: "", amount: "", currency: "USD" },
                         ]);
                       }}
                     >
@@ -1232,17 +1125,15 @@ export default function PageBody({
                 <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2">
                   {orderHandledBy.trim() !== "" && (
                     <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Order Handled By:</strong>{" "}
-                            {orderHandledBy}
-                          </p>
+                      <Label className={headingStyling}>Order Handled By</Label>
+                      <Label className="">{orderHandledBy}</Label>
                     </div>
                   )}
                   <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2">
-                    <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Import By:</strong>{" "}
-                            {importedBy || "Not selected"}
-                          </p>
+                    <Label className={headingStyling}>Import By</Label>
+                    <Label className="font-bold">
+                      {importedBy || "Not selected"}
+                    </Label>
                   </div>
                 </div>
                 {/* Project information */}
@@ -1257,46 +1148,40 @@ export default function PageBody({
                     <Label className={headingStyling}>
                       Project Information
                     </Label>
-                    <div className="grid grid-cols-1 gap-8 border rounded-lg p-4 @xl:grid-cols-2">
+                    <div className="flex flex-col gap-8 border rounded-lg p-4">
                       {productSystem.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>System Type:</strong>{" "}
-                            {productSystem}
-                          </p>
+                          <Label className={headingStyling}>System Type</Label>
+                          <Label className="font-bold">{productSystem}</Label>
                         </div>
                       )}
 
                       {projectName.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Project Name:</strong>{" "}
-                            {projectName}
-                          </p>
+                          <Label className={headingStyling}>Project Name</Label>
+                          <Label className="font-bold">{projectName}</Label>
                         </div>
                       )}
                       {clientName.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Customer:</strong>{" "}
-                            {clientName}
-                          </p>
+                          <Label className={headingStyling}>Customer</Label>
+                          <Label className="font-bold">{clientName}</Label>
                         </div>
                       )}
                       {endUser.trim() !== "" && (
                         <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>End User:</strong>{" "}
-                            {endUser}
-                          </p>
+                          <Label className={headingStyling}>End User</Label>
+                          <Label className="font-bold">{endUser}</Label>
                         </div>
                       )}
                       {projectNotes.trim() !== "" && (
-                        <div className="flex min-w-0 flex-col gap-2 @xl:col-span-2 [&>label:first-child]:min-h-6">
-                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Project Notes:</strong>{" "}
+                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                          <Label className={headingStyling}>
+                            Project Notes
+                          </Label>
+                          <Label className="font-bold whitespace-pre-wrap">
                             {projectNotes}
-                          </p>
+                          </Label>
                         </div>
                       )}
                     </div>
@@ -1316,15 +1201,19 @@ export default function PageBody({
                       <div className="flex flex-col gap-8 border rounded-lg p-4">
                         {clientOrderValue.trim() !== "" && (
                           <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                            <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Client Order Value ({clientOrderCurrency}):</strong>{" "}
-                            {formatMoney(clientOrderValue)}
-                          </p>
+                            <Label className={headingStyling}>
+                              Client Order Value ({clientOrderCurrency})
+                            </Label>
+                            <Label className="font-bold">
+                              {formatMoney(clientOrderValue)}
+                            </Label>
                             {clientOrderCurrency !== "USD" && (
                               <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                                <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Order Value (USD):</strong>{" "}
-                            {formatMoney(
+                                <Label className={headingStyling}>
+                                  Order Value (USD)
+                                </Label>
+                                <Label className="font-bold">
+                                  {formatMoney(
                                     convertToUsd(
                                       clientOrderValue,
                                       clientOrderCurrency,
@@ -1334,7 +1223,7 @@ export default function PageBody({
                                     ),
                                     "—",
                                   )}
-                          </p>
+                                </Label>
                               </div>
                             )}
                           </div>
@@ -1363,7 +1252,7 @@ export default function PageBody({
                           {visibleSuppliers.map((row, index) => (
                             <div
                               key={row.id}
-                              className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(5.5rem,0.65fr)_minmax(5.5rem,0.55fr)_minmax(0,2fr)]"
+                              className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)]"
                             >
                               <Label>{index + 1}.</Label>
                               <div className="col-start-2 min-w-0 @2xl:col-start-auto">
@@ -1394,15 +1283,6 @@ export default function PageBody({
                                       : row.currency}
                                   </Label>
                                 </div>
-                              </div>
-                              <div className="col-start-2 min-w-0 @2xl:col-start-auto">
-                                <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId} rowKey={row.rowKey}
-                                  pendingFile={pendingSupplierFiles[row.rowKey ?? `new:${row.id}`]}
-                                  onFileChange={file => stageSupplierFile(row.rowKey ?? `new:${row.id}`, file)}
-                                  document={supplierDocuments.find(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
-                                  editable={false} disabled={isSubmitting || documentBusy}
-                                  onBusyChange={setDocumentBusyState}
-                                  onChange={document => changeSupplierDocument(row.rowKey ?? `new:${row.id}`, document)} />
                               </div>
                               {row.currency !== "USD" && (
                                 <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
@@ -1498,16 +1378,13 @@ export default function PageBody({
               </div>
             </div>
           )}
-            {/* File selections are staged here and uploaded by the form submit handler. */}
+            {/* Attachments are saved separately from the order form. */}
             <OrderDocuments
               key={orderDetails?.sl ?? "new"}
-              orderId={orderDetails?.sl ?? createdOrderId}
-              initialDocuments={supplierDocuments.filter(document => document.supplierRowKey === null)}
-              drafts={documentDrafts} setDrafts={setDocumentDrafts}
-              onBusyChange={setDocumentBusyState}
-              onUploadedDocumentRemoved={id => setSupplierDocuments(rows => rows.filter(row => row.id !== id))}
+              orderId={orderDetails?.sl}
+              initialDocuments={initialDocuments}
               editable={isEditing}
-              disabled={isSubmitting || documentBusy}
+              disabled={isSubmitting}
             />
           </div>
           <div className="min-w-0 flex flex-col gap-4">
@@ -1518,18 +1395,17 @@ export default function PageBody({
                   {orderDetails?.createdBy ?? username}
                 </Label>
               </div>
-              <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_max-content] items-center gap-4">
+              <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 [&>label:last-child]:justify-end [&>label:last-child]:text-right">
                 <Label className={headingStyling}>Last Edited By:</Label>
-                <Label className="justify-end text-right font-bold whitespace-nowrap">
+                <Label className="font-bold">
                   {orderDetails?.lastEditedBy ?? "Not edited yet"}
-                </Label>
-              </div>
-              <div className="grid min-h-10 grid-cols-[minmax(0,1fr)_max-content] items-center gap-4">
-                <Label className={headingStyling}>Last Edited At:</Label>
-                <Label className="justify-end text-right font-bold whitespace-nowrap">
-                  {orderDetails?.lastEditedAt
-                    ? formatOrderEditDate(orderDetails.lastEditedAt)
-                    : "Not edited yet"}
+                  {orderDetails?.lastEditedBy && orderDetails.lastEditedAt && (
+                    <>
+                      {" "}
+                      <span className="text-[24px] font-thin"> | </span>{" "}
+                      {formatOrderEditDate(orderDetails.lastEditedAt)}
+                    </>
+                  )}
                 </Label>
               </div>
               {felixOrderNo && (
@@ -1579,7 +1455,7 @@ export default function PageBody({
                         {formatMoney(displayed, "—")}
                       </Label>
                       <Select
-                        disabled={isSubmitting || documentBusy}
+                        disabled={isSubmitting}
                         value={panelCurrencies[key]}
                         onValueChange={(currency) => {
                           if (isCurrency(currency)) {
@@ -1626,9 +1502,9 @@ export default function PageBody({
                     <Button
                       key="submit-order"
                       type="submit"
-                      disabled={!hasChanges || isSubmitting || documentBusy}
+                      disabled={isSubmitting}
                       form="order-form"
-                      className={cn(actionButtonStyling, "disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-100")}
+                      className={actionButtonStyling}
                     >
                       {isSubmitting ? "Saving…" : "Submit"}
                     </Button>
@@ -1636,15 +1512,9 @@ export default function PageBody({
                       type="button"
                       className={actionButtonStyling}
                       key="discard-order"
-                      disabled={isSubmitting || documentBusy}
+                      disabled={isSubmitting}
                       onClick={() => {
                         setSubmissionMessage("");
-                        setPendingSupplierFiles({});
-                        setDocumentDrafts([{ id: 0, file: null }]);
-                        if (createdOrderId && !orderDetails) {
-                          router.push(`/order_form/${createdOrderId}`);
-                          return;
-                        }
                         // Restore saved fields and currencies before leaving edit mode.
                         if (orderDetails) setLoadedOrderDetails(undefined);
                         setIsEditing(false);
@@ -1712,7 +1582,7 @@ export default function PageBody({
                       </Label>
                       <Input
                         form="order-form"
-                        disabled={isSubmitting || documentBusy}
+                        disabled={isSubmitting}
                         className={cn(
                           inputStyling,
                           "bg-white text-foreground border-white/30",
@@ -1741,7 +1611,7 @@ export default function PageBody({
                       </Label>
                       <Input
                         form="order-form"
-                        disabled={isSubmitting || documentBusy}
+                        disabled={isSubmitting}
                         className={cn(
                           inputStyling,
                           "bg-white text-foreground border-white/30",
@@ -1770,7 +1640,7 @@ export default function PageBody({
                       </Label>
                       <Input
                         form="order-form"
-                        disabled={isSubmitting || documentBusy}
+                        disabled={isSubmitting}
                         className={cn(
                           inputStyling,
                           "bg-white text-foreground border-white/30",
@@ -1805,7 +1675,7 @@ export default function PageBody({
                       </Label>
                       <Input
                         form="order-form"
-                        disabled={isSubmitting || documentBusy}
+                        disabled={isSubmitting}
                         className={cn(
                           inputStyling,
                           "bg-white text-foreground border-white/30",
@@ -1838,7 +1708,7 @@ export default function PageBody({
                       </Label>
                       <Input
                         form="order-form"
-                        disabled={isSubmitting || documentBusy}
+                        disabled={isSubmitting}
                         className={cn(
                           inputStyling,
                           "bg-white text-foreground border-white/30",

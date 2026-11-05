@@ -32,7 +32,6 @@ export default async function OrderForm({
 
   const documents = await db.select({
     id: orderDocuments.id,
-    supplierRowKey: orderDocuments.supplierRowKey,
     title: orderDocuments.title,
     originalName: orderDocuments.originalName,
     sizeBytes: orderDocuments.sizeBytes,

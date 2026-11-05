@@ -2,7 +2,7 @@ import type { NewOrder } from "./schema";
 import { DEFAULT_PANEL_CURRENCIES, panelFields } from "./order-calculations";
 import { sumUsdAmounts, type MiscellaneousExpense } from "./expenses";
 import { supplierColumns, type SupplierKey, type SupplierCurrencyDetail, type CustomSupplierDetail,
-  legacySupplierRowKey, DEFAULT_GBP_TO_USD, DEFAULT_EUR_TO_USD, DEFAULT_USD_TO_SGD, isCurrency, isValidRate, convertToUsd } from "./currency";
+  DEFAULT_GBP_TO_USD, DEFAULT_EUR_TO_USD, DEFAULT_USD_TO_SGD, isCurrency, isValidRate, convertToUsd } from "./currency";
 
 function readText(formData: FormData, name: string) {
   const value = formData.get(name);
@@ -61,8 +61,6 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
   }
 
   // Validate supplier rows and keep both original currency details and USD amounts.
-  const supplierRowKeys = formData.getAll("supplierRowKey");
-  const usedRowKeys = new Set<string>();
   const supplierNames = formData.getAll("supplier");
   const supplierAmounts = formData.getAll("supplierAmount");
   const supplierCurrencies = formData.getAll("supplierCurrency");
@@ -96,11 +94,6 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
     if (!allowedSuppliers.has(name) || name.length > 200) {
       return { ok: false, message: `Unknown supplier: ${name}. Add new suppliers in Settings first.` };
     }
-    const rowKey = supplierRowKeys.length ? supplierRowKeys[index] : legacySupplierRowKey(name);
-    if (typeof rowKey !== "string" || !rowKey || rowKey.length > 240 || /[\x00-\x1f\x7f]/.test(rowKey) || usedRowKeys.has(rowKey)) {
-      return { ok: false, message: "Supplier row references are invalid. Reload the order and try again." };
-    }
-    usedRowKeys.add(rowKey);
     const column = Object.hasOwn(supplierColumns, name)
       ? supplierColumns[name as keyof typeof supplierColumns] : undefined;
     if (selectedSuppliers.includes(name)) {
@@ -118,9 +111,9 @@ export function readOrderValues(formData: FormData, authenticatedUsername: strin
 
     if (column) {
       supplierValues[column] = usdAmount;
-      supplierCurrencyDetails.push({ rowKey, supplier: column, amount, currency });
+      supplierCurrencyDetails.push({ supplier: column, amount, currency });
     } else {
-      customSupplierDetails.push({ rowKey, name, amount, currency });
+      customSupplierDetails.push({ name, amount, currency });
       customUsdAmounts.push(usdAmount);
     }
     selectedSuppliers.push(name);

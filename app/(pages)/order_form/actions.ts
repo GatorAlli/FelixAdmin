@@ -3,13 +3,12 @@
 import { and, eq, sql } from "drizzle-orm";
 import { requireUser } from "@/lib/betterAuth/session";
 import { db } from "@/lib/drizzle/drizzle-index";
-import { data, users, suppliers, orderDocuments } from "@/lib/drizzle/schema";
+import { data, users, suppliers } from "@/lib/drizzle/schema";
 import { revalidatePath } from "next/cache";
 import { readOrderValues } from "@/lib/drizzle/order-values";
 import { currentOrderDate } from "@/lib/drizzle/order-date";
 import { nextOrderReference } from "@/lib/drizzle/order-reference";
 import { canEditOrder } from "@/lib/drizzle/order-access";
-import { removeDocumentFile } from "@/lib/documents/storage";
 import { restoreSupplierRows } from "@/lib/drizzle/currency";
 
 // Both save actions use the signed-in profile and the same form validation.
@@ -77,20 +76,20 @@ export async function createOrder(formData: FormData) {
     // Allocate the reference and insert together so concurrent saves cannot reuse it.
     const orderReference = await db.transaction(async (transaction) => {
       const felixOrderRef = await nextOrderReference(transaction, createdDate);
-      const [created] = await transaction.insert(data).values({
+      await transaction.insert(data).values({
         ...preparedOrder.values,
         createdDate,
         felixOrderRef,
         orderManagerAccess: true,
-      }).returning({ id: data.sl });
+      });
 
-      return { reference: felixOrderRef, id: created.id };
+      return felixOrderRef;
     }, { isolationLevel: "read committed" });
 
     // Refresh the order lists after the database write succeeds.
     revalidatePath("/home");
     revalidatePath("/summary");
-    return { ok: true, message: `Order created: ${orderReference.reference}`, createdDate, orderId: orderReference.id };
+    return { ok: true, message: `Order created: ${orderReference}`, createdDate };
   } catch (error) {
     console.error("Unable to create order", error);
     return {
@@ -114,39 +113,29 @@ export async function updateOrder(orderId: number, formData: FormData) {
   const { createdBy: lastEditedBy, ...editableValues } = preparedOrder.values;
 
   try {
-    const saved = await db.transaction(async (transaction) => {
-      const [updatedOrder] = await transaction.update(data)
-        .set({ ...editableValues, lastEditedBy, lastEditedAt: sql`now()` })
-        .where(and(eq(data.sl, orderId), preparedOrder.status === "admin" ? undefined : eq(data.orderManagerAccess, true)))
-        .returning();
-      if (!updatedOrder) return null;
-      const retainedKeys = new Set(restoreSupplierRows(updatedOrder).map(row => row.rowKey));
-      const documents = await transaction.select().from(orderDocuments).where(eq(orderDocuments.orderId, orderId));
-      return { updatedOrder, removedDocuments: documents.filter(document => document.supplierRowKey !== null && !retainedKeys.has(document.supplierRowKey)) };
-    });
-    const updatedOrder = saved?.updatedOrder;
+    const [updatedOrder] = await db
+      .update(data)
+      // The primary key, creator, order reference and creation date are excluded.
+      .set({ ...editableValues, lastEditedBy, lastEditedAt: sql`now()` })
+      // Check the flag in the UPDATE itself, including for already-open forms.
+      .where(
+        and(
+          eq(data.sl, orderId),
+          preparedOrder.status === "admin" ? undefined : eq(data.orderManagerAccess, true),
+        ),
+      )
+      .returning({ felixOrderRef: data.felixOrderRef });
 
     if (!updatedOrder) {
       return { ok: false, message: "Order not found or your editing access has been revoked." };
     }
 
-    // Keep metadata when filesystem cleanup fails so a subsequent save can retry.
-    let cleanupFailed = false;
-    for (const document of saved!.removedDocuments) {
-      try {
-        await removeDocumentFile(document.storagePath);
-        await db.delete(orderDocuments).where(and(eq(orderDocuments.id, document.id), eq(orderDocuments.orderId, orderId)));
-      } catch (error) {
-        cleanupFailed = true;
-        console.error("Supplier document cleanup failed", error);
-      }
-    }
     revalidatePath("/summary");
     revalidatePath("/home");
     revalidatePath(`/order_form/${orderId}`);
     return {
       ok: true,
-      message: `Order updated: ${updatedOrder.felixOrderRef}` + (cleanupFailed ? ". Some removed attachments could not be deleted. Save again to retry." : ""),
+      message: `Order updated: ${updatedOrder.felixOrderRef}`,
     };
   } catch (error) {
     console.error("Unable to update order", error);
