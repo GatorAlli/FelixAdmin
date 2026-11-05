@@ -1367,14 +1367,14 @@ export default function PageBody({
                         <h3 id="material-cost-heading" className="text-[1.21em] font-extrabold underline underline-offset-4">Material Cost</h3>
                         <div role="region" aria-label="Material cost table" tabIndex={0}
                           className="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-ring">
-                          <table className="w-full min-w-[36rem] text-left text-sm">
+                          <table className="w-full min-w-[36rem] text-center text-sm">
                             <thead className="border-b bg-muted/50">
                               <tr>
                                 <th scope="col" aria-label="Row number" className="w-12 px-4 py-3">&nbsp;</th>
                                 <th scope="col" className="w-full px-4 py-3">Supplier</th>
-                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Amount</th>
-                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Currency</th>
-                                {showSupplierUsd && <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Amount (USD)</th>}
+                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Amount</th>
+                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Currency</th>
+                                {showSupplierUsd && <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Amount (USD)</th>}
                                 <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Documents</th>
                               </tr>
                             </thead>
@@ -1383,11 +1383,11 @@ export default function PageBody({
                                 return (
                                   <tr key={row.id} className="align-middle">
                                     <td className="w-12 px-3 py-3 text-center text-base font-semibold tracking-normal tabular-nums">{index + 1}.</td>
-                                    <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 font-semibold">{row.supplier}</th>
-                                    <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{formatMoney(row.amount)}</td>
-                                    <td className="whitespace-nowrap px-4 py-3 text-right">{row.currency === "EUR" ? "Euro" : row.currency}</td>
+                                    <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 text-center font-semibold">{row.supplier}</th>
+                                    <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">{formatMoney(row.amount)}</td>
+                                    <td className="whitespace-nowrap px-4 py-3 text-center">{row.currency === "EUR" ? "Euro" : row.currency}</td>
                                     {showSupplierUsd && (
-                                      <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">
+                                      <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">
                                         {formatMoney(convertToUsd(row.amount, row.currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate), "—")}
                                       </td>
                                     )}
@@ -1410,25 +1410,25 @@ export default function PageBody({
                         <h3 id="miscellaneous-cost-heading" className="text-[1.21em] font-extrabold underline underline-offset-4">Miscellaneous Costs</h3>
                         <div role="region" aria-label="Miscellaneous costs table" tabIndex={0}
                           className="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-ring">
-                          <table className="w-full min-w-[28rem] text-left text-sm">
+                          <table className="w-full min-w-[28rem] text-center text-sm">
                             <thead className="border-b bg-muted/50">
                               <tr>
                                 <th scope="col" aria-label="Row number" className="w-12 px-4 py-3">&nbsp;</th>
                                 <th scope="col" className="w-full px-4 py-3">Expenditure</th>
-                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Amount</th>
-                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Currency</th>
-                                {showExpenseUsd && <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-right">Amount (USD)</th>}
+                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Amount</th>
+                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Currency</th>
+                                {showExpenseUsd && <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Amount (USD)</th>}
                               </tr>
                             </thead>
                             <tbody className="divide-y">
                               {visibleExpenses.map((row, index) => (
                                 <tr key={row.id} className="align-middle">
                                   <td className="w-12 px-3 py-3 text-center text-base font-semibold tracking-normal tabular-nums">{index + 1}.</td>
-                                  <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 font-semibold">{row.name}</th>
-                                  <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">{formatMoney(row.amount)}</td>
-                                  <td className="whitespace-nowrap px-4 py-3 text-right">{row.currency === "EUR" ? "Euro" : row.currency}</td>
+                                  <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 text-center font-semibold">{row.name}</th>
+                                  <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">{formatMoney(row.amount)}</td>
+                                  <td className="whitespace-nowrap px-4 py-3 text-center">{row.currency === "EUR" ? "Euro" : row.currency}</td>
                                   {showExpenseUsd && (
-                                    <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">
+                                    <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">
                                       {formatMoney(convertToUsd(row.amount, row.currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate), "—")}
                                     </td>
                                   )}

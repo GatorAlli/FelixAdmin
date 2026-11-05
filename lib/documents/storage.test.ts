@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test, type TestContext } from "node:test";
 import { mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { randomUUID } from "node:crypto";
 import { MAX_DOCUMENT_BYTES } from "../document-files";
 import { openDocument, removeDocumentFile, writeDocument } from "./storage";
@@ -69,14 +69,21 @@ test("rejects traversal, public directories and symlink escapes", async t => {
   }
   process.env.DOCUMENTS_DIRECTORY = join(process.cwd(), "public", "documents");
   await assert.rejects(writeDocument(key, body("x"), 1), /outside public/);
-  process.env.DOCUMENTS_DIRECTORY = "relative/path";
-  await assert.rejects(writeDocument(key, body("x"), 1), /absolute/);
+  process.env.DOCUMENTS_DIRECTORY = "public/documents";
+  await assert.rejects(writeDocument(key, body("x"), 1), /outside public/);
   process.env.DOCUMENTS_DIRECTORY = directory;
   const outside = await mkdtemp(join(tmpdir(), "felix-outside-"));
   t.after(() => rm(outside, { recursive: true, force: true }));
   await mkdir(join(directory, "orders"));
   await symlink(outside, join(directory, "orders", "1"), "dir");
   await assert.rejects(writeDocument(key, body("x"), 1), /Invalid document directory/);
+});
+
+test("resolves relative storage from the application working directory", async t => {
+  const { directory, key } = await fixture(t);
+  process.env.DOCUMENTS_DIRECTORY = relative(process.cwd(), directory);
+  await writeDocument(key, body("portable"), 8);
+  assert.equal(await readFile(join(directory, key), "utf8"), "portable");
 });
 
 test("does not follow symlinked document files on download", async t => {
