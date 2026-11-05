@@ -16,12 +16,7 @@ function isWithin(parent: string, child: string) {
 }
 
 async function rootDirectory() {
-  const configured = process.env.DOCUMENTS_DIRECTORY;
-  if (!configured?.trim()) {
-    throw new DocumentStorageError("DOCUMENTS_DIRECTORY must specify a private directory.");
-  }
-  // Relative settings travel with the app; absolute settings support external disks.
-  const directory = resolve(process.cwd(), configured);
+  const directory = resolve(process.cwd(), ".local/documents");
   const publicDirectory = resolve(process.cwd(), "public");
   if (isWithin(publicDirectory, directory) || directory.split(sep).includes("public_html")) {
     throw new DocumentStorageError("Documents must be stored outside public website directories.");

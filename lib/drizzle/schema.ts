@@ -115,7 +115,7 @@ export const miscellaneousExpenditures = p.pgTable.withRLS(
   },
 );
 
-// Document metadata only; file bytes live in DOCUMENTS_DIRECTORY.
+// Document metadata only; file bytes live in .local/documents.
 export const orderDocuments = p.pgTable.withRLS(
   "order_documents",
   {

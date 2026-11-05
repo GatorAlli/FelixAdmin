@@ -1,20 +1,21 @@
 import assert from "node:assert/strict";
 import { test, type TestContext } from "node:test";
-import { mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, realpath, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
+import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { MAX_DOCUMENT_BYTES } from "../document-files";
 import { openDocument, removeDocumentFile, writeDocument } from "./storage";
 
 async function fixture(t: TestContext) {
-  const directory = await mkdtemp(join(tmpdir(), "felix-documents-"));
-  const original = process.env.DOCUMENTS_DIRECTORY;
-  process.env.DOCUMENTS_DIRECTORY = directory;
+  const application = await mkdtemp(join(tmpdir(), "felix-documents-"));
+  const original = process.cwd();
+  process.chdir(application);
+  const directory = join(application, ".local", "documents");
+  await mkdir(directory, { recursive: true });
   t.after(async () => {
-    if (original === undefined) delete process.env.DOCUMENTS_DIRECTORY;
-    else process.env.DOCUMENTS_DIRECTORY = original;
-    await rm(directory, { recursive: true, force: true });
+    process.chdir(original);
+    await rm(application, { recursive: true, force: true });
   });
   return { directory, key: "orders/1/" + randomUUID() };
 }
@@ -62,16 +63,11 @@ test("does not overwrite an existing completed file", async t => {
   assert.deepEqual(await readdir(join(directory, "orders", "1")), [key.split("/").at(-1)]);
 });
 
-test("rejects traversal, public directories and symlink escapes", async t => {
+test("rejects traversal and symlink escapes", async t => {
   const { directory, key } = await fixture(t);
   for (const unsafe of ["../secret", "orders/1/../../secret", "orders/0/" + randomUUID(), "/etc/passwd"]) {
     await assert.rejects(writeDocument(unsafe, body("x"), 1), /Invalid document storage path/);
   }
-  process.env.DOCUMENTS_DIRECTORY = join(process.cwd(), "public", "documents");
-  await assert.rejects(writeDocument(key, body("x"), 1), /outside public/);
-  process.env.DOCUMENTS_DIRECTORY = "public/documents";
-  await assert.rejects(writeDocument(key, body("x"), 1), /outside public/);
-  process.env.DOCUMENTS_DIRECTORY = directory;
   const outside = await mkdtemp(join(tmpdir(), "felix-outside-"));
   t.after(() => rm(outside, { recursive: true, force: true }));
   await mkdir(join(directory, "orders"));
@@ -79,11 +75,20 @@ test("rejects traversal, public directories and symlink escapes", async t => {
   await assert.rejects(writeDocument(key, body("x"), 1), /Invalid document directory/);
 });
 
-test("resolves relative storage from the application working directory", async t => {
+test("uses the fixed project-local storage directory", async t => {
   const { directory, key } = await fixture(t);
-  process.env.DOCUMENTS_DIRECTORY = relative(process.cwd(), directory);
   await writeDocument(key, body("portable"), 8);
+  assert.equal(await realpath(directory), await realpath(join(process.cwd(), ".local", "documents")));
   assert.equal(await readFile(join(directory, key), "utf8"), "portable");
+});
+
+test("rejects a storage directory symlinked into public", async t => {
+  const { directory, key } = await fixture(t);
+  const publicDocuments = join(process.cwd(), "public", "documents");
+  await mkdir(publicDocuments, { recursive: true });
+  await rm(directory, { recursive: true });
+  await symlink(publicDocuments, directory, "dir");
+  await assert.rejects(writeDocument(key, body("x"), 1), /public website/);
 });
 
 test("does not follow symlinked document files on download", async t => {
