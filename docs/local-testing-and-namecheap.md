@@ -52,6 +52,22 @@ Files use generated UUID storage names; original filenames live in PostgreSQL an
 
 Downloads require a current session and are sent as attachments with private/no-store and nosniff headers. File paths reject traversal and symlink escapes. Uploads/downloads stream instead of loading the entire file into application memory.
 
+### Supplier documents
+
+Each saved material-cost row supports one document, using the same endpoints and
+`orders/<orderId>/<UUID>` folder as general documents. `X-Supplier-Row-Key` is the
+URL-encoded permanent row reference. Original filenames are preserved for display
+and download. New rows must be saved before uploading. Renaming or reordering rows
+preserves their attachments; removing a row deletes its attachment after the order
+save succeeds. General documents remain separate in the interface.
+
+Before deploying this feature against an existing database, apply only
+`lib/drizzle/migrations/20261105155637_supplier_documents/migration.sql` using your
+PostgreSQL SQL runner. It adds a nullable supplier-row reference and a unique index
+that enforces one document per row. Existing documents remain general documents.
+Fresh databases use the updated `docker/postgres/schema.sql`. The feature migration
+has already been applied to the local database.
+
 ## Moving to Namecheap
 
 Use Node.js 24 and configure the Node application with HTTPS. Set the four environment variables above for that host, preserving the Better Auth secret when moving existing logins/sessions.

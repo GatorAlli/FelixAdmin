@@ -52,3 +52,35 @@ test("saving an SGD supplier keeps the original amount and recalculates USD", ()
   assert.equal(restored[0].amount, "130");
   assert.equal(restored[0].currency, "SGD");
 });
+
+test("supplier document references survive rename, reorder and row removal", () => {
+  const form = new FormData();
+  form.set("projectName", "Attachment regression");
+  form.set("clientName", "Test customer");
+  for (const [name, rowKey] of [["SQUARE", "row-square"], ["TRANE", "row-trane"]]) {
+    form.append("supplier", name);
+    form.append("supplierAmount", "100");
+    form.append("supplierCurrency", "USD");
+    form.append("supplierRowKey", rowKey);
+  }
+  const result = readOrderValues(form, "Tester", ["SQUARE", "TRANE"]);
+  assert.ok(result.ok);
+  const restored = restoreSupplierRows({ ...result.values, supplierCurrencyDetails: result.values.supplierCurrencyDetails ?? null });
+  assert.deepEqual(restored.map(row => [row.supplier, row.rowKey]), [["TRANE", "row-trane"], ["SQUARE", "row-square"]]);
+  const renamed = restoreSupplierRows({ supplierCurrencyDetails: [], customSupplierDetails: [{ name: "RENAMED", amount: "100", currency: "USD", rowKey: "row-square" }] });
+  assert.equal(renamed[0].rowKey, "row-square");
+  assert.ok(!renamed.some(row => row.rowKey === "row-trane"));
+});
+
+test("rejects duplicate supplier document references", () => {
+  const form = new FormData();
+  form.set("projectName", "Test");
+  form.set("clientName", "Test");
+  for (const name of ["TRANE", "BELIMO"]) {
+    form.append("supplier", name);
+    form.append("supplierAmount", "1");
+    form.append("supplierCurrency", "USD");
+    form.append("supplierRowKey", "same-row");
+  }
+  assert.equal(readOrderValues(form, "Tester").ok, false);
+});

@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/drizzle/drizzle-index";
-import { orderDocuments } from "@/lib/drizzle/schema";
+import { eq } from "drizzle-orm";
+import { restoreSupplierRows } from "@/lib/drizzle/currency";
+import { data, orderDocuments } from "@/lib/drizzle/schema";
 import { readDocumentMetadata } from "@/lib/document-files";
 import { documentAccess, hasDocumentOrigin, parseOrderId } from "@/lib/documents/access";
 import { DocumentStorageError, writeDocument, removeDocumentFile } from "@/lib/documents/storage";
@@ -25,27 +27,49 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
     });
     if (!metadata.ok) return Response.json(metadata, { status: 400 });
     if (!request.body) return Response.json({ ok: false, message: "Choose a file first." }, { status: 400 });
+    let supplierRowKey: string | null;
+    try {
+      const header = request.headers.get("x-supplier-row-key");
+      supplierRowKey = header === null ? null : decodeURIComponent(header);
+    } catch {
+      return Response.json({ ok: false, message: "Invalid supplier row." }, { status: 400 });
+    }
+    if (supplierRowKey !== null && (!supplierRowKey || supplierRowKey.length > 240)) {
+      return Response.json({ ok: false, message: "Invalid supplier row." }, { status: 400 });
+    }
     const storagePath = "orders/" + orderId + "/" + randomUUID();
     const sizeBytes = await writeDocument(storagePath, request.body, metadata.sizeBytes);
     savedPath = storagePath;
     // A role or access flag may have changed while a large file was uploading.
     const currentAccess = await documentAccess(orderId, true, request.headers);
     if (!currentAccess.ok) return Response.json(currentAccess, { status: currentAccess.status });
-    const [document] = await db.insert(orderDocuments).values({
-      orderId, storagePath, sizeBytes,
-      title: metadata.originalName.slice(0, 120),
-      originalName: metadata.originalName,
-      mimeType: metadata.mimeType,
-      uploadedBy: access.user.id,
-    }).returning({
-      id: orderDocuments.id, title: orderDocuments.title,
-      originalName: orderDocuments.originalName, sizeBytes: orderDocuments.sizeBytes,
+    const document = await db.transaction(async (transaction) => {
+      // Lock only after streaming, and serialize with supplier-row saves.
+      const [order] = await transaction.select().from(data).where(eq(data.sl, orderId)).for("update");
+      if (!order || (supplierRowKey !== null && !restoreSupplierRows(order).some(row => row.rowKey === supplierRowKey))) {
+        throw new DocumentStorageError("Save this supplier row before attaching a document.");
+      }
+      const [saved] = await transaction.insert(orderDocuments).values({
+        orderId, storagePath, sizeBytes, supplierRowKey,
+        title: metadata.originalName.slice(0, 120),
+        originalName: metadata.originalName,
+        mimeType: metadata.mimeType,
+        uploadedBy: access.user.id,
+      }).returning({
+        supplierRowKey: orderDocuments.supplierRowKey,
+        id: orderDocuments.id, title: orderDocuments.title,
+        originalName: orderDocuments.originalName, sizeBytes: orderDocuments.sizeBytes,
+      });
+      return saved;
     });
     savedPath = undefined;
     return Response.json({ ok: true, document }, { status: 201 });
   } catch (error) {
     if (error instanceof DocumentStorageError) {
       return Response.json({ ok: false, message: error.message }, { status: 400 });
+    }
+    if (error && typeof error === "object" && ("code" in error && error.code === "23505" || "cause" in error && error.cause && typeof error.cause === "object" && "code" in error.cause && error.cause.code === "23505")) {
+      return Response.json({ ok: false, message: "This supplier row already has a document. Remove it before attaching another." }, { status: 409 });
     }
     console.error("Document upload failed", error);
     return Response.json({ ok: false, message: "Could not upload the document. Please try again." }, { status: 500 });
