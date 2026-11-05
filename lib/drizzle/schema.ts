@@ -126,6 +126,7 @@ export const orderDocuments = p.pgTable.withRLS(
       .integer()
       .notNull()
       .references(() => data.sl),
+    supplierRowKey: p.varchar({ length: 240 }),
     title: p.varchar({ length: 120 }).notNull(),
     originalName: p.varchar({ length: 255 }).notNull(),
     storagePath: p.text().notNull().unique(),
@@ -137,6 +138,7 @@ export const orderDocuments = p.pgTable.withRLS(
   (table) => [
     // Makes "find documents for this order" efficient.
     p.index("order_documents_order_id_idx").on(table.orderId),
+    p.uniqueIndex("order_documents_supplier_row_idx").on(table.orderId, table.supplierRowKey),
   ],
 );
 
@@ -148,5 +150,5 @@ export type Order = typeof data.$inferSelect;
 export type NewOrder = typeof data.$inferInsert;
 export type DocumentSummary = Pick<
   typeof orderDocuments.$inferSelect,
-  "id" | "title" | "originalName" | "sizeBytes"
+  "id" | "title" | "originalName" | "sizeBytes" | "supplierRowKey"
 >;

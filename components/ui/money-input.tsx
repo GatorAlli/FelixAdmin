@@ -22,7 +22,7 @@ export function MoneyInput({ value, onValueChange, name, form, disabled, classNa
         type="text"
         inputMode="decimal"
         pattern="[0-9,]+(\.[0-9]{1,2})?"
-        className={cn(className, "text-right tabular-nums")}
+        className={cn(className, "text-left tabular-nums")}
         value={focused ? formatMoneyDraft(value) : formatMoney(value)}
         onFocus={(event) => { setFocused(true); onFocus?.(event); }}
         onChange={(event) => {

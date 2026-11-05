@@ -38,13 +38,15 @@ export type SupplierKey = (typeof supplierColumns)[keyof typeof supplierColumns]
 
 export type Currency = "USD" | "EUR" | "GBP" | "SGD";
 export type SupplierCurrencyDetail = {
+  rowKey?: string;
   supplier: SupplierKey;
   amount: string;
   currency: Currency;
 };
-export type CustomSupplierDetail = { name: string; amount: string; currency: Currency };
+export type CustomSupplierDetail = { rowKey?: string; name: string; amount: string; currency: Currency };
 export type SupplierRow = {
   id: number;
+  rowKey?: string;
   supplier: string;
   amount: string;
   currency: Currency;
@@ -112,6 +114,7 @@ export function restoreSupplierRows(order: {
     );
     return [{
       id: index + 1,
+      rowKey: original?.rowKey ?? legacySupplierRowKey(name),
       supplier: name,
       amount: original?.amount ?? usdAmount,
       currency: original?.currency ?? "USD",
@@ -119,6 +122,7 @@ export function restoreSupplierRows(order: {
   });
   return [...legacy, ...(order.customSupplierDetails ?? []).map((detail, index) => ({
     id: Object.keys(supplierColumns).length + index + 1,
+    rowKey: detail.rowKey ?? legacySupplierRowKey(detail.name),
     supplier: detail.name, amount: detail.amount, currency: detail.currency,
   }))];
 }
@@ -147,4 +151,9 @@ export function convertFromUsd(
   const text = convertedCents.toString().padStart(3, "0");
   const sign = negative && convertedCents !== BigInt(0) ? "-" : "";
   return `${sign}${text.slice(0, -2)}.${text.slice(-2)}`;
+}
+
+// Legacy keys survive changes in row order until the next save persists them.
+export function legacySupplierRowKey(name: string) {
+  return `legacy:${name.trim().toUpperCase()}`;
 }
