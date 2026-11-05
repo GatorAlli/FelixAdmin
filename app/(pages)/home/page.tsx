@@ -4,14 +4,10 @@ import { db } from "@/lib/drizzle/drizzle-index";
 import { data, users } from "@/lib/drizzle/schema";
 import { asc } from "drizzle-orm";
 import TableBody from "./TableBody";
-import { Sora, Manrope } from "next/font/google";
+import { Manrope } from "next/font/google";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { canEditOrder } from "@/lib/drizzle/order-access";
-const sora = Sora({
-  subsets: ["latin"],
-  weight: ["600"],
-});
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -42,14 +38,14 @@ export default async function Home() {
       <Navbar />
 
       {/* Content  */}
-      <div className="flex-1 p-6 md:p-10 max-w-[1600px] mx-auto w-full">
+      <div className="flex-1 px-6 pb-6 pt-4 md:px-10 md:pb-10 max-w-[1600px] mx-auto w-full">
         {/* header */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="mb-4 flex flex-col items-start gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1
-              className={`text-[18px] text-black font-extrabold uppercase tracking-wide ${sora.className}`}
+              className="text-left text-[18px] text-black font-normal uppercase tracking-wide"
             >
-              HELLO {name || "USER"}
+              HELLO <span className="font-extrabold">{name || "USER"}</span>
             </h1>
           </div>
 

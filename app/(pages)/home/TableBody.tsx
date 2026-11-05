@@ -94,7 +94,7 @@ export default function TableBody({
   );
 
   const cellStyling = clsx(
-    "px-4 py-3 text-sm text-black whitespace-nowrap border-b border-r border-gray-200 group-hover:bg-gray-50 transition-colors",
+    "px-4 py-3 text-left text-sm text-black whitespace-nowrap border-b border-r border-gray-200 group-hover:bg-gray-50 transition-colors",
   );
 
   // Render the filtered orders, access controls and year selector.
@@ -132,7 +132,7 @@ export default function TableBody({
                   <td className={`${cellStyling} font-bold text-black`}>
                     {e.felixOrderRef}
                   </td>
-                  <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.clientOrderValue)}</td>
+                  <td className={clsx(cellStyling, "text-left tabular-nums")}>{formatMoney(e.clientOrderValue)}</td>
                   <td className={cellStyling}>{e.projectName}</td>
                   <td className={cellStyling}>{e.clientName}</td>
                   <td className={cellStyling}>{e.endUser}</td>
@@ -148,7 +148,7 @@ export default function TableBody({
                   ) : (
                     <></>
                   )}
-                  <td className={`${cellStyling} text-right pr-6`}>
+                  <td className={`${cellStyling} text-left pr-6`}>
                     <Link
                       href={`/order_form/${e.sl}`}
                       className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg text-[13px] font-bold uppercase tracking-wide transition-colors inline-block"

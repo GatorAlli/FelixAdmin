@@ -70,7 +70,7 @@ export default function TableBody({
     "px-4 py-4 text-left text-[13px] font-bold text-black uppercase whitespace-nowrap bg-white border-b border-r border-gray-200 sticky top-0 z-10",
   );
   const cellStyling = clsx(
-    "px-4 py-3 text-sm text-black whitespace-nowrap border-b border-r border-gray-200 group-hover:bg-gray-50 transition-colors",
+    "px-4 py-3 text-left text-sm text-black whitespace-nowrap border-b border-r border-gray-200 group-hover:bg-gray-50 transition-colors",
   );
 
   // Render the year selector, scrollable table and compact supplier totals.
@@ -124,7 +124,6 @@ export default function TableBody({
                   <th className={headerStyling}>PAYMENT MODE</th>
                   <th className={headerStyling}>CLIENT ORDER VALUE (USD)</th>
                   <th className={headerStyling}>PROJECT NAME</th>
-                  <th className={headerStyling}>PROJECT NOTES</th>
                   <th className={headerStyling}>CLIENT NAME</th>
                   <th className={headerStyling}>END USER</th>
                   <th className={headerStyling}>SYSTEM TYPE</th>
@@ -164,16 +163,15 @@ export default function TableBody({
                       {e.felixOrderRef}
                     </td>
                     <td className={cellStyling}>{e.paymentMode}</td>
-                    <td className={clsx(cellStyling, "text-right tabular-nums")}>{formatMoney(e.clientOrderValue)}</td>
+                    <td className={clsx(cellStyling, "text-left tabular-nums")}>{formatMoney(e.clientOrderValue)}</td>
                     <td className={cellStyling}>{e.projectName}</td>
-                    <td className={cellStyling}>{e.projectNotes}</td>
                     <td className={cellStyling}>{e.clientName}</td>
                     <td className={cellStyling}>{e.endUser}</td>
                     <td className={cellStyling}>{e.productSystem}</td>
                     <td className={cellStyling}>{e.orderHandledBy}</td>
                     {visibleSuppliers.map(([, key]) => (
                       <td
-                        className={clsx(cellStyling, "text-right tabular-nums")}
+                        className={clsx(cellStyling, "text-left tabular-nums")}
                         key={key}
                       >
                         {formatMoney(e[key])}
