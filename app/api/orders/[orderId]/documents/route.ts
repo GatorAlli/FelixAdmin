@@ -134,25 +134,6 @@ export async function POST(
         { status: 400 },
       );
     }
-    if (
-      error &&
-      typeof error === "object" &&
-      (("code" in error && error.code === "23505") ||
-        ("cause" in error &&
-          error.cause &&
-          typeof error.cause === "object" &&
-          "code" in error.cause &&
-          error.cause.code === "23505"))
-    ) {
-      return Response.json(
-        {
-          ok: false,
-          message:
-            "This supplier row already has a document. Remove it before attaching another.",
-        },
-        { status: 409 },
-      );
-    }
     console.error("Document upload failed", error);
     return Response.json(
       {

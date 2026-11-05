@@ -54,17 +54,18 @@ Downloads require a current session and are sent as attachments with private/no-
 
 ### Supplier documents
 
-Each saved material-cost row supports one document, using the same endpoints and
+Each material-cost row supports multiple documents in a pop-up, using the same endpoints and
 `orders/<orderId>/<UUID>` folder as general documents. `X-Supplier-Row-Key` is the
 URL-encoded permanent row reference. Original filenames are preserved for display
 and download. Files can be selected on new rows and upload after the order is saved. Renaming or reordering rows
-preserves their attachments; removing a row deletes its attachment after the order
+preserves their attachments; removing a row deletes its attachments after the order
 save succeeds. General documents remain separate in the interface.
 
-Before deploying this feature against an existing database, apply only
+For databases without supplier documents, first apply
 `lib/drizzle/migrations/20261105155637_supplier_documents/migration.sql` using your
-PostgreSQL SQL runner. It adds a nullable supplier-row reference and a unique index
-that enforces one document per row. Existing documents remain general documents.
+PostgreSQL SQL runner. It adds a nullable supplier-row reference and the original
+single-document index. Then apply the multiple supplier documents migration below.
+Existing general documents remain general documents.
 Fresh databases use the updated `docker/postgres/schema.sql`. The feature migration
 has already been applied to the local database.
 
@@ -100,3 +101,15 @@ The optional Reference Number is free text, separate from the generated Felix or
 reference. For existing databases, apply
 `lib/drizzle/migrations/20261105171827_order_reference_number/migration.sql` before
 deploying. Fresh databases include the column in `docker/postgres/schema.sql`.
+
+## Multiple supplier documents
+
+Before deploying multiple attachments per supplier addition, apply
+`lib/drizzle/migrations/20261105192514_multiple_supplier_documents/migration.sql`
+to an existing database. This replaces the single-document unique index with a
+non-unique index and preserves existing attachments. New databases already use
+the updated `docker/postgres/schema.sql`.
+
+Each supplier addition has a Documents button that opens its attachment list.
+Choose multiple files or add more files later; new files upload on order save.
+Saved files can be downloaded or removed individually.

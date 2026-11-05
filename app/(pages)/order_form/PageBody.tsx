@@ -259,16 +259,13 @@ export default function PageBody({
     documentBusyRef.current = busy;
     setDocumentBusy(busy);
   }
-  function changeSupplierDocument(rowKey: string | undefined, document: DocumentSummary | null) {
-    setSupplierDocuments(rows => [...rows.filter(row => row.supplierRowKey !== rowKey), ...(document ? [document] : [])]);
-  }
-  const [pendingSupplierFiles, setPendingSupplierFiles] = useState<Record<string, File>>({});
+  const [pendingSupplierFiles, setPendingSupplierFiles] = useState<Record<string, File[]>>({});
   const [documentDrafts, setDocumentDrafts] = useState<DocumentDraft[]>([{ id: 0, file: null }]);
   const [createdOrderId, setCreatedOrderId] = useState<number>();
-  function stageSupplierFile(key: string, file: File | null) {
+  function stageSupplierFiles(key: string, selected: File[]) {
     setPendingSupplierFiles(files => {
       const next = { ...files };
-      if (file) next[key] = file;
+      if (selected.length) next[key] = selected;
       else delete next[key];
       return next;
     });
@@ -360,7 +357,7 @@ export default function PageBody({
     setSavedFormSnapshot(formSnapshot);
   }
   const hasChanges = (savedFormSnapshot !== null && formSnapshot !== savedFormSnapshot)
-    || Object.values(pendingSupplierFiles).some(Boolean)
+    || Object.values(pendingSupplierFiles).some(files => files.length > 0)
     || documentDrafts.some(draft => draft.file !== null);
 
   // Only load a new order once. Without this guard, the setters cause a render loop.
@@ -510,7 +507,7 @@ export default function PageBody({
                   // The server action validates these fields and recomputes saved USD values.
                   const formData = new FormData(e.currentTarget);
                   try {
-                    if (suppliers.some(row => pendingSupplierFiles[row.rowKey ?? `new:${row.id}`] && (!row.supplier.trim() || !row.amount.trim()))) {
+                    if (suppliers.some(row => pendingSupplierFiles[row.rowKey ?? `new:${row.id}`]?.length && (!row.supplier.trim() || !row.amount.trim()))) {
                       setSubmissionMessage("Complete the supplier and amount for each selected supplier document.");
                       return;
                     }
@@ -527,14 +524,22 @@ export default function PageBody({
                     if ("createdDate" in result && typeof result.createdDate === "string") setCreatedDate(result.createdDate);
                     const failures: string[] = [];
                     const activeKeys = new Set(suppliers.filter(row => row.supplier.trim() && row.amount.trim()).map(row => row.rowKey ?? `new:${row.id}`));
-                    for (const [key, file] of Object.entries(pendingSupplierFiles)) {
+                    for (const [key, files] of Object.entries(pendingSupplierFiles)) {
                       if (!activeKeys.has(key)) continue;
-                      try {
-                        const document = await uploadOrderDocument(savedId, file, key);
-                        changeSupplierDocument(key, document);
-                        stageSupplierFile(key, null);
-                      } catch (error) {
-                        failures.push(`${file.name}: ${error instanceof Error ? error.message : "Upload failed."}`);
+                      for (const file of files) {
+                        try {
+                          const document = await uploadOrderDocument(savedId, file, key);
+                          setSupplierDocuments(documents => [...documents, document]);
+                          setPendingSupplierFiles(pending => {
+                            const remaining = (pending[key] ?? []).filter(candidate => candidate !== file);
+                            const next = { ...pending };
+                            if (remaining.length) next[key] = remaining;
+                            else delete next[key];
+                            return next;
+                          });
+                        } catch (error) {
+                          failures.push(`${file.name}: ${error instanceof Error ? error.message : "Upload failed."}`);
+                        }
                       }
                     }
                     for (const draft of documentDrafts) {
@@ -898,7 +903,7 @@ export default function PageBody({
                       {suppliers.map((row, index) => (
                         <div
                           key={row.id}
-                          className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(5.5rem,0.65fr)_minmax(5.5rem,0.55fr)_minmax(0,2fr)_auto]"
+                          className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_calc((100%_-_9rem)*5/11)_minmax(5.5rem,0.65fr)_minmax(5.5rem,0.55fr)_auto_3.5rem]"
                         >
                           <Label className="mt-8 h-10 self-start justify-center">
                             {index + 1}.
@@ -985,15 +990,14 @@ export default function PageBody({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="col-start-2 min-w-0 @2xl:col-start-auto">
+                          <div className="col-start-2 min-w-0 @2xl:col-start-auto @2xl:pt-8">
                             <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId}
-                              rowKey={row.rowKey ?? `new:${row.id}`}
-                              pendingFile={pendingSupplierFiles[row.rowKey ?? `new:${row.id}`]}
-                              onFileChange={file => stageSupplierFile(row.rowKey ?? `new:${row.id}`, file)}
-                              document={supplierDocuments.find(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
+                              pendingFiles={pendingSupplierFiles[row.rowKey ?? `new:${row.id}`] ?? []}
+                              onFilesChange={files => stageSupplierFiles(row.rowKey ?? `new:${row.id}`, files)}
+                              documents={supplierDocuments.filter(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
                               editable disabled={isSubmitting || documentBusy}
                               onBusyChange={setDocumentBusyState}
-                              onChange={document => changeSupplierDocument(row.rowKey ?? `new:${row.id}`, document)} />
+                              onRemoved={id => setSupplierDocuments(documents => documents.filter(document => document.id !== id))} />
                           </div>
                           <input type="hidden" name="supplierRowKey" value={row.rowKey ?? `new:${row.id}`} />
                           <input
@@ -1001,7 +1005,7 @@ export default function PageBody({
                             name="supplierCurrency"
                             value={row.currency}
                           />
-                          <div className="col-start-3 row-start-1 self-start pt-8 @2xl:col-start-6">
+                          <div className="col-start-3 row-start-1 self-start pt-8 @2xl:col-start-6 @2xl:[&>button]:w-full">
                             <Button
                               type="button"
                               aria-label={`Remove supplier ${index + 1}`}
@@ -1075,7 +1079,7 @@ export default function PageBody({
                       {expenses.map((row, index) => (
                         <div
                           key={row.id}
-                          className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_auto]"
+                          className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_3.5rem]"
                         >
                           <Label className="h-10 self-end justify-center">
                             {index + 1}.
@@ -1169,7 +1173,7 @@ export default function PageBody({
                             name="expenseCurrency"
                             value={row.currency}
                           />
-                          <div className="col-start-3 row-start-1 self-end @2xl:col-start-5">
+                          <div className="col-start-3 row-start-1 self-end @2xl:col-start-5 @2xl:[&>button]:w-full">
                             <Button
                               type="button"
                               aria-label={`Remove expenditure ${index + 1}`}
@@ -1372,12 +1376,11 @@ export default function PageBody({
                                 <th scope="col" className="px-4 py-3">Amount</th>
                                 <th scope="col" className="px-4 py-3">Currency</th>
                                 {showSupplierUsd && <th scope="col" className="whitespace-nowrap px-4 py-3">Amount (USD)</th>}
-                                <th scope="col" className="px-4 py-3">Document</th>
+                                <th scope="col" className="px-4 py-3">Documents</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y">
                               {visibleSuppliers.map((row, index) => {
-                                const document = supplierDocuments.find(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`));
                                 return (
                                   <tr key={row.id} className="align-top">
                                     <td className="px-4 py-3">{index + 1}.</td>
@@ -1390,11 +1393,10 @@ export default function PageBody({
                                       </td>
                                     )}
                                     <td className="max-w-72 px-4 py-3">
-                                      {document ? (
-                                        <a className="break-all underline" href={`/api/orders/${orderDetails?.sl ?? createdOrderId}/documents/${document.id}`} download>
-                                          {document.originalName}
-                                        </a>
-                                      ) : <span className="text-muted-foreground">No document</span>}
+                                      <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId}
+                                        documents={supplierDocuments.filter(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
+                                        editable={false} disabled={false} onBusyChange={setDocumentBusyState}
+                                        onRemoved={() => {}} onFilesChange={() => {}} />
                                     </td>
                                   </tr>
                                 );

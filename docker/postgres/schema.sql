@@ -160,7 +160,7 @@ CREATE TABLE "better_auth"."verification" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 
-CREATE UNIQUE INDEX "order_documents_supplier_row_idx" ON "order_documents" ("orderId", "supplierRowKey");
+CREATE INDEX "order_documents_supplier_row_idx" ON "order_documents" ("orderId", "supplierRowKey");
 CREATE INDEX "order_documents_order_id_idx" ON "order_documents" ("orderId");
 CREATE INDEX "account_userId_idx" ON "better_auth"."account" ("user_id");
 CREATE INDEX "session_userId_idx" ON "better_auth"."session" ("user_id");
