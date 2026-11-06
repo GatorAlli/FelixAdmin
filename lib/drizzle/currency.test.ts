@@ -17,7 +17,10 @@ test("USD, GBP, EUR and SGD convert using the order's rates", () => {
 test("conversion rounds half cents and rejects invalid amounts or overflow", () => {
   assert.equal(convertToUsd("0.01", "GBP", "0.5", "1"), "0.01");
   assert.equal(convertToUsd("1", "SGD", "1", "1", "1.3"), "0.77");
-  assert.equal(convertToUsd("9999999999999999.99", "USD", "1", "1"), "9999999999999999.99");
+  assert.equal(
+    convertToUsd("9999999999999999.99", "USD", "1", "1"),
+    "9999999999999999.99",
+  );
   assert.equal(convertToUsd("9999999999999999.99", "EUR", "1", "2"), null);
   assert.equal(convertToUsd("-1", "USD", "1", "1"), null);
   assert.equal(convertToUsd("10", "SGD", "1", "1", "0"), null);
@@ -25,7 +28,10 @@ test("conversion rounds half cents and rejects invalid amounts or overflow", () 
 
 test("supplier totals add exact cents and ignore empty amounts", () => {
   assert.equal(sumMoneyAmounts(["0.10", "0.20", null, undefined, ""]), "0.30");
-  assert.equal(sumMoneyAmounts(["9999999999999999.99", "0.02"]), "10000000000000000.01");
+  assert.equal(
+    sumMoneyAmounts(["9999999999999999.99", "0.02"]),
+    "10000000000000000.01",
+  );
   assert.equal(sumMoneyAmounts(["1.00", "-2.25"]), "-1.25");
   assert.equal(sumMoneyAmounts([]), "0.00");
 });
@@ -57,7 +63,10 @@ test("supplier document references survive rename, reorder and row removal", () 
   const form = new FormData();
   form.set("projectName", "Attachment regression");
   form.set("clientName", "Test customer");
-  for (const [name, rowKey] of [["SQUARE", "row-square"], ["TRANE", "row-trane"]]) {
+  for (const [name, rowKey] of [
+    ["SQUARE", "row-square"],
+    ["TRANE", "row-trane"],
+  ]) {
     form.append("supplier", name);
     form.append("supplierAmount", "100");
     form.append("supplierCurrency", "USD");
@@ -65,11 +74,25 @@ test("supplier document references survive rename, reorder and row removal", () 
   }
   const result = readOrderValues(form, "Tester", ["SQUARE", "TRANE"]);
   assert.ok(result.ok);
-  const restored = restoreSupplierRows({ ...result.values, supplierCurrencyDetails: result.values.supplierCurrencyDetails ?? null });
-  assert.deepEqual(restored.map(row => [row.supplier, row.rowKey]), [["TRANE", "row-trane"], ["SQUARE", "row-square"]]);
-  const renamed = restoreSupplierRows({ supplierCurrencyDetails: [], customSupplierDetails: [{ name: "RENAMED", amount: "100", currency: "USD", rowKey: "row-square" }] });
+  const restored = restoreSupplierRows({
+    ...result.values,
+    supplierCurrencyDetails: result.values.supplierCurrencyDetails ?? null,
+  });
+  assert.deepEqual(
+    restored.map((row) => [row.supplier, row.rowKey]),
+    [
+      ["TRANE", "row-trane"],
+      ["SQUARE", "row-square"],
+    ],
+  );
+  const renamed = restoreSupplierRows({
+    supplierCurrencyDetails: [],
+    customSupplierDetails: [
+      { name: "RENAMED", amount: "100", currency: "USD", rowKey: "row-square" },
+    ],
+  });
   assert.equal(renamed[0].rowKey, "row-square");
-  assert.ok(!renamed.some(row => row.rowKey === "row-trane"));
+  assert.ok(!renamed.some((row) => row.rowKey === "row-trane"));
 });
 
 test("rejects duplicate supplier document references", () => {

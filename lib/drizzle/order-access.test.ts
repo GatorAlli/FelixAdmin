@@ -20,8 +20,8 @@ test("guests and unknown profiles cannot edit, regardless of the access flag", (
 test("a forged order form cannot grant or revoke manager access", () => {
   for (const access of ["true", "false"]) {
     const form = new FormData();
-  form.set("projectName", "Test project");
-  form.set("clientName", "Test customer");
+    form.set("projectName", "Test project");
+    form.set("clientName", "Test customer");
     form.set("gbpToUsdRate", "1.40");
     form.set("eurToUsdRate", "1.20");
     form.set("usdToSgdRate", "1.30");
@@ -46,7 +46,6 @@ test("the form cannot impersonate another creator", () => {
   assert.equal(result.values.createdBy, "Current user");
   assert.equal(readOrderValues(form, "").ok, false);
 });
-
 
 test("only project and customer names are mandatory user-entered fields", () => {
   const form = new FormData();

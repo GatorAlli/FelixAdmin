@@ -12,7 +12,7 @@ export function useTransientMessage() {
     if (!notice.text) return;
     const timer = window.setTimeout(() => {
       // An older timer must never dismiss a newer message.
-      setNotice((current) => current === notice ? { text: "" } : current);
+      setNotice((current) => (current === notice ? { text: "" } : current));
     }, 10_000);
     return () => window.clearTimeout(timer);
   }, [notice]);

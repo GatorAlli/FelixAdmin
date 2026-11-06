@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { IdleSession, IdleSignOut, IDLE_WARNING_MS, IDLE_LOGOUT_MS, type IdleRecord, type IdleView } from "./idle-session";
+import {
+  IdleSession,
+  IdleSignOut,
+  IDLE_WARNING_MS,
+  IDLE_LOGOUT_MS,
+  type IdleRecord,
+  type IdleView,
+} from "./idle-session";
 
 // A manual clock tests minutes of inactivity without waiting in real time.
 function setup() {
@@ -13,16 +20,22 @@ function setup() {
     const idle = new IdleSession({
       now: () => now,
       read: () => shared,
-      write: (record) => { shared = structuredClone(record); },
+      write: (record) => {
+        shared = structuredClone(record);
+      },
       onChange: (view) => views.push(view),
-      onExpire: () => { expirations++; },
+      onExpire: () => {
+        expirations++;
+      },
     });
     return { idle, views, expired: () => expirations };
   }
 
   return {
     tab,
-    advance: (milliseconds: number) => { now += milliseconds; },
+    advance: (milliseconds: number) => {
+      now += milliseconds;
+    },
     shared: () => shared,
   };
 }
@@ -32,7 +45,10 @@ test("warns at 14 minutes and expires once at 15 minutes", () => {
   const tab = clock.tab();
   clock.advance(IDLE_WARNING_MS);
   tab.idle.check();
-  assert.deepEqual(tab.views.at(-1), { status: "warning", remainingSeconds: 60 });
+  assert.deepEqual(tab.views.at(-1), {
+    status: "warning",
+    remainingSeconds: 60,
+  });
 
   clock.advance(60_000);
   tab.idle.activity();
@@ -77,9 +93,13 @@ test("failed logout retries without duplicate requests or an early redirect", as
   const logout = new IdleSignOut({
     signOut: () => {
       calls++;
-      return new Promise((resolve) => { resolveSignOut = resolve; });
+      return new Promise((resolve) => {
+        resolveSignOut = resolve;
+      });
     },
-    onSuccess: () => { redirects++; },
+    onSuccess: () => {
+      redirects++;
+    },
     onError: () => {},
     schedule: (retry) => {
       retries.push(retry);
@@ -108,8 +128,13 @@ test("leaving the page prevents a pending logout from redirecting later", async 
   let resolveSignOut!: (value: { error: unknown }) => void;
   let redirects = 0;
   const logout = new IdleSignOut({
-    signOut: () => new Promise((resolve) => { resolveSignOut = resolve; }),
-    onSuccess: () => { redirects++; },
+    signOut: () =>
+      new Promise((resolve) => {
+        resolveSignOut = resolve;
+      }),
+    onSuccess: () => {
+      redirects++;
+    },
     onError: () => {},
     schedule: () => () => {},
   });

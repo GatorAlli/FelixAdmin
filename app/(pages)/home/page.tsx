@@ -42,9 +42,7 @@ export default async function Home() {
         {/* header */}
         <div className="mb-4 flex flex-col items-start gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1
-              className="text-left text-[18px] text-black font-normal uppercase tracking-wide"
-            >
+            <h1 className="text-left text-[18px] text-black font-normal uppercase tracking-wide">
               HELLO <span className="font-extrabold">{name || "USER"}</span>
             </h1>
           </div>

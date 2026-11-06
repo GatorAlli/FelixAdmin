@@ -40,7 +40,6 @@ function SuggestionList({
   const [message, setMessage] = useTransientMessage();
   const [error, setError] = useState(false);
 
-
   // Mark local changes so the Save button becomes available.
   function editRows(next: typeof rows) {
     setRows(next);
@@ -53,10 +52,7 @@ function SuggestionList({
       className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6"
       aria-labelledby={`${kind}-heading`}
     >
-      <h2
-        id={`${kind}-heading`}
-        className="text-[1.21em] font-extrabold"
-      >
+      <h2 id={`${kind}-heading`} className="text-[1.21em] font-extrabold">
         {title}
       </h2>
       <form
@@ -101,7 +97,10 @@ function SuggestionList({
                   {index + 1}.
                 </Label>
                 <div className="-ml-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6">
-                  <Label htmlFor={`${kind}-${row.id}`} className="font-bold text-1.5xl whitespace-normal">
+                  <Label
+                    htmlFor={`${kind}-${row.id}`}
+                    className="font-bold text-1.5xl whitespace-normal"
+                  >
                     {itemLabel}
                   </Label>
                   <Input
@@ -125,7 +124,10 @@ function SuggestionList({
                   />
                   {kind === "customers" && (
                     <div className="flex min-w-0 flex-col gap-2 [&>label]:min-h-6">
-                      <Label htmlFor={`customer-address-${row.id}`} className="font-bold text-1.5xl whitespace-normal">
+                      <Label
+                        htmlFor={`customer-address-${row.id}`}
+                        className="font-bold text-1.5xl whitespace-normal"
+                      >
                         Address
                       </Label>
                       <Input
@@ -206,26 +208,34 @@ export default function SettingsLists({
 }) {
   return (
     <div className="p-4">
-      <section aria-labelledby="datalist-elements-heading" className="grid grid-cols-1 items-start gap-4 rounded-lg border bg-card p-5 sm:p-6 md:grid-cols-2">
-      <h1 id="datalist-elements-heading" className="col-span-full text-2xl font-extrabold underline underline-offset-4">Datalist Elements</h1>
-      <div className="grid min-w-0 grid-cols-1 gap-4">
+      <section
+        aria-labelledby="datalist-elements-heading"
+        className="grid grid-cols-1 items-start gap-4 rounded-lg border bg-card p-5 sm:p-6 md:grid-cols-2"
+      >
+        <h1
+          id="datalist-elements-heading"
+          className="col-span-full text-2xl font-extrabold underline underline-offset-4"
+        >
+          Datalist Elements
+        </h1>
+        <div className="grid min-w-0 grid-cols-1 gap-4">
+          <SuggestionList
+            kind="customers"
+            title="Customers"
+            initialValues={customerSuggestions}
+            initialAddresses={customerAddresses}
+          />
+          <SuggestionList
+            kind="expenses"
+            title="Expenses"
+            initialValues={expenseSuggestions}
+          />
+        </div>
         <SuggestionList
-          kind="customers"
-          title="Customers"
-          initialValues={customerSuggestions}
-          initialAddresses={customerAddresses}
+          kind="suppliers"
+          title="Suppliers"
+          initialValues={supplierSuggestions}
         />
-        <SuggestionList
-          kind="expenses"
-          title="Expenses"
-          initialValues={expenseSuggestions}
-        />
-      </div>
-      <SuggestionList
-        kind="suppliers"
-        title="Suppliers"
-        initialValues={supplierSuggestions}
-      />
       </section>
     </div>
   );

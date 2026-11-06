@@ -139,7 +139,9 @@ export const orderDocuments = p.pgTable.withRLS(
   (table) => [
     // Makes "find documents for this order" efficient.
     p.index("order_documents_order_id_idx").on(table.orderId),
-    p.index("order_documents_supplier_row_idx").on(table.orderId, table.supplierRowKey),
+    p
+      .index("order_documents_supplier_row_idx")
+      .on(table.orderId, table.supplierRowKey),
   ],
 );
 

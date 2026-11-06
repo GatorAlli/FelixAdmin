@@ -119,9 +119,11 @@ export default function App() {
                     password,
                   });
                   if (error) {
-                    setMessage(error.status === 429
-                      ? "Too many attempts. Please wait a minute and try again."
-                      : "Invalid Credentials");
+                    setMessage(
+                      error.status === 429
+                        ? "Too many attempts. Please wait a minute and try again."
+                        : "Invalid Credentials",
+                    );
                   } else {
                     setMessage("Signed In Successfully");
                     router.replace("/home");
@@ -186,7 +188,9 @@ export default function App() {
               className="w-full normal-case bg-primary hover:bg-primary/90 text-white mt-4 py-7 px-6 text-[17px] font-semibold rounded-lg transition-colors group"
             >
               <div className="relative flex w-full items-center justify-between">
-                <span className="relative z-10">{isSigningIn ? "Signing in…" : "Sign In"}</span>
+                <span className="relative z-10">
+                  {isSigningIn ? "Signing in…" : "Sign In"}
+                </span>
                 {/* Arrow moving */}
                 <div className="bg-black/10 p-1.5 rounded-lg group-hover:bg-black/20 transition-all duration-300 group-hover:translate-x-1 shrink-0 z-10">
                   <ArrowRight

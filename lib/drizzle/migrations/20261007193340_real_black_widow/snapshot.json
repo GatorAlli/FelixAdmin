@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "cf322fd1-643e-4f16-9674-20158597f15f",
-  "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -789,9 +787,7 @@
       "table": "data"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "data_pkey",
       "schema": "public",

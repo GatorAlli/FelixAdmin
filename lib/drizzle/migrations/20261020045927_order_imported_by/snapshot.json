@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "af3e2765-e3aa-4587-b911-81b587690545",
-  "prevIds": [
-    "4729cec9-db6e-4bde-ae03-3bcae28de0d2"
-  ],
+  "prevIds": ["4729cec9-db6e-4bde-ae03-3bcae28de0d2"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -1005,9 +1003,7 @@
       "table": "users"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "customers_pkey",
       "schema": "public",
@@ -1015,9 +1011,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "data_pkey",
       "schema": "public",
@@ -1025,9 +1019,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "miscellaneousExpenditures_pkey",
       "schema": "public",
@@ -1035,9 +1027,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "suppliers_pkey",
       "schema": "public",
@@ -1045,9 +1035,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",

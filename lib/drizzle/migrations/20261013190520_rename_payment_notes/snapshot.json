@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "b51fb4e5-bd45-4eb5-9760-c2acfb65b625",
-  "prevIds": [
-    "c956e50a-cea2-43c6-9ff9-2267a8fe831e"
-  ],
+  "prevIds": ["c956e50a-cea2-43c6-9ff9-2267a8fe831e"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -752,9 +750,7 @@
       "table": "users"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "data_pkey",
       "schema": "public",
@@ -762,9 +758,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -772,7 +766,5 @@
       "entityType": "pks"
     }
   ],
-  "renames": [
-    "public.data.remarks->public.data.paymentNotes"
-  ]
+  "renames": ["public.data.remarks->public.data.paymentNotes"]
 }

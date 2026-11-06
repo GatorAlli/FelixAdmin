@@ -54,9 +54,22 @@ async function main() {
     message: "Permission:",
     default: "guest",
     choices: [
-      { name: "Read only", value: "guest", description: "View orders and download documents." },
-      { name: "Order manager", value: "order", description: "Create orders and edit orders with manager access enabled." },
-      { name: "Admin", value: "admin", description: "Edit all orders, manage access and change Settings." },
+      {
+        name: "Read only",
+        value: "guest",
+        description: "View orders and download documents.",
+      },
+      {
+        name: "Order manager",
+        value: "order",
+        description:
+          "Create orders and edit orders with manager access enabled.",
+      },
+      {
+        name: "Admin",
+        value: "admin",
+        description: "Edit all orders, manage access and change Settings.",
+      },
     ],
   });
 
@@ -110,14 +123,21 @@ async function main() {
     });
 
     // Reuse a manually entered profile, including mixed-case or padded emails.
-    const profiles = await transaction.select({ sl: users.sl }).from(users)
+    const profiles = await transaction
+      .select({ sl: users.sl })
+      .from(users)
       .where(sql`lower(trim(${users.email})) = ${email}`);
     if (profiles.length > 1) {
-      throw new Error("Multiple profiles have this email. Resolve duplicates first.");
+      throw new Error(
+        "Multiple profiles have this email. Resolve duplicates first.",
+      );
     }
     const profile = { name, email, status: permission };
     if (profiles.length) {
-      await transaction.update(users).set(profile).where(eq(users.sl, profiles[0].sl));
+      await transaction
+        .update(users)
+        .set(profile)
+        .where(eq(users.sl, profiles[0].sl));
     } else {
       await transaction.insert(users).values(profile);
     }

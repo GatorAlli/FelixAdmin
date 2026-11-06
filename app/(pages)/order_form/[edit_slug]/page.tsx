@@ -20,9 +20,12 @@ export default async function OrderForm({
 
   const { edit_slug } = await params;
   if (
-    !/^\d+$/.test(edit_slug) || !Number.isSafeInteger(Number(edit_slug)) ||
-    Number(edit_slug) < 1 || Number(edit_slug) > 2147483647
-  ) notFound();
+    !/^\d+$/.test(edit_slug) ||
+    !Number.isSafeInteger(Number(edit_slug)) ||
+    Number(edit_slug) < 1 ||
+    Number(edit_slug) > 2147483647
+  )
+    notFound();
   const order = await db
     .select()
     .from(data)
@@ -30,13 +33,16 @@ export default async function OrderForm({
     .limit(1);
   if (!order[0]) notFound();
 
-  const documents = await db.select({
-    id: orderDocuments.id,
-    supplierRowKey: orderDocuments.supplierRowKey,
-    title: orderDocuments.title,
-    originalName: orderDocuments.originalName,
-    sizeBytes: orderDocuments.sizeBytes,
-  }).from(orderDocuments).where(eq(orderDocuments.orderId, order[0].sl))
+  const documents = await db
+    .select({
+      id: orderDocuments.id,
+      supplierRowKey: orderDocuments.supplierRowKey,
+      title: orderDocuments.title,
+      originalName: orderDocuments.originalName,
+      sizeBytes: orderDocuments.sizeBytes,
+    })
+    .from(orderDocuments)
+    .where(eq(orderDocuments.orderId, order[0].sl))
     .orderBy(orderDocuments.createdAt);
 
   const userArray = await db.select().from(users);
@@ -53,7 +59,14 @@ export default async function OrderForm({
 
   return (
     <div>
-      <PageBody {...datalists} orderDetails={order[0]} initialDocuments={documents} isAdmin={adminStatus} username={username} currentDate={currentOrderDate()} />
+      <PageBody
+        {...datalists}
+        orderDetails={order[0]}
+        initialDocuments={documents}
+        isAdmin={adminStatus}
+        username={username}
+        currentDate={currentOrderDate()}
+      />
     </div>
   );
 }

@@ -5,7 +5,12 @@ import type { db } from "./drizzle-index";
 type OrderTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export function formatOrderReference(year: number, sequence: bigint): string {
-  if (!Number.isInteger(year) || year < 1000 || year > 9999 || sequence < BigInt("1")) {
+  if (
+    !Number.isInteger(year) ||
+    year < 1000 ||
+    year > 9999 ||
+    sequence < BigInt("1")
+  ) {
     throw new RangeError("Invalid order reference year or sequence.");
   }
   return `FCL/FPO/${year}/${sequence.toString().padStart(3, "0")}`;

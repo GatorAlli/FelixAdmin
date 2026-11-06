@@ -1,4 +1,6 @@
-const integerFormatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const integerFormatter = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 0,
+});
 
 // Sum the displayed cents exactly, including totals larger than a single order.
 export function sumMoneyAmounts(values: (string | null | undefined)[]): string {
@@ -6,17 +8,24 @@ export function sumMoneyAmounts(values: (string | null | undefined)[]): string {
     const amount = formatMoney(value, "0.00").replace(/[,\.]/g, "");
     return total + BigInt(amount);
   }, BigInt(0));
-  const digits = (cents < BigInt(0) ? -cents : cents).toString().padStart(3, "0");
+  const digits = (cents < BigInt(0) ? -cents : cents)
+    .toString()
+    .padStart(3, "0");
   return `${cents < BigInt(0) ? "-" : ""}${digits.slice(0, -2)}.${digits.slice(-2)}`;
 }
 
 // Format decimal strings without losing cents on large database numeric values.
-export function formatMoney(value: string | null | undefined, fallback = ""): string {
+export function formatMoney(
+  value: string | null | undefined,
+  fallback = "",
+): string {
   if (value == null || value.trim() === "") return fallback;
   const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(value.trim());
   if (!match) return fallback;
   const fraction = match[3] ?? "";
-  let cents = BigInt(match[2]) * BigInt(100) + BigInt(fraction.padEnd(2, "0").slice(0, 2));
+  let cents =
+    BigInt(match[2]) * BigInt(100) +
+    BigInt(fraction.padEnd(2, "0").slice(0, 2));
   if (fraction.length > 2 && fraction[2] >= "5") cents += BigInt(1);
   const sign = match[1] && cents !== BigInt(0) ? "-" : "";
   return `${sign}${integerFormatter.format(cents / BigInt(100))}.${(cents % BigInt(100)).toString().padStart(2, "0")}`;
@@ -33,6 +42,8 @@ export function parseMoneyInput(value: string): string | null {
 
 export function formatMoneyDraft(value: string): string {
   const [whole, fraction] = value.split(".");
-  return whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",") +
-    (fraction === undefined ? "" : `.${fraction}`);
+  return (
+    whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",") +
+    (fraction === undefined ? "" : `.${fraction}`)
+  );
 }

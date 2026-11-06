@@ -67,7 +67,9 @@ function Label({
       {children}
       {required && (
         <>
-          <span aria-hidden="true" className="text-destructive">*</span>
+          <span aria-hidden="true" className="text-destructive">
+            *
+          </span>
           <span className="sr-only"> (required)</span>
         </>
       )}
@@ -247,7 +249,9 @@ export default function PageBody({
   initialDocuments?: DocumentSummary[];
 }) {
   const router = useRouter();
-  const [supplierDocuments, setSupplierDocuments] = useState(() => initialDocuments);
+  const [supplierDocuments, setSupplierDocuments] = useState(
+    () => initialDocuments,
+  );
   const [loadedDocuments, setLoadedDocuments] = useState(initialDocuments);
   if (initialDocuments !== loadedDocuments) {
     setLoadedDocuments(initialDocuments);
@@ -259,11 +263,15 @@ export default function PageBody({
     documentBusyRef.current = busy;
     setDocumentBusy(busy);
   }
-  const [pendingSupplierFiles, setPendingSupplierFiles] = useState<Record<string, File[]>>({});
-  const [documentDrafts, setDocumentDrafts] = useState<DocumentDraft[]>([{ id: 0, file: null }]);
+  const [pendingSupplierFiles, setPendingSupplierFiles] = useState<
+    Record<string, File[]>
+  >({});
+  const [documentDrafts, setDocumentDrafts] = useState<DocumentDraft[]>([
+    { id: 0, file: null },
+  ]);
   const [createdOrderId, setCreatedOrderId] = useState<number>();
   function stageSupplierFiles(key: string, selected: File[]) {
-    setPendingSupplierFiles(files => {
+    setPendingSupplierFiles((files) => {
       const next = { ...files };
       if (selected.length) next[key] = selected;
       else delete next[key];
@@ -335,30 +343,53 @@ export default function PageBody({
   };
   // Compare submitted information, excluding UI choices and temporary row IDs.
   const formSnapshot = JSON.stringify({
-    felixOrderNo: felixOrderNo.trim(), paymentMode: paymentMode.trim(), referenceNumber: referenceNumber.trim(), importedBy,
-    clientOrderValue: normalizeNumber(clientOrderValue), clientOrderCurrency,
-    projectName: projectName.trim(), projectNotes: projectNotes.trim(),
+    felixOrderNo: felixOrderNo.trim(),
+    paymentMode: paymentMode.trim(),
+    referenceNumber: referenceNumber.trim(),
+    importedBy,
+    clientOrderValue: normalizeNumber(clientOrderValue),
+    clientOrderCurrency,
+    projectName: projectName.trim(),
+    projectNotes: projectNotes.trim(),
     orderHandlingFee: normalizeNumber(orderHandlingFee),
     miscellaneousHandlingFee: normalizeNumber(miscellaneousHandlingFee),
-    clientName: clientName.trim(), endUser: endUser.trim(),
-    productSystem: productSystem.trim(), orderHandledBy: orderHandledBy.trim(),
-    expenses: expenses.filter(row => row.name.trim() || row.amount.trim()).map(row => ({
-      name: row.name.trim().toUpperCase(), amount: normalizeNumber(row.amount), currency: row.currency,
-    })),
-    paymentNotes: paymentNotes.trim(), panelCurrencies,
-    suppliers: suppliers.filter(row => row.supplier.trim() || row.amount.trim()).map(row => ({
-      supplier: row.supplier.trim().toUpperCase(), amount: normalizeNumber(row.amount), currency: row.currency,
-    })),
+    clientName: clientName.trim(),
+    endUser: endUser.trim(),
+    productSystem: productSystem.trim(),
+    orderHandledBy: orderHandledBy.trim(),
+    expenses: expenses
+      .filter((row) => row.name.trim() || row.amount.trim())
+      .map((row) => ({
+        name: row.name.trim().toUpperCase(),
+        amount: normalizeNumber(row.amount),
+        currency: row.currency,
+      })),
+    paymentNotes: paymentNotes.trim(),
+    panelCurrencies,
+    suppliers: suppliers
+      .filter((row) => row.supplier.trim() || row.amount.trim())
+      .map((row) => ({
+        supplier: row.supplier.trim().toUpperCase(),
+        amount: normalizeNumber(row.amount),
+        currency: row.currency,
+      })),
     gbpToUsdRate: normalizeNumber(gbpToUsdRate),
-    eurToUsdRate: normalizeNumber(eurToUsdRate), usdToSgdRate: normalizeNumber(usdToSgdRate),
+    eurToUsdRate: normalizeNumber(eurToUsdRate),
+    usdToSgdRate: normalizeNumber(usdToSgdRate),
   });
-  const [savedFormSnapshot, setSavedFormSnapshot] = useState<string | null>(null);
-  if (savedFormSnapshot === null && (!orderDetails || orderDetails === loadedOrderDetails)) {
+  const [savedFormSnapshot, setSavedFormSnapshot] = useState<string | null>(
+    null,
+  );
+  if (
+    savedFormSnapshot === null &&
+    (!orderDetails || orderDetails === loadedOrderDetails)
+  ) {
     setSavedFormSnapshot(formSnapshot);
   }
-  const hasChanges = (savedFormSnapshot !== null && formSnapshot !== savedFormSnapshot)
-    || Object.values(pendingSupplierFiles).some(files => files.length > 0)
-    || documentDrafts.some(draft => draft.file !== null);
+  const hasChanges =
+    (savedFormSnapshot !== null && formSnapshot !== savedFormSnapshot) ||
+    Object.values(pendingSupplierFiles).some((files) => files.length > 0) ||
+    documentDrafts.some((draft) => draft.file !== null);
 
   // Only load a new order once. Without this guard, the setters cause a render loop.
   if (orderDetails && orderDetails !== loadedOrderDetails) {
@@ -461,8 +492,10 @@ export default function PageBody({
     (row) => row.name.trim() !== "" || row.amount.trim() !== "",
   );
 
-  const showSupplierUsd = visibleSuppliers.some(row => row.currency !== "USD");
-  const showExpenseUsd = visibleExpenses.some(row => row.currency !== "USD");
+  const showSupplierUsd = visibleSuppliers.some(
+    (row) => row.currency !== "USD",
+  );
+  const showExpenseUsd = visibleExpenses.some((row) => row.currency !== "USD");
 
   // The page switches between editable fields and a read-only order summary.
   return (
@@ -493,965 +526,1255 @@ export default function PageBody({
       <div>
         <div className="grid grid-cols-1 items-start gap-4 p-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <div className="min-w-0 flex flex-col gap-4">
-          {isEditing ? (
-            <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
-              <form
-                id="order-form"
-                onSubmit={async (e) => {
-                  e.preventDefault();
+            {isEditing ? (
+              <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
+                <form
+                  id="order-form"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
 
-                  if (!hasChanges || submissionInProgress.current || documentBusyRef.current) return;
-                  submissionInProgress.current = true;
-                  setIsSubmitting(true);
-                  setSubmissionMessage("");
-                  // The server action validates these fields and recomputes saved USD values.
-                  const formData = new FormData(e.currentTarget);
-                  try {
-                    if (suppliers.some(row => pendingSupplierFiles[row.rowKey ?? `new:${row.id}`]?.length && (!row.supplier.trim() || !row.amount.trim()))) {
-                      setSubmissionMessage("Complete the supplier and amount for each selected supplier document.");
+                    if (
+                      !hasChanges ||
+                      submissionInProgress.current ||
+                      documentBusyRef.current
+                    )
                       return;
-                    }
-                    const existingId = orderDetails?.sl ?? createdOrderId;
-                    const result = existingId
-                      ? await updateOrder(existingId, formData)
-                      : await createOrder(formData);
-                    setSubmissionMessage(result.message);
-                    if (!result.ok) return;
-                    const savedId = existingId ?? ("orderId" in result && typeof result.orderId === "number" ? result.orderId : undefined);
-                    if (!savedId) throw new Error("The saved order reference is missing.");
-                    // Retain the new ID even if an upload fails, so retry updates this order.
-                    if (!orderDetails) setCreatedOrderId(savedId);
-                    if ("createdDate" in result && typeof result.createdDate === "string") setCreatedDate(result.createdDate);
-                    const failures: string[] = [];
-                    const activeKeys = new Set(suppliers.filter(row => row.supplier.trim() && row.amount.trim()).map(row => row.rowKey ?? `new:${row.id}`));
-                    for (const [key, files] of Object.entries(pendingSupplierFiles)) {
-                      if (!activeKeys.has(key)) continue;
-                      for (const file of files) {
-                        try {
-                          const document = await uploadOrderDocument(savedId, file, key);
-                          setSupplierDocuments(documents => [...documents, document]);
-                          setPendingSupplierFiles(pending => {
-                            const remaining = (pending[key] ?? []).filter(candidate => candidate !== file);
-                            const next = { ...pending };
-                            if (remaining.length) next[key] = remaining;
-                            else delete next[key];
-                            return next;
-                          });
-                        } catch (error) {
-                          failures.push(`${file.name}: ${error instanceof Error ? error.message : "Upload failed."}`);
+                    submissionInProgress.current = true;
+                    setIsSubmitting(true);
+                    setSubmissionMessage("");
+                    // The server action validates these fields and recomputes saved USD values.
+                    const formData = new FormData(e.currentTarget);
+                    try {
+                      if (
+                        suppliers.some(
+                          (row) =>
+                            pendingSupplierFiles[row.rowKey ?? `new:${row.id}`]
+                              ?.length &&
+                            (!row.supplier.trim() || !row.amount.trim()),
+                        )
+                      ) {
+                        setSubmissionMessage(
+                          "Complete the supplier and amount for each selected supplier document.",
+                        );
+                        return;
+                      }
+                      const existingId = orderDetails?.sl ?? createdOrderId;
+                      const result = existingId
+                        ? await updateOrder(existingId, formData)
+                        : await createOrder(formData);
+                      setSubmissionMessage(result.message);
+                      if (!result.ok) return;
+                      const savedId =
+                        existingId ??
+                        ("orderId" in result &&
+                        typeof result.orderId === "number"
+                          ? result.orderId
+                          : undefined);
+                      if (!savedId)
+                        throw new Error(
+                          "The saved order reference is missing.",
+                        );
+                      // Retain the new ID even if an upload fails, so retry updates this order.
+                      if (!orderDetails) setCreatedOrderId(savedId);
+                      if (
+                        "createdDate" in result &&
+                        typeof result.createdDate === "string"
+                      )
+                        setCreatedDate(result.createdDate);
+                      const failures: string[] = [];
+                      const activeKeys = new Set(
+                        suppliers
+                          .filter(
+                            (row) => row.supplier.trim() && row.amount.trim(),
+                          )
+                          .map((row) => row.rowKey ?? `new:${row.id}`),
+                      );
+                      for (const [key, files] of Object.entries(
+                        pendingSupplierFiles,
+                      )) {
+                        if (!activeKeys.has(key)) continue;
+                        for (const file of files) {
+                          try {
+                            const document = await uploadOrderDocument(
+                              savedId,
+                              file,
+                              key,
+                            );
+                            setSupplierDocuments((documents) => [
+                              ...documents,
+                              document,
+                            ]);
+                            setPendingSupplierFiles((pending) => {
+                              const remaining = (pending[key] ?? []).filter(
+                                (candidate) => candidate !== file,
+                              );
+                              const next = { ...pending };
+                              if (remaining.length) next[key] = remaining;
+                              else delete next[key];
+                              return next;
+                            });
+                          } catch (error) {
+                            failures.push(
+                              `${file.name}: ${error instanceof Error ? error.message : "Upload failed."}`,
+                            );
+                          }
                         }
                       }
-                    }
-                    for (const draft of documentDrafts) {
-                      if (!draft.file) continue;
-                      try {
-                        const document = await uploadOrderDocument(savedId, draft.file);
-                        setSupplierDocuments(documents => [...documents, document]);
-                        setDocumentDrafts(rows => rows.filter(row => row.id !== draft.id));
-                      } catch (error) {
-                        failures.push(`${draft.file.name}: ${error instanceof Error ? error.message : "Upload failed."}`);
+                      for (const draft of documentDrafts) {
+                        if (!draft.file) continue;
+                        try {
+                          const document = await uploadOrderDocument(
+                            savedId,
+                            draft.file,
+                          );
+                          setSupplierDocuments((documents) => [
+                            ...documents,
+                            document,
+                          ]);
+                          setDocumentDrafts((rows) =>
+                            rows.filter((row) => row.id !== draft.id),
+                          );
+                        } catch (error) {
+                          failures.push(
+                            `${draft.file.name}: ${error instanceof Error ? error.message : "Upload failed."}`,
+                          );
+                        }
                       }
+                      if (failures.length) {
+                        setSubmissionMessage(
+                          `${result.message}. Order saved, but some documents failed to upload. Submit again to retry. ${failures.join(" ")}`,
+                        );
+                        return;
+                      }
+                      setPendingSupplierFiles({});
+                      setIsEditing(false);
+                      if (orderDetails) router.refresh();
+                      else router.push(`/order_form/${savedId}`);
+                    } catch {
+                      setSubmissionMessage(
+                        "Could not save the order. Please try again.",
+                      );
+                    } finally {
+                      submissionInProgress.current = false;
+                      setIsSubmitting(false);
                     }
-                    if (failures.length) {
-                      setSubmissionMessage(`${result.message}. Order saved, but some documents failed to upload. Submit again to retry. ${failures.join(" ")}`);
-                      return;
-                    }
-                    setPendingSupplierFiles({});
-                    setIsEditing(false);
-                    if (orderDetails) router.refresh();
-                    else router.push(`/order_form/${savedId}`);
-                  } catch {
-                    setSubmissionMessage(
-                      "Could not save the order. Please try again.",
-                    );
-                  } finally {
-                    submissionInProgress.current = false;
-                    setIsSubmitting(false);
-                  }
-                }}
-                className="flex flex-col gap-8"
-              >
-                <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2 @lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(8rem,0.5fr)]">
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <Label
-                      className={headingStyling}
-                      htmlFor="orderHandlerChoice"
-                    >
-                      Order Handled By
-                    </Label>
-                    <div className="flex min-w-0 items-center gap-3">
-                      <Select
-                        value={orderHandlerChoice}
-                        onValueChange={(value) => {
-                          if (typeof value !== "string") return;
-                          setOrderHandlerChoice(value);
-                          setOrderHandledBy(value === "OTHERS" ? "" : value);
-                        }}
-                      >
-                        <SelectTrigger id="orderHandlerChoice" className="shrink-0">
-                          <SelectValue placeholder="Select order handler" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {orderHandlers.map((handler) => (
-                            <SelectItem key={handler} value={handler}>
-                              {titleCaseLabel(handler)}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="OTHERS">Others</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {orderHandlerChoice === "OTHERS" && (
-                        <Input
-                          className={cn(inputStyling, "min-w-0 flex-1")}
-                          id="otherOrderHandler"
-                          aria-label="Other order handler"
-                          placeholder="Specify order handler"
-                          value={orderHandledBy}
-                          onChange={(e) => setOrderHandledBy(e.target.value)}
-                        />
-                      )}
-                    </div>
-                    <input
-                      type="hidden"
-                      name="orderHandledBy"
-                      value={orderHandledBy}
-                    />
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <Label className={headingStyling} htmlFor="referenceNumber">Reference Number</Label>
-                    <Input id="referenceNumber" name="referenceNumber" className={inputStyling}
-                      value={referenceNumber} placeholder="Reference number"
-                      disabled={isSubmitting || documentBusy}
-                      onChange={event => setReferenceNumber(event.target.value)} />
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <Label className={headingStyling} htmlFor="importedBy">
-                      Import By
-                    </Label>
-                    <Select
-                      value={importedBy}
-                      onValueChange={(value) => {
-                        if (value === "Felix" || value === "Customer")
-                          setImportedBy(value);
-                      }}
-                    >
-                      <SelectTrigger
-                        id="importedBy"
-                        className="w-full"
-                        disabled={isSubmitting || documentBusy}
-                      >
-                        <SelectValue placeholder="Select importer" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Felix">Felix</SelectItem>
-                        <SelectItem value="Customer">Customer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <input type="hidden" name="importedBy" value={importedBy} />
-                  </div>
-                </div>
-                {/* Project information */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-x-8 gap-y-3 border rounded-lg p-4 @xl:grid-cols-2">
-                      <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">Project Information</h2>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                  }}
+                  className="flex flex-col gap-8"
+                >
+                  <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2 @lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(8rem,0.5fr)]">
+                    <div className="flex min-w-0 flex-col gap-2">
                       <Label
-                        htmlFor="systemTypeChoice"
                         className={headingStyling}
+                        htmlFor="orderHandlerChoice"
                       >
-                        System Type
+                        Order Handled By
                       </Label>
-                      <div className="flex min-w-0 flex-col gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
                         <Select
-                          value={systemTypeChoice}
+                          value={orderHandlerChoice}
                           onValueChange={(value) => {
                             if (typeof value !== "string") return;
-                            setSystemTypeChoice(value);
-                            setProductSystem(value === "OTHER" ? "" : value);
+                            setOrderHandlerChoice(value);
+                            setOrderHandledBy(value === "OTHERS" ? "" : value);
                           }}
                         >
-                          <SelectTrigger id="systemTypeChoice" className="w-full">
-                            <SelectValue placeholder="Select system type" />
+                          <SelectTrigger
+                            id="orderHandlerChoice"
+                            className="shrink-0"
+                          >
+                            <SelectValue placeholder="Select order handler" />
                           </SelectTrigger>
                           <SelectContent>
-                            {systemTypes.map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {titleCaseLabel(type)}
+                            {orderHandlers.map((handler) => (
+                              <SelectItem key={handler} value={handler}>
+                                {titleCaseLabel(handler)}
                               </SelectItem>
                             ))}
-                            <SelectItem value="OTHER">Other</SelectItem>
+                            <SelectItem value="OTHERS">Others</SelectItem>
                           </SelectContent>
                         </Select>
-                        {systemTypeChoice === "OTHER" && (
-                          <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                            <Label
-                              className={headingStyling}
-                              htmlFor="otherSystemType"
-                            >
-                              Other System Type
-                            </Label>
-                            <Input
-                              className={inputStyling}
-                              id="otherSystemType"
-                              placeholder="Specify system type"
-                              value={productSystem}
-                              onChange={(e) => setProductSystem(e.target.value)}
-                            />
-                          </div>
+                        {orderHandlerChoice === "OTHERS" && (
+                          <Input
+                            className={cn(inputStyling, "min-w-0 flex-1")}
+                            id="otherOrderHandler"
+                            aria-label="Other order handler"
+                            placeholder="Specify order handler"
+                            value={orderHandledBy}
+                            onChange={(e) => setOrderHandledBy(e.target.value)}
+                          />
                         )}
                       </div>
-                      {/* Submit either the selected preset or the custom Other text. */}
                       <input
                         type="hidden"
-                        name="productSystem"
-                        value={productSystem}
+                        name="orderHandledBy"
+                        value={orderHandledBy}
                       />
                     </div>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling} required htmlFor="projectName">
-                        Project Name
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <Label
+                        className={headingStyling}
+                        htmlFor="referenceNumber"
+                      >
+                        Reference Number
                       </Label>
                       <Input
-                        id="projectName"
-                        name="projectName"
-                        required
-                        type="text"
-                        value={projectName}
+                        id="referenceNumber"
+                        name="referenceNumber"
                         className={inputStyling}
-                        onChange={(e) => setProjectName(e.target.value)}
+                        value={referenceNumber}
+                        placeholder="Reference number"
+                        disabled={isSubmitting || documentBusy}
+                        onChange={(event) =>
+                          setReferenceNumber(event.target.value)
+                        }
                       />
                     </div>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling} required htmlFor="clientName">
-                        Customer Name
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <Label className={headingStyling} htmlFor="importedBy">
+                        Import By
                       </Label>
-                      <Input
-                        className={inputStyling}
-                        id="clientName"
-                        name="clientName"
-                        required
-                        list="customer-options"
-                        type="text"
-                        value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
-                      />
-                      <datalist id="customer-options">
-                        {customerSuggestions.map((name) => (
-                          <option key={name} value={name} />
-                        ))}
-                      </datalist>
-                    </div>
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling} htmlFor="endUser">
-                        End User
-                      </Label>
-                      <Input
-                        className={inputStyling}
-                        id="endUser"
-                        name="endUser"
-                        type="text"
-                        value={endUser}
-                        onChange={(e) => setEndUser(e.target.value)}
-                      />
-                    </div>
-                    <div className="flex min-w-0 flex-col gap-2 @xl:col-span-2 [&>label:first-child]:min-h-6">
-                      <Label className={headingStyling} htmlFor="projectNotes">
-                        Project Notes
-                      </Label>
-                      <textarea
-                        className={cn(inputStyling, "border")}
-                        id="projectNotes"
-                        name="projectNotes"
-                        value={projectNotes}
-                        onChange={(e) => setProjectNotes(e.target.value)}
+                      <Select
+                        value={importedBy}
+                        onValueChange={(value) => {
+                          if (value === "Felix" || value === "Customer")
+                            setImportedBy(value);
+                        }}
+                      >
+                        <SelectTrigger
+                          id="importedBy"
+                          className="w-full"
+                          disabled={isSubmitting || documentBusy}
+                        >
+                          <SelectValue placeholder="Select importer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Felix">Felix</SelectItem>
+                          <SelectItem value="Customer">Customer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <input
+                        type="hidden"
+                        name="importedBy"
+                        value={importedBy}
                       />
                     </div>
                   </div>
-                </div>
-                {/* Order value, payment and costs */}
-                <div className="flex flex-col gap-8">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex flex-col gap-3 border rounded-lg p-4">
-                      <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">Payment Information</h2>
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 items-end gap-4 @xl:grid-cols-[minmax(0,1fr)_8rem]">
-                          <div className="flex min-w-0 flex-col gap-2 [&>label]:min-h-6">
-                            <Label
-                              className={headingStyling}
-                              htmlFor="clientOrderValue"
+                  {/* Project information */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-x-8 gap-y-3 border rounded-lg p-4 @xl:grid-cols-2">
+                      <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">
+                        Project Information
+                      </h2>
+                      <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                        <Label
+                          htmlFor="systemTypeChoice"
+                          className={headingStyling}
+                        >
+                          System Type
+                        </Label>
+                        <div className="flex min-w-0 flex-col gap-3">
+                          <Select
+                            value={systemTypeChoice}
+                            onValueChange={(value) => {
+                              if (typeof value !== "string") return;
+                              setSystemTypeChoice(value);
+                              setProductSystem(value === "OTHER" ? "" : value);
+                            }}
+                          >
+                            <SelectTrigger
+                              id="systemTypeChoice"
+                              className="w-full"
                             >
-                              Client Order Value
-                            </Label>
-                            <MoneyInput
-                              className={inputStyling}
-                              id="clientOrderValue"
-                              name="clientOrderValue"
-                              value={clientOrderValue}
-                              onValueChange={(value) =>
-                                setClientOrderValue(value)
-                              }
-                            />
-                          </div>
-                          <div className="flex min-w-0 flex-col gap-2 [&>label]:min-h-6 [&_[data-slot=select-trigger]]:w-full">
-                            <Label
-                              className={headingStyling}
-                              htmlFor="clientOrderCurrency"
-                            >
-                              Currency
-                            </Label>
-                            <Select
-                              value={clientOrderCurrency}
-                              onValueChange={(currency) => {
-                                if (isCurrency(currency))
-                                  setClientOrderCurrency(currency);
-                              }}
-                            >
-                              <SelectTrigger id="clientOrderCurrency">
-                                <SelectValue>
-                                  {clientOrderCurrency === "EUR"
-                                    ? "Euro"
-                                    : clientOrderCurrency}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="USD">USD</SelectItem>
-                                <SelectItem value="EUR">Euro</SelectItem>
-                                <SelectItem value="GBP">GBP</SelectItem>
-                                <SelectItem value="SGD">SGD</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Input
-                            type="hidden"
-                            name="clientOrderCurrency"
-                            value={clientOrderCurrency}
-                          />
-                          {clientOrderCurrency !== "USD" && (
-                            <div className="min-w-0 @xl:col-span-2">
-                              <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                <Label
-                                  className={headingStyling}
-                                  htmlFor="clientOrderUsdValue"
-                                >
-                                  Order Value (USD)
-                                </Label>
-                                <Input
-                                  className={inputStyling}
-                                  id="clientOrderUsdValue"
-                                  value={formatMoney(
-                                    convertToUsd(
-                                      clientOrderValue,
-                                      clientOrderCurrency,
-                                      gbpToUsdRate,
-                                      eurToUsdRate,
-                                      usdToSgdRate,
-                                    ),
-                                    "",
-                                  )}
-                                  placeholder="Enter an amount and valid rate"
-                                  readOnly
-                                />
-                              </div>
+                              <SelectValue placeholder="Select system type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {systemTypes.map((type) => (
+                                <SelectItem key={type} value={type}>
+                                  {titleCaseLabel(type)}
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="OTHER">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {systemTypeChoice === "OTHER" && (
+                            <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                              <Label
+                                className={headingStyling}
+                                htmlFor="otherSystemType"
+                              >
+                                Other System Type
+                              </Label>
+                              <Input
+                                className={inputStyling}
+                                id="otherSystemType"
+                                placeholder="Specify system type"
+                                value={productSystem}
+                                onChange={(e) =>
+                                  setProductSystem(e.target.value)
+                                }
+                              />
                             </div>
                           )}
                         </div>
+                        {/* Submit either the selected preset or the custom Other text. */}
+                        <input
+                          type="hidden"
+                          name="productSystem"
+                          value={productSystem}
+                        />
                       </div>
-                      <PaymentModeField
-                        value={paymentMode}
-                        isOther={paymentModeOther === "Other"}
-                        disabled={isSubmitting || documentBusy}
-                        onChoiceChange={(choice) => {
-                          if (choice === "Other") {
-                            if (paymentModeOther !== "Other")
-                              setPaymentMode("");
-                            setPaymentModeOther("Other");
-                          } else {
-                            setPaymentMode(choice);
-                            setPaymentModeOther("");
-                          }
-                        }}
-                        onOtherChange={setPaymentMode}
-                      />
                       <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
                         <Label
                           className={headingStyling}
-                          htmlFor="paymentNotes"
+                          required
+                          htmlFor="projectName"
                         >
-                          Payment Notes
+                          Project Name
+                        </Label>
+                        <Input
+                          id="projectName"
+                          name="projectName"
+                          required
+                          type="text"
+                          value={projectName}
+                          className={inputStyling}
+                          onChange={(e) => setProjectName(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                        <Label
+                          className={headingStyling}
+                          required
+                          htmlFor="clientName"
+                        >
+                          Customer Name
+                        </Label>
+                        <Input
+                          className={inputStyling}
+                          id="clientName"
+                          name="clientName"
+                          required
+                          list="customer-options"
+                          type="text"
+                          value={clientName}
+                          onChange={(e) => setClientName(e.target.value)}
+                        />
+                        <datalist id="customer-options">
+                          {customerSuggestions.map((name) => (
+                            <option key={name} value={name} />
+                          ))}
+                        </datalist>
+                      </div>
+                      <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                        <Label className={headingStyling} htmlFor="endUser">
+                          End User
+                        </Label>
+                        <Input
+                          className={inputStyling}
+                          id="endUser"
+                          name="endUser"
+                          type="text"
+                          value={endUser}
+                          onChange={(e) => setEndUser(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex min-w-0 flex-col gap-2 @xl:col-span-2 [&>label:first-child]:min-h-6">
+                        <Label
+                          className={headingStyling}
+                          htmlFor="projectNotes"
+                        >
+                          Project Notes
                         </Label>
                         <textarea
                           className={cn(inputStyling, "border")}
-                          id="paymentNotes"
-                          name="paymentNotes"
-                          value={paymentNotes}
-                          onChange={(e) => setPaymentNotes(e.target.value)}
+                          id="projectNotes"
+                          name="projectNotes"
+                          value={projectNotes}
+                          onChange={(e) => setProjectNotes(e.target.value)}
                         />
                       </div>
                     </div>
                   </div>
-                  {/* Supplier names use inputs, with suggestions for the brands in the schema. */}
-                  <div className="space-y-4">
-                    <datalist id="supplier-options">
-                      {supplierSuggestions.map((name) => (
-                        <option key={name} value={name} />
-                      ))}
-                    </datalist>
-
-                    <h3 className="text-[1.21em] font-extrabold underline underline-offset-4">Material Cost</h3>
-                    <div className="flex flex-col gap-4 border px-4 py-2 rounded-lg">
-                      {suppliers.map((row, index) => (
-                        <div
-                          key={row.id}
-                          className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_calc((100%_-_9rem)*5/11)_minmax(5.5rem,0.65fr)_minmax(5.5rem,0.55fr)_auto_3.5rem]"
-                        >
-                          <Label className="mt-8 h-10 self-start justify-center text-base font-semibold tracking-normal tabular-nums">
-                            {index + 1}.
-                          </Label>
-                          <div className="-ml-2 col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
-                            <Label className={headingStyling} htmlFor={`supplier-${row.id}`}>Supplier</Label>
-                            <Input
-                              className={inputStyling}
-                              id={`supplier-${row.id}`}
-                              name="supplier"
-                              placeholder="Supplier"
-                              aria-label={`Supplier ${index + 1}`}
-                              list="supplier-options"
-                              value={row.supplier}
-                              onChange={(e) => {
-                                // Update only this row's supplier name.
-                                setSuppliers((rows) =>
-                                  rows.map((item) =>
-                                    item.id === row.id
-                                      ? { ...item, supplier: e.target.value }
-                                      : item,
-                                  ),
-                                );
-                              }}
-                            />
-                          </div>
-                          <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
-                            <Label
-                              className={headingStyling}
-                              htmlFor={`supplier-amount-${row.id}`}
-                            >
-                              Amount
-                            </Label>
-                            <MoneyInput
-                              className={inputStyling}
-                              id={`supplier-amount-${row.id}`}
-                              name="supplierAmount"
-                              value={row.amount}
-                              placeholder={`in ${row.currency}`}
-                              onValueChange={(value) => {
-                                // Update only this row's amount; keep it as a string so it can be cleared.
-                                setSuppliers((rows) =>
-                                  rows.map((item) =>
-                                    item.id === row.id
-                                      ? { ...item, amount: value }
-                                      : item,
-                                  ),
-                                );
-                              }}
-                            />
-                          </div>
-                          <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto [&_[data-slot=select-trigger]]:w-full">
-                            <Label
-                              className={headingStyling}
-                              htmlFor={`supplier-currency-${row.id}`}
-                            >
-                              Currency
-                            </Label>
-                            <Select
-                              value={row.currency}
-                              onValueChange={(currency) => {
-                                if (!isCurrency(currency)) return;
-                                setSuppliers((rows) =>
-                                  rows.map((item) =>
-                                    item.id === row.id
-                                      ? { ...item, currency }
-                                      : item,
-                                  ),
-                                );
-                              }}
-                            >
-                              <SelectTrigger id={`supplier-currency-${row.id}`}>
-                                <SelectValue>
-                                  {row.currency === "EUR"
-                                    ? "Euro"
-                                    : row.currency}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="USD">USD</SelectItem>
-                                <SelectItem value="EUR">Euro</SelectItem>
-                                <SelectItem value="GBP">GBP</SelectItem>
-                                <SelectItem value="SGD">SGD</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="col-start-2 min-w-0 @2xl:col-start-auto @2xl:pt-8">
-                            <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId}
-                              pendingFiles={pendingSupplierFiles[row.rowKey ?? `new:${row.id}`] ?? []}
-                              onFilesChange={files => stageSupplierFiles(row.rowKey ?? `new:${row.id}`, files)}
-                              documents={supplierDocuments.filter(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
-                              editable disabled={isSubmitting || documentBusy}
-                              onBusyChange={setDocumentBusyState}
-                              onRemoved={id => setSupplierDocuments(documents => documents.filter(document => document.id !== id))} />
-                          </div>
-                          <input type="hidden" name="supplierRowKey" value={row.rowKey ?? `new:${row.id}`} />
-                          <input
-                            type="hidden"
-                            name="supplierCurrency"
-                            value={row.currency}
-                          />
-                          <div className="col-start-3 row-start-1 self-start pt-8 @2xl:col-start-6 @2xl:[&>button]:w-full">
-                            <Button
-                              type="button"
-                              aria-label={`Remove supplier ${index + 1}`}
-                              disabled={isSubmitting || documentBusy}
-                              onClick={() =>
-                                setSuppliers((rows) =>
-                                  rows.filter((item) => item.id !== row.id),
-                                )
-                              }
-                            >
-                              <span className="text-xl leading-none">−</span>
-                            </Button>
-                          </div>
-                          {row.currency !== "USD" && (
-                            <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
-                              <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                <Label
-                                  className={headingStyling}
-                                  htmlFor={`supplier-usd-${row.id}`}
-                                >
-                                  Amount (USD)
-                                </Label>
-                                <Label
-                                  id={`supplier-usd-${row.id}`}
-                                  className="px-2"
-                                >
-                                  {formatMoney(
-                                    convertToUsd(
-                                      row.amount,
-                                      row.currency,
-                                      gbpToUsdRate,
-                                      eurToUsdRate,
-                                      usdToSgdRate,
-                                    ),
-                                    "",
-                                  )}
-                                </Label>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    <Button
-                      type="button"
-                      aria-label="Add supplier"
-                      onClick={() => {
-                        // Append a new empty row with an ID that has not been used before.
-                        const id = Math.max(
-                          nextSupplierId.current,
-                          ...suppliers.map((row) => row.id + 1),
-                        );
-                        nextSupplierId.current = id + 1;
-                        setSuppliers((rows) => [
-                          ...rows,
-                          { id, rowKey: crypto.randomUUID(), supplier: "", amount: "", currency: "USD" },
-                        ]);
-                      }}
-                    >
-                      <span className="text-xl leading-none">+</span>
-                    </Button>
-                  </div>
-                  <div className="space-y-4">
-                    <datalist id="expense-options">
-                      {expenseSuggestions.map((name) => (
-                        <option key={name} value={name} />
-                      ))}
-                    </datalist>
-                    <h3 className="text-[1.21em] font-extrabold underline underline-offset-4">Miscellaneous Costs</h3>
-                    <div className="flex flex-col gap-4 border px-4 py-2 rounded-lg">
-                      {expenses.map((row, index) => (
-                        <div
-                          key={row.id}
-                          className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_3.5rem]"
-                        >
-                          <Label className="h-10 self-end justify-center text-base font-semibold tracking-normal tabular-nums">
-                            {index + 1}.
-                          </Label>
-                          <div className="-ml-2 col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
-                            <Label className={headingStyling} htmlFor={`expense-${row.id}`}>
-                              Expenditure
-                            </Label>
-                            <Input
-                              className={inputStyling}
-                              id={`expense-${row.id}`}
-                              name="expenseName"
-                              placeholder="Expenditure name"
-                              aria-label={`Expenditure name ${index + 1}`}
-                              list="expense-options"
-                              value={row.name}
-                              onChange={(e) => {
-                                // Update only this row's expenditure name.
-                                setExpenses((rows) =>
-                                  rows.map((item) =>
-                                    item.id === row.id
-                                      ? { ...item, name: e.target.value }
-                                      : item,
-                                  ),
-                                );
-                              }}
-                            />
-                          </div>
-                          <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
-                            <Label
-                              className={headingStyling}
-                              htmlFor={`expense-amount-${row.id}`}
-                            >
-                              Amount
-                            </Label>
-                            <MoneyInput
-                              className={inputStyling}
-                              id={`expense-amount-${row.id}`}
-                              name="expenseAmount"
-                              value={row.amount}
-                              placeholder={`in ${row.currency}`}
-                              onValueChange={(value) => {
-                                // Update only this row's amount; keep it as a string so it can be cleared.
-                                setExpenses((rows) =>
-                                  rows.map((item) =>
-                                    item.id === row.id
-                                      ? { ...item, amount: value }
-                                      : item,
-                                  ),
-                                );
-                              }}
-                            />
-                          </div>
-                          <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto **:data-[slot=select-trigger]:w-full">
-                            <Label
-                              className={headingStyling}
-                              htmlFor={`expense-currency-${row.id}`}
-                            >
-                              Currency
-                            </Label>
-                            <Select
-                              value={row.currency}
-                              onValueChange={(currency) => {
-                                if (!isCurrency(currency)) return;
-                                setExpenses((rows) =>
-                                  rows.map((item) =>
-                                    item.id === row.id
-                                      ? { ...item, currency }
-                                      : item,
-                                  ),
-                                );
-                              }}
-                            >
-                              <SelectTrigger id={`expense-currency-${row.id}`}>
-                                <SelectValue>
-                                  {row.currency === "EUR"
-                                    ? "Euro"
-                                    : row.currency}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="USD">USD</SelectItem>
-                                <SelectItem value="EUR">Euro</SelectItem>
-                                <SelectItem value="GBP">GBP</SelectItem>
-                                <SelectItem value="SGD">SGD</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <input
-                            type="hidden"
-                            name="expenseCurrency"
-                            value={row.currency}
-                          />
-                          <div className="col-start-3 row-start-1 self-end @2xl:col-start-5 @2xl:[&>button]:w-full">
-                            <Button
-                              type="button"
-                              aria-label={`Remove expenditure ${index + 1}`}
-                              onClick={() =>
-                                setExpenses((rows) =>
-                                  rows.filter((item) => item.id !== row.id),
-                                )
-                              }
-                            >
-                              <span className="text-xl leading-none">−</span>
-                            </Button>
-                          </div>
-                          {row.currency !== "USD" && (
-                            <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
-                              <div className="flex min-w-0 flex-wrap items-center gap-3">
-                                <Label
-                                  className={headingStyling}
-                                  htmlFor={`expense-usd-${row.id}`}
-                                >
-                                  Amount (USD)
-                                </Label>
-                                <Label id={`expense-usd-${row.id}`}>
-                                  {formatMoney(
-                                    convertToUsd(
-                                      row.amount,
-                                      row.currency,
-                                      gbpToUsdRate,
-                                      eurToUsdRate,
-                                      usdToSgdRate,
-                                    ),
-                                    "",
-                                  )}
-                                </Label>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    <Button
-                      type="button"
-                      aria-label="Add expenditure"
-                      onClick={() => {
-                        // Append a new empty row with an ID that has not been used before.
-                        const id = nextExpenseId.current++;
-                        setExpenses((rows) => [
-                          ...rows,
-                          { id, name: "", amount: "", currency: "USD" },
-                        ]);
-                      }}
-                    >
-                      <span className="text-xl leading-none">+</span>
-                    </Button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          ) : (
-            <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
-              <div className="flex flex-col gap-8">
-                <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2 @lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(8rem,0.5fr)]">
-                  {orderHandledBy.trim() !== "" && (
-                    <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                      <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong className="block">Order Handled By</strong>
-                            {orderHandledBy}
-                          </p>
-                    </div>
-                  )}
-                  <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2">
-                    <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                      <strong className="block">Reference Number</strong>
-                      {referenceNumber || "Not specified"}
-                    </p>
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2 @lg:col-start-3">
-                    <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong className="block">Import By</strong>
-                            {importedBy || "Not selected"}
-                          </p>
-                  </div>
-                </div>
-                {/* Project information */}
-                {[
-                  productSystem,
-                  projectName,
-                  clientName,
-                  endUser,
-                  projectNotes,
-                ].some((value) => value.trim() !== "") && (
-                  <div className="flex flex-col gap-2">
-                    <div className="grid grid-cols-1 gap-x-8 gap-y-3 border rounded-lg p-4 @xl:grid-cols-2">
-                      <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">Project Information</h2>
-                      {productSystem.trim() !== "" && (
-                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>System Type:</strong>{" "}
-                            {productSystem}
-                          </p>
-                        </div>
-                      )}
-
-                      {projectName.trim() !== "" && (
-                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Project Name:</strong>{" "}
-                            {projectName}
-                          </p>
-                        </div>
-                      )}
-                      {clientName.trim() !== "" && (
-                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Customer:</strong>{" "}
-                            {clientName}
-                          </p>
-                        </div>
-                      )}
-                      {endUser.trim() !== "" && (
-                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>End User:</strong>{" "}
-                            {endUser}
-                          </p>
-                        </div>
-                      )}
-                      {projectNotes.trim() !== "" && (
-                        <div className="flex min-w-0 flex-col gap-2 @xl:col-span-2 [&>label:first-child]:min-h-6">
-                          <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Project Notes:</strong><br />
-                            {projectNotes}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {/* Order value, payment and costs */}
-                {(clientOrderValue.trim() !== "" ||
-                  paymentMode.trim() !== "" ||
-                  paymentNotes.trim() !== "" ||
-                  visibleSuppliers.length > 0 ||
-                  visibleExpenses.length > 0) && (
+                  {/* Order value, payment and costs */}
                   <div className="flex flex-col gap-8">
                     <div className="flex flex-col gap-2">
                       <div className="flex flex-col gap-3 border rounded-lg p-4">
-                      <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">Payment Information</h2>
-                        {clientOrderValue.trim() !== "" && (
-                          <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                            <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Client Order Value ({clientOrderCurrency}):</strong>{" "}
-                            {formatMoney(clientOrderValue)}
-                          </p>
+                        <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">
+                          Payment Information
+                        </h2>
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 items-end gap-4 @xl:grid-cols-[minmax(0,1fr)_8rem]">
+                            <div className="flex min-w-0 flex-col gap-2 [&>label]:min-h-6">
+                              <Label
+                                className={headingStyling}
+                                htmlFor="clientOrderValue"
+                              >
+                                Client Order Value
+                              </Label>
+                              <MoneyInput
+                                className={inputStyling}
+                                id="clientOrderValue"
+                                name="clientOrderValue"
+                                value={clientOrderValue}
+                                onValueChange={(value) =>
+                                  setClientOrderValue(value)
+                                }
+                              />
+                            </div>
+                            <div className="flex min-w-0 flex-col gap-2 [&>label]:min-h-6 [&_[data-slot=select-trigger]]:w-full">
+                              <Label
+                                className={headingStyling}
+                                htmlFor="clientOrderCurrency"
+                              >
+                                Currency
+                              </Label>
+                              <Select
+                                value={clientOrderCurrency}
+                                onValueChange={(currency) => {
+                                  if (isCurrency(currency))
+                                    setClientOrderCurrency(currency);
+                                }}
+                              >
+                                <SelectTrigger id="clientOrderCurrency">
+                                  <SelectValue>
+                                    {clientOrderCurrency === "EUR"
+                                      ? "Euro"
+                                      : clientOrderCurrency}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="USD">USD</SelectItem>
+                                  <SelectItem value="EUR">Euro</SelectItem>
+                                  <SelectItem value="GBP">GBP</SelectItem>
+                                  <SelectItem value="SGD">SGD</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Input
+                              type="hidden"
+                              name="clientOrderCurrency"
+                              value={clientOrderCurrency}
+                            />
                             {clientOrderCurrency !== "USD" && (
-                              <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                                <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
-                            <strong>Order Value (USD):</strong>{" "}
-                            {formatMoney(
-                                    convertToUsd(
-                                      clientOrderValue,
-                                      clientOrderCurrency,
-                                      gbpToUsdRate,
-                                      eurToUsdRate,
-                                      usdToSgdRate,
-                                    ),
-                                    "—",
-                                  )}
-                          </p>
+                              <div className="min-w-0 @xl:col-span-2">
+                                <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                  <Label
+                                    className={headingStyling}
+                                    htmlFor="clientOrderUsdValue"
+                                  >
+                                    Order Value (USD)
+                                  </Label>
+                                  <Input
+                                    className={inputStyling}
+                                    id="clientOrderUsdValue"
+                                    value={formatMoney(
+                                      convertToUsd(
+                                        clientOrderValue,
+                                        clientOrderCurrency,
+                                        gbpToUsdRate,
+                                        eurToUsdRate,
+                                        usdToSgdRate,
+                                      ),
+                                      "",
+                                    )}
+                                    placeholder="Enter an amount and valid rate"
+                                    readOnly
+                                  />
+                                </div>
                               </div>
                             )}
                           </div>
-                        )}
-                        {paymentMode.trim() !== "" && (
-                          <PaymentModeField
-                            value={paymentMode}
-                            isOther={paymentModeOther === "Other"}
-                            readOnly
+                        </div>
+                        <PaymentModeField
+                          value={paymentMode}
+                          isOther={paymentModeOther === "Other"}
+                          disabled={isSubmitting || documentBusy}
+                          onChoiceChange={(choice) => {
+                            if (choice === "Other") {
+                              if (paymentModeOther !== "Other")
+                                setPaymentMode("");
+                              setPaymentModeOther("Other");
+                            } else {
+                              setPaymentMode(choice);
+                              setPaymentModeOther("");
+                            }
+                          }}
+                          onOtherChange={setPaymentMode}
+                        />
+                        <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                          <Label
+                            className={headingStyling}
+                            htmlFor="paymentNotes"
+                          >
+                            Payment Notes
+                          </Label>
+                          <textarea
+                            className={cn(inputStyling, "border")}
+                            id="paymentNotes"
+                            name="paymentNotes"
+                            value={paymentNotes}
+                            onChange={(e) => setPaymentNotes(e.target.value)}
                           />
-                        )}
-                        {paymentNotes.trim() !== "" && (
-                          <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
-                            <Label className={headingStyling}>
-                              Payment Notes
+                        </div>
+                      </div>
+                    </div>
+                    {/* Supplier names use inputs, with suggestions for the brands in the schema. */}
+                    <div className="space-y-4">
+                      <datalist id="supplier-options">
+                        {supplierSuggestions.map((name) => (
+                          <option key={name} value={name} />
+                        ))}
+                      </datalist>
+
+                      <h3 className="text-[1.21em] font-extrabold underline underline-offset-4">
+                        Material Cost
+                      </h3>
+                      <div className="flex flex-col gap-4 border px-4 py-2 rounded-lg">
+                        {suppliers.map((row, index) => (
+                          <div
+                            key={row.id}
+                            className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_calc((100%_-_9rem)*5/11)_minmax(5.5rem,0.65fr)_minmax(5.5rem,0.55fr)_auto_3.5rem]"
+                          >
+                            <Label className="mt-8 h-10 self-start justify-center text-base font-semibold tracking-normal tabular-nums">
+                              {index + 1}.
                             </Label>
-                            <p className="min-w-0 whitespace-pre-wrap wrap-break-words font-bold">{paymentNotes}</p>
+                            <div className="-ml-2 col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
+                              <Label
+                                className={headingStyling}
+                                htmlFor={`supplier-${row.id}`}
+                              >
+                                Supplier
+                              </Label>
+                              <Input
+                                className={inputStyling}
+                                id={`supplier-${row.id}`}
+                                name="supplier"
+                                placeholder="Supplier"
+                                aria-label={`Supplier ${index + 1}`}
+                                list="supplier-options"
+                                value={row.supplier}
+                                onChange={(e) => {
+                                  // Update only this row's supplier name.
+                                  setSuppliers((rows) =>
+                                    rows.map((item) =>
+                                      item.id === row.id
+                                        ? { ...item, supplier: e.target.value }
+                                        : item,
+                                    ),
+                                  );
+                                }}
+                              />
+                            </div>
+                            <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
+                              <Label
+                                className={headingStyling}
+                                htmlFor={`supplier-amount-${row.id}`}
+                              >
+                                Amount
+                              </Label>
+                              <MoneyInput
+                                className={inputStyling}
+                                id={`supplier-amount-${row.id}`}
+                                name="supplierAmount"
+                                value={row.amount}
+                                placeholder={`in ${row.currency}`}
+                                onValueChange={(value) => {
+                                  // Update only this row's amount; keep it as a string so it can be cleared.
+                                  setSuppliers((rows) =>
+                                    rows.map((item) =>
+                                      item.id === row.id
+                                        ? { ...item, amount: value }
+                                        : item,
+                                    ),
+                                  );
+                                }}
+                              />
+                            </div>
+                            <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto [&_[data-slot=select-trigger]]:w-full">
+                              <Label
+                                className={headingStyling}
+                                htmlFor={`supplier-currency-${row.id}`}
+                              >
+                                Currency
+                              </Label>
+                              <Select
+                                value={row.currency}
+                                onValueChange={(currency) => {
+                                  if (!isCurrency(currency)) return;
+                                  setSuppliers((rows) =>
+                                    rows.map((item) =>
+                                      item.id === row.id
+                                        ? { ...item, currency }
+                                        : item,
+                                    ),
+                                  );
+                                }}
+                              >
+                                <SelectTrigger
+                                  id={`supplier-currency-${row.id}`}
+                                >
+                                  <SelectValue>
+                                    {row.currency === "EUR"
+                                      ? "Euro"
+                                      : row.currency}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="USD">USD</SelectItem>
+                                  <SelectItem value="EUR">Euro</SelectItem>
+                                  <SelectItem value="GBP">GBP</SelectItem>
+                                  <SelectItem value="SGD">SGD</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="col-start-2 min-w-0 @2xl:col-start-auto @2xl:pt-8">
+                              <SupplierDocument
+                                orderId={orderDetails?.sl ?? createdOrderId}
+                                pendingFiles={
+                                  pendingSupplierFiles[
+                                    row.rowKey ?? `new:${row.id}`
+                                  ] ?? []
+                                }
+                                onFilesChange={(files) =>
+                                  stageSupplierFiles(
+                                    row.rowKey ?? `new:${row.id}`,
+                                    files,
+                                  )
+                                }
+                                documents={supplierDocuments.filter(
+                                  (document) =>
+                                    document.supplierRowKey ===
+                                    (row.rowKey ?? `new:${row.id}`),
+                                )}
+                                editable
+                                disabled={isSubmitting || documentBusy}
+                                onBusyChange={setDocumentBusyState}
+                                onRemoved={(id) =>
+                                  setSupplierDocuments((documents) =>
+                                    documents.filter(
+                                      (document) => document.id !== id,
+                                    ),
+                                  )
+                                }
+                              />
+                            </div>
+                            <input
+                              type="hidden"
+                              name="supplierRowKey"
+                              value={row.rowKey ?? `new:${row.id}`}
+                            />
+                            <input
+                              type="hidden"
+                              name="supplierCurrency"
+                              value={row.currency}
+                            />
+                            <div className="col-start-3 row-start-1 self-start pt-8 @2xl:col-start-6 @2xl:[&>button]:w-full">
+                              <Button
+                                type="button"
+                                aria-label={`Remove supplier ${index + 1}`}
+                                disabled={isSubmitting || documentBusy}
+                                onClick={() =>
+                                  setSuppliers((rows) =>
+                                    rows.filter((item) => item.id !== row.id),
+                                  )
+                                }
+                              >
+                                <span className="text-xl leading-none">−</span>
+                              </Button>
+                            </div>
+                            {row.currency !== "USD" && (
+                              <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                                <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                  <Label
+                                    className={headingStyling}
+                                    htmlFor={`supplier-usd-${row.id}`}
+                                  >
+                                    Amount (USD)
+                                  </Label>
+                                  <Label
+                                    id={`supplier-usd-${row.id}`}
+                                    className="px-2"
+                                  >
+                                    {formatMoney(
+                                      convertToUsd(
+                                        row.amount,
+                                        row.currency,
+                                        gbpToUsdRate,
+                                        eurToUsdRate,
+                                        usdToSgdRate,
+                                      ),
+                                      "",
+                                    )}
+                                  </Label>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        type="button"
+                        aria-label="Add supplier"
+                        onClick={() => {
+                          // Append a new empty row with an ID that has not been used before.
+                          const id = Math.max(
+                            nextSupplierId.current,
+                            ...suppliers.map((row) => row.id + 1),
+                          );
+                          nextSupplierId.current = id + 1;
+                          setSuppliers((rows) => [
+                            ...rows,
+                            {
+                              id,
+                              rowKey: crypto.randomUUID(),
+                              supplier: "",
+                              amount: "",
+                              currency: "USD",
+                            },
+                          ]);
+                        }}
+                      >
+                        <span className="text-xl leading-none">+</span>
+                      </Button>
+                    </div>
+                    <div className="space-y-4">
+                      <datalist id="expense-options">
+                        {expenseSuggestions.map((name) => (
+                          <option key={name} value={name} />
+                        ))}
+                      </datalist>
+                      <h3 className="text-[1.21em] font-extrabold underline underline-offset-4">
+                        Miscellaneous Costs
+                      </h3>
+                      <div className="flex flex-col gap-4 border px-4 py-2 rounded-lg">
+                        {expenses.map((row, index) => (
+                          <div
+                            key={row.id}
+                            className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-4 py-2 @2xl:grid-cols-[1.5rem_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.8fr)_3.5rem]"
+                          >
+                            <Label className="h-10 self-end justify-center text-base font-semibold tracking-normal tabular-nums">
+                              {index + 1}.
+                            </Label>
+                            <div className="-ml-2 col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
+                              <Label
+                                className={headingStyling}
+                                htmlFor={`expense-${row.id}`}
+                              >
+                                Expenditure
+                              </Label>
+                              <Input
+                                className={inputStyling}
+                                id={`expense-${row.id}`}
+                                name="expenseName"
+                                placeholder="Expenditure name"
+                                aria-label={`Expenditure name ${index + 1}`}
+                                list="expense-options"
+                                value={row.name}
+                                onChange={(e) => {
+                                  // Update only this row's expenditure name.
+                                  setExpenses((rows) =>
+                                    rows.map((item) =>
+                                      item.id === row.id
+                                        ? { ...item, name: e.target.value }
+                                        : item,
+                                    ),
+                                  );
+                                }}
+                              />
+                            </div>
+                            <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto">
+                              <Label
+                                className={headingStyling}
+                                htmlFor={`expense-amount-${row.id}`}
+                              >
+                                Amount
+                              </Label>
+                              <MoneyInput
+                                className={inputStyling}
+                                id={`expense-amount-${row.id}`}
+                                name="expenseAmount"
+                                value={row.amount}
+                                placeholder={`in ${row.currency}`}
+                                onValueChange={(value) => {
+                                  // Update only this row's amount; keep it as a string so it can be cleared.
+                                  setExpenses((rows) =>
+                                    rows.map((item) =>
+                                      item.id === row.id
+                                        ? { ...item, amount: value }
+                                        : item,
+                                    ),
+                                  );
+                                }}
+                              />
+                            </div>
+                            <div className="col-start-2 flex min-w-0 flex-col gap-2 [&>label]:min-h-6 @2xl:col-start-auto **:data-[slot=select-trigger]:w-full">
+                              <Label
+                                className={headingStyling}
+                                htmlFor={`expense-currency-${row.id}`}
+                              >
+                                Currency
+                              </Label>
+                              <Select
+                                value={row.currency}
+                                onValueChange={(currency) => {
+                                  if (!isCurrency(currency)) return;
+                                  setExpenses((rows) =>
+                                    rows.map((item) =>
+                                      item.id === row.id
+                                        ? { ...item, currency }
+                                        : item,
+                                    ),
+                                  );
+                                }}
+                              >
+                                <SelectTrigger
+                                  id={`expense-currency-${row.id}`}
+                                >
+                                  <SelectValue>
+                                    {row.currency === "EUR"
+                                      ? "Euro"
+                                      : row.currency}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="USD">USD</SelectItem>
+                                  <SelectItem value="EUR">Euro</SelectItem>
+                                  <SelectItem value="GBP">GBP</SelectItem>
+                                  <SelectItem value="SGD">SGD</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <input
+                              type="hidden"
+                              name="expenseCurrency"
+                              value={row.currency}
+                            />
+                            <div className="col-start-3 row-start-1 self-end @2xl:col-start-5 @2xl:[&>button]:w-full">
+                              <Button
+                                type="button"
+                                aria-label={`Remove expenditure ${index + 1}`}
+                                onClick={() =>
+                                  setExpenses((rows) =>
+                                    rows.filter((item) => item.id !== row.id),
+                                  )
+                                }
+                              >
+                                <span className="text-xl leading-none">−</span>
+                              </Button>
+                            </div>
+                            {row.currency !== "USD" && (
+                              <div className="col-start-2 min-w-0 @2xl:col-start-2 @2xl:col-span-3">
+                                <div className="flex min-w-0 flex-wrap items-center gap-3">
+                                  <Label
+                                    className={headingStyling}
+                                    htmlFor={`expense-usd-${row.id}`}
+                                  >
+                                    Amount (USD)
+                                  </Label>
+                                  <Label id={`expense-usd-${row.id}`}>
+                                    {formatMoney(
+                                      convertToUsd(
+                                        row.amount,
+                                        row.currency,
+                                        gbpToUsdRate,
+                                        eurToUsdRate,
+                                        usdToSgdRate,
+                                      ),
+                                      "",
+                                    )}
+                                  </Label>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        type="button"
+                        aria-label="Add expenditure"
+                        onClick={() => {
+                          // Append a new empty row with an ID that has not been used before.
+                          const id = nextExpenseId.current++;
+                          setExpenses((rows) => [
+                            ...rows,
+                            { id, name: "", amount: "", currency: "USD" },
+                          ]);
+                        }}
+                      >
+                        <span className="text-xl leading-none">+</span>
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div className="@container min-w-0 w-full rounded-lg border bg-card p-5 sm:p-6">
+                <div className="flex flex-col gap-8">
+                  <div className="grid grid-cols-1 items-start gap-6 @sm:grid-cols-2 @lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(8rem,0.5fr)]">
+                    {orderHandledBy.trim() !== "" && (
+                      <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                        <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                          <strong className="block">Order Handled By</strong>
+                          {orderHandledBy}
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2">
+                      <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                        <strong className="block">Reference Number</strong>
+                        {referenceNumber || "Not specified"}
+                      </p>
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-2 @sm:col-start-2 @lg:col-start-3">
+                      <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                        <strong className="block">Import By</strong>
+                        {importedBy || "Not selected"}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Project information */}
+                  {[
+                    productSystem,
+                    projectName,
+                    clientName,
+                    endUser,
+                    projectNotes,
+                  ].some((value) => value.trim() !== "") && (
+                    <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-1 gap-x-8 gap-y-3 border rounded-lg p-4 @xl:grid-cols-2">
+                        <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">
+                          Project Information
+                        </h2>
+                        {productSystem.trim() !== "" && (
+                          <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                            <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                              <strong>System Type:</strong> {productSystem}
+                            </p>
+                          </div>
+                        )}
+
+                        {projectName.trim() !== "" && (
+                          <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                            <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                              <strong>Project Name:</strong> {projectName}
+                            </p>
+                          </div>
+                        )}
+                        {clientName.trim() !== "" && (
+                          <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                            <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                              <strong>Customer:</strong> {clientName}
+                            </p>
+                          </div>
+                        )}
+                        {endUser.trim() !== "" && (
+                          <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                            <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                              <strong>End User:</strong> {endUser}
+                            </p>
+                          </div>
+                        )}
+                        {projectNotes.trim() !== "" && (
+                          <div className="flex min-w-0 flex-col gap-2 @xl:col-span-2 [&>label:first-child]:min-h-6">
+                            <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                              <strong>Project Notes:</strong>
+                              <br />
+                              {projectNotes}
+                            </p>
                           </div>
                         )}
                       </div>
                     </div>
-                    {visibleSuppliers.length > 0 && (
-                      <section className="min-w-0 space-y-4" aria-labelledby="material-cost-heading">
-                        <h3 id="material-cost-heading" className="text-[1.21em] font-extrabold underline underline-offset-4">Material Cost</h3>
-                        <div role="region" aria-label="Material cost table" tabIndex={0}
-                          className="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-ring">
-                          <table className="w-full min-w-[36rem] text-center text-sm">
-                            <thead className="border-b bg-muted/50">
-                              <tr>
-                                <th scope="col" aria-label="Row number" className="w-12 px-4 py-3">&nbsp;</th>
-                                <th scope="col" className="w-full px-4 py-3">Supplier</th>
-                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Amount</th>
-                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Currency</th>
-                                {showSupplierUsd && <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Amount (USD)</th>}
-                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Documents</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                              {visibleSuppliers.map((row, index) => {
-                                return (
-                                  <tr key={row.id} className="align-middle">
-                                    <td className="w-12 px-3 py-3 text-center text-base font-semibold tracking-normal tabular-nums">{index + 1}.</td>
-                                    <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 text-center font-semibold">{row.supplier}</th>
-                                    <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">{formatMoney(row.amount)}</td>
-                                    <td className="whitespace-nowrap px-4 py-3 text-center">{row.currency === "EUR" ? "Euro" : row.currency}</td>
-                                    {showSupplierUsd && (
-                                      <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">
-                                        {formatMoney(convertToUsd(row.amount, row.currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate), "—")}
-                                      </td>
+                  )}
+                  {/* Order value, payment and costs */}
+                  {(clientOrderValue.trim() !== "" ||
+                    paymentMode.trim() !== "" ||
+                    paymentNotes.trim() !== "" ||
+                    visibleSuppliers.length > 0 ||
+                    visibleExpenses.length > 0) && (
+                    <div className="flex flex-col gap-8">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-3 border rounded-lg p-4">
+                          <h2 className="col-span-full text-[1.21em] font-extrabold underline underline-offset-4">
+                            Payment Information
+                          </h2>
+                          {clientOrderValue.trim() !== "" && (
+                            <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                              <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                                <strong>
+                                  Client Order Value ({clientOrderCurrency}):
+                                </strong>{" "}
+                                {formatMoney(clientOrderValue)}
+                              </p>
+                              {clientOrderCurrency !== "USD" && (
+                                <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                                  <p className="min-w-0 whitespace-pre-wrap wrap-break-words">
+                                    <strong>Order Value (USD):</strong>{" "}
+                                    {formatMoney(
+                                      convertToUsd(
+                                        clientOrderValue,
+                                        clientOrderCurrency,
+                                        gbpToUsdRate,
+                                        eurToUsdRate,
+                                        usdToSgdRate,
+                                      ),
+                                      "—",
                                     )}
-                                    <td className="whitespace-nowrap px-4 py-3 text-center">
-                                      <SupplierDocument orderId={orderDetails?.sl ?? createdOrderId}
-                                        documents={supplierDocuments.filter(document => document.supplierRowKey === (row.rowKey ?? `new:${row.id}`))}
-                                        editable={false} disabled={false} onBusyChange={setDocumentBusyState}
-                                        onRemoved={() => {}} onFilesChange={() => {}} />
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {paymentMode.trim() !== "" && (
+                            <PaymentModeField
+                              value={paymentMode}
+                              isOther={paymentModeOther === "Other"}
+                              readOnly
+                            />
+                          )}
+                          {paymentNotes.trim() !== "" && (
+                            <div className="flex min-w-0 flex-col gap-2 [&>label:first-child]:min-h-6">
+                              <Label className={headingStyling}>
+                                Payment Notes
+                              </Label>
+                              <p className="min-w-0 whitespace-pre-wrap wrap-break-words font-bold">
+                                {paymentNotes}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      </section>
-                    )}
-                    {visibleExpenses.length > 0 && (
-                      <section className="min-w-0 space-y-4" aria-labelledby="miscellaneous-cost-heading">
-                        <h3 id="miscellaneous-cost-heading" className="text-[1.21em] font-extrabold underline underline-offset-4">Miscellaneous Costs</h3>
-                        <div role="region" aria-label="Miscellaneous costs table" tabIndex={0}
-                          className="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-ring">
-                          <table className="w-full min-w-[28rem] text-center text-sm">
-                            <thead className="border-b bg-muted/50">
-                              <tr>
-                                <th scope="col" aria-label="Row number" className="w-12 px-4 py-3">&nbsp;</th>
-                                <th scope="col" className="w-full px-4 py-3">Expenditure</th>
-                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Amount</th>
-                                <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Currency</th>
-                                {showExpenseUsd && <th scope="col" className="w-px whitespace-nowrap px-4 py-3 text-center">Amount (USD)</th>}
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                              {visibleExpenses.map((row, index) => (
-                                <tr key={row.id} className="align-middle">
-                                  <td className="w-12 px-3 py-3 text-center text-base font-semibold tracking-normal tabular-nums">{index + 1}.</td>
-                                  <th scope="row" className="max-w-64 wrap-break-words px-4 py-3 text-center font-semibold">{row.name}</th>
-                                  <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">{formatMoney(row.amount)}</td>
-                                  <td className="whitespace-nowrap px-4 py-3 text-center">{row.currency === "EUR" ? "Euro" : row.currency}</td>
+                      </div>
+                      {visibleSuppliers.length > 0 && (
+                        <section
+                          className="min-w-0 space-y-4"
+                          aria-labelledby="material-cost-heading"
+                        >
+                          <h3
+                            id="material-cost-heading"
+                            className="text-[1.21em] font-extrabold underline underline-offset-4"
+                          >
+                            Material Cost
+                          </h3>
+                          <div
+                            role="region"
+                            aria-label="Material cost table"
+                            tabIndex={0}
+                            className="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-ring"
+                          >
+                            <table className="w-full min-w-[36rem] text-center text-sm">
+                              <thead className="border-b bg-muted/50">
+                                <tr>
+                                  <th
+                                    scope="col"
+                                    aria-label="Row number"
+                                    className="w-12 px-4 py-3"
+                                  >
+                                    &nbsp;
+                                  </th>
+                                  <th scope="col" className="w-full px-4 py-3">
+                                    Supplier
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="w-px whitespace-nowrap px-4 py-3 text-center"
+                                  >
+                                    Amount
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="w-px whitespace-nowrap px-4 py-3 text-center"
+                                  >
+                                    Currency
+                                  </th>
+                                  {showSupplierUsd && (
+                                    <th
+                                      scope="col"
+                                      className="w-px whitespace-nowrap px-4 py-3 text-center"
+                                    >
+                                      Amount (USD)
+                                    </th>
+                                  )}
+                                  <th
+                                    scope="col"
+                                    className="w-px whitespace-nowrap px-4 py-3 text-center"
+                                  >
+                                    Documents
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y">
+                                {visibleSuppliers.map((row, index) => {
+                                  return (
+                                    <tr key={row.id} className="align-middle">
+                                      <td className="w-12 px-3 py-3 text-center text-base font-semibold tracking-normal tabular-nums">
+                                        {index + 1}.
+                                      </td>
+                                      <th
+                                        scope="row"
+                                        className="max-w-64 wrap-break-words px-4 py-3 text-center font-semibold"
+                                      >
+                                        {row.supplier}
+                                      </th>
+                                      <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">
+                                        {formatMoney(row.amount)}
+                                      </td>
+                                      <td className="whitespace-nowrap px-4 py-3 text-center">
+                                        {row.currency === "EUR"
+                                          ? "Euro"
+                                          : row.currency}
+                                      </td>
+                                      {showSupplierUsd && (
+                                        <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">
+                                          {formatMoney(
+                                            convertToUsd(
+                                              row.amount,
+                                              row.currency,
+                                              gbpToUsdRate,
+                                              eurToUsdRate,
+                                              usdToSgdRate,
+                                            ),
+                                            "—",
+                                          )}
+                                        </td>
+                                      )}
+                                      <td className="whitespace-nowrap px-4 py-3 text-center">
+                                        <SupplierDocument
+                                          orderId={
+                                            orderDetails?.sl ?? createdOrderId
+                                          }
+                                          documents={supplierDocuments.filter(
+                                            (document) =>
+                                              document.supplierRowKey ===
+                                              (row.rowKey ?? `new:${row.id}`),
+                                          )}
+                                          editable={false}
+                                          disabled={false}
+                                          onBusyChange={setDocumentBusyState}
+                                          onRemoved={() => {}}
+                                          onFilesChange={() => {}}
+                                        />
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </section>
+                      )}
+                      {visibleExpenses.length > 0 && (
+                        <section
+                          className="min-w-0 space-y-4"
+                          aria-labelledby="miscellaneous-cost-heading"
+                        >
+                          <h3
+                            id="miscellaneous-cost-heading"
+                            className="text-[1.21em] font-extrabold underline underline-offset-4"
+                          >
+                            Miscellaneous Costs
+                          </h3>
+                          <div
+                            role="region"
+                            aria-label="Miscellaneous costs table"
+                            tabIndex={0}
+                            className="overflow-x-auto rounded-lg border focus-visible:outline-2 focus-visible:outline-ring"
+                          >
+                            <table className="w-full min-w-[28rem] text-center text-sm">
+                              <thead className="border-b bg-muted/50">
+                                <tr>
+                                  <th
+                                    scope="col"
+                                    aria-label="Row number"
+                                    className="w-12 px-4 py-3"
+                                  >
+                                    &nbsp;
+                                  </th>
+                                  <th scope="col" className="w-full px-4 py-3">
+                                    Expenditure
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="w-px whitespace-nowrap px-4 py-3 text-center"
+                                  >
+                                    Amount
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="w-px whitespace-nowrap px-4 py-3 text-center"
+                                  >
+                                    Currency
+                                  </th>
                                   {showExpenseUsd && (
-                                    <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">
-                                      {formatMoney(convertToUsd(row.amount, row.currency, gbpToUsdRate, eurToUsdRate, usdToSgdRate), "—")}
-                                    </td>
+                                    <th
+                                      scope="col"
+                                      className="w-px whitespace-nowrap px-4 py-3 text-center"
+                                    >
+                                      Amount (USD)
+                                    </th>
                                   )}
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </section>
-                    )}
-                  </div>
-                )}
+                              </thead>
+                              <tbody className="divide-y">
+                                {visibleExpenses.map((row, index) => (
+                                  <tr key={row.id} className="align-middle">
+                                    <td className="w-12 px-3 py-3 text-center text-base font-semibold tracking-normal tabular-nums">
+                                      {index + 1}.
+                                    </td>
+                                    <th
+                                      scope="row"
+                                      className="max-w-64 wrap-break-words px-4 py-3 text-center font-semibold"
+                                    >
+                                      {row.name}
+                                    </th>
+                                    <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">
+                                      {formatMoney(row.amount)}
+                                    </td>
+                                    <td className="whitespace-nowrap px-4 py-3 text-center">
+                                      {row.currency === "EUR"
+                                        ? "Euro"
+                                        : row.currency}
+                                    </td>
+                                    {showExpenseUsd && (
+                                      <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">
+                                        {formatMoney(
+                                          convertToUsd(
+                                            row.amount,
+                                            row.currency,
+                                            gbpToUsdRate,
+                                            eurToUsdRate,
+                                            usdToSgdRate,
+                                          ),
+                                          "—",
+                                        )}
+                                      </td>
+                                    )}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </section>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
             {/* File selections are staged here and uploaded by the form submit handler. */}
             <OrderDocuments
               key={orderDetails?.sl ?? "new"}
               orderId={orderDetails?.sl ?? createdOrderId}
-              initialDocuments={supplierDocuments.filter(document => document.supplierRowKey === null)}
-              drafts={documentDrafts} setDrafts={setDocumentDrafts}
+              initialDocuments={supplierDocuments.filter(
+                (document) => document.supplierRowKey === null,
+              )}
+              drafts={documentDrafts}
+              setDrafts={setDocumentDrafts}
               onBusyChange={setDocumentBusyState}
-              onUploadedDocumentRemoved={id => setSupplierDocuments(rows => rows.filter(row => row.id !== id))}
+              onUploadedDocumentRemoved={(id) =>
+                setSupplierDocuments((rows) =>
+                  rows.filter((row) => row.id !== id),
+                )
+              }
               editable={isEditing}
               disabled={isSubmitting || documentBusy}
             />
@@ -1574,7 +1897,10 @@ export default function PageBody({
                       type="submit"
                       disabled={!hasChanges || isSubmitting || documentBusy}
                       form="order-form"
-                      className={cn(actionButtonStyling, "disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-100")}
+                      className={cn(
+                        actionButtonStyling,
+                        "disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-100",
+                      )}
                     >
                       {isSubmitting ? "Saving…" : "Submit"}
                     </Button>

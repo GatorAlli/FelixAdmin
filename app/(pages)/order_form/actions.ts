@@ -26,7 +26,10 @@ async function prepareOrder(formData: FormData, orderId?: number) {
   }
 
   if (!canEditOrder(userProfile?.status, true)) {
-    return { ok: false as const, message: "You do not have permission to save orders." };
+    return {
+      ok: false as const,
+      message: "You do not have permission to save orders.",
+    };
   }
 
   const username = userProfile?.name?.trim();
@@ -47,8 +50,11 @@ async function prepareOrder(formData: FormData, orderId?: number) {
   }
 
   // A supplier removed from Settings must still be accepted on its existing order.
-  const hasValidOrderId = orderId !== undefined &&
-    Number.isInteger(orderId) && orderId > 0 && orderId <= 2147483647;
+  const hasValidOrderId =
+    orderId !== undefined &&
+    Number.isInteger(orderId) &&
+    orderId > 0 &&
+    orderId <= 2147483647;
   if (hasValidOrderId) {
     const [existingOrder] = await db
       .select()
@@ -63,7 +69,11 @@ async function prepareOrder(formData: FormData, orderId?: number) {
     }
   }
 
-  const validatedOrder = readOrderValues(formData, username, allowedSupplierNames);
+  const validatedOrder = readOrderValues(
+    formData,
+    username,
+    allowedSupplierNames,
+  );
   return { ...validatedOrder, status: userProfile?.status };
 }
 
@@ -75,22 +85,36 @@ export async function createOrder(formData: FormData) {
   const createdDate = currentOrderDate();
   try {
     // Allocate the reference and insert together so concurrent saves cannot reuse it.
-    const orderReference = await db.transaction(async (transaction) => {
-      const felixOrderRef = await nextOrderReference(transaction, createdDate);
-      const [created] = await transaction.insert(data).values({
-        ...preparedOrder.values,
-        createdDate,
-        felixOrderRef,
-        orderManagerAccess: true,
-      }).returning({ id: data.sl });
+    const orderReference = await db.transaction(
+      async (transaction) => {
+        const felixOrderRef = await nextOrderReference(
+          transaction,
+          createdDate,
+        );
+        const [created] = await transaction
+          .insert(data)
+          .values({
+            ...preparedOrder.values,
+            createdDate,
+            felixOrderRef,
+            orderManagerAccess: true,
+          })
+          .returning({ id: data.sl });
 
-      return { reference: felixOrderRef, id: created.id };
-    }, { isolationLevel: "read committed" });
+        return { reference: felixOrderRef, id: created.id };
+      },
+      { isolationLevel: "read committed" },
+    );
 
     // Refresh the order lists after the database write succeeds.
     revalidatePath("/home");
     revalidatePath("/summary");
-    return { ok: true, message: `Order created: ${orderReference.reference}`, createdDate, orderId: orderReference.id };
+    return {
+      ok: true,
+      message: `Order created: ${orderReference.reference}`,
+      createdDate,
+      orderId: orderReference.id,
+    };
   } catch (error) {
     console.error("Unable to create order", error);
     return {
@@ -115,19 +139,42 @@ export async function updateOrder(orderId: number, formData: FormData) {
 
   try {
     const saved = await db.transaction(async (transaction) => {
-      const [updatedOrder] = await transaction.update(data)
+      const [updatedOrder] = await transaction
+        .update(data)
         .set({ ...editableValues, lastEditedBy, lastEditedAt: sql`now()` })
-        .where(and(eq(data.sl, orderId), preparedOrder.status === "admin" ? undefined : eq(data.orderManagerAccess, true)))
+        .where(
+          and(
+            eq(data.sl, orderId),
+            preparedOrder.status === "admin"
+              ? undefined
+              : eq(data.orderManagerAccess, true),
+          ),
+        )
         .returning();
       if (!updatedOrder) return null;
-      const retainedKeys = new Set(restoreSupplierRows(updatedOrder).map(row => row.rowKey));
-      const documents = await transaction.select().from(orderDocuments).where(eq(orderDocuments.orderId, orderId));
-      return { updatedOrder, removedDocuments: documents.filter(document => document.supplierRowKey !== null && !retainedKeys.has(document.supplierRowKey)) };
+      const retainedKeys = new Set(
+        restoreSupplierRows(updatedOrder).map((row) => row.rowKey),
+      );
+      const documents = await transaction
+        .select()
+        .from(orderDocuments)
+        .where(eq(orderDocuments.orderId, orderId));
+      return {
+        updatedOrder,
+        removedDocuments: documents.filter(
+          (document) =>
+            document.supplierRowKey !== null &&
+            !retainedKeys.has(document.supplierRowKey),
+        ),
+      };
     });
     const updatedOrder = saved?.updatedOrder;
 
     if (!updatedOrder) {
-      return { ok: false, message: "Order not found or your editing access has been revoked." };
+      return {
+        ok: false,
+        message: "Order not found or your editing access has been revoked.",
+      };
     }
 
     // Keep metadata when filesystem cleanup fails so a subsequent save can retry.
@@ -135,7 +182,14 @@ export async function updateOrder(orderId: number, formData: FormData) {
     for (const document of saved!.removedDocuments) {
       try {
         await removeDocumentFile(document.storagePath);
-        await db.delete(orderDocuments).where(and(eq(orderDocuments.id, document.id), eq(orderDocuments.orderId, orderId)));
+        await db
+          .delete(orderDocuments)
+          .where(
+            and(
+              eq(orderDocuments.id, document.id),
+              eq(orderDocuments.orderId, orderId),
+            ),
+          );
       } catch (error) {
         cleanupFailed = true;
         console.error("Supplier document cleanup failed", error);
@@ -146,7 +200,11 @@ export async function updateOrder(orderId: number, formData: FormData) {
     revalidatePath(`/order_form/${orderId}`);
     return {
       ok: true,
-      message: `Order updated: ${updatedOrder.felixOrderRef}` + (cleanupFailed ? ". Some removed attachments could not be deleted. Save again to retry." : ""),
+      message:
+        `Order updated: ${updatedOrder.felixOrderRef}` +
+        (cleanupFailed
+          ? ". Some removed attachments could not be deleted. Save again to retry."
+          : ""),
     };
   } catch (error) {
     console.error("Unable to update order", error);

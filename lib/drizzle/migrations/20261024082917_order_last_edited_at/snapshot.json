@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "1d266e19-64ff-4fac-95f8-9421f0764820",
-  "prevIds": [
-    "fd55e67e-6b34-49ca-ba06-c31f1583dc5a"
-  ],
+  "prevIds": ["fd55e67e-6b34-49ca-ba06-c31f1583dc5a"],
   "ddl": [
     {
       "isRlsEnabled": true,
@@ -1163,14 +1161,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "orderId"
-      ],
+      "columns": ["orderId"],
       "schemaTo": "public",
       "tableTo": "data",
-      "columnsTo": [
-        "sl"
-      ],
+      "columnsTo": ["sl"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "order_documents_orderId_data_sl_fkey",
@@ -1179,9 +1173,7 @@
       "table": "order_documents"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "customers_pkey",
       "schema": "public",
@@ -1189,9 +1181,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "data_pkey",
       "schema": "public",
@@ -1199,9 +1189,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "miscellaneousExpenditures_pkey",
       "schema": "public",
@@ -1209,9 +1197,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "order_documents_pkey",
       "schema": "public",
@@ -1219,9 +1205,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "suppliers_pkey",
       "schema": "public",
@@ -1229,9 +1213,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -1240,9 +1222,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "storagePath"
-      ],
+      "columns": ["storagePath"],
       "nullsNotDistinct": false,
       "name": "order_documents_storagePath_key",
       "schema": "public",

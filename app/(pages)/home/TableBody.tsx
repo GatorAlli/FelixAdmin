@@ -132,7 +132,9 @@ export default function TableBody({
                   <td className={`${cellStyling} font-bold text-black`}>
                     {e.felixOrderRef}
                   </td>
-                  <td className={clsx(cellStyling, "text-left tabular-nums")}>{formatMoney(e.clientOrderValue)}</td>
+                  <td className={clsx(cellStyling, "text-left tabular-nums")}>
+                    {formatMoney(e.clientOrderValue)}
+                  </td>
                   <td className={cellStyling}>{e.projectName}</td>
                   <td className={cellStyling}>{e.clientName}</td>
                   <td className={cellStyling}>{e.endUser}</td>

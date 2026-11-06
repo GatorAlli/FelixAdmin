@@ -3,7 +3,10 @@ export const IDLE_LOGOUT_MS = 15 * 60 * 1000;
 export const IDLE_STORAGE_PREFIX = "felix:idle-session:";
 
 export type IdleRecord = { lastActivity: number; expired: boolean };
-export type IdleView = { status: "active" | "warning" | "expired"; remainingSeconds: number };
+export type IdleView = {
+  status: "active" | "warning" | "expired";
+  remainingSeconds: number;
+};
 
 type IdlePorts = {
   now: () => number;
@@ -16,8 +19,14 @@ type IdlePorts = {
 export function readIdleRecord(value: unknown, now: number): IdleRecord | null {
   if (!value || typeof value !== "object") return null;
   const record = value as Partial<IdleRecord>;
-  if (typeof record.lastActivity !== "number" || !Number.isFinite(record.lastActivity) ||
-      record.lastActivity < 0 || record.lastActivity > now || typeof record.expired !== "boolean") return null;
+  if (
+    typeof record.lastActivity !== "number" ||
+    !Number.isFinite(record.lastActivity) ||
+    record.lastActivity < 0 ||
+    record.lastActivity > now ||
+    typeof record.expired !== "boolean"
+  )
+    return null;
   return { lastActivity: record.lastActivity, expired: record.expired };
 }
 
@@ -30,12 +39,17 @@ export class IdleSession {
   private expired = false;
 
   constructor(private ports: IdlePorts) {
-    this.record = readIdleRecord(ports.read(), ports.now()) ?? { lastActivity: ports.now(), expired: false };
+    this.record = readIdleRecord(ports.read(), ports.now()) ?? {
+      lastActivity: ports.now(),
+      expired: false,
+    };
     this.persist();
     this.check();
   }
 
-  isExpired() { return this.expired; }
+  isExpired() {
+    return this.expired;
+  }
 
   private persist() {
     this.ports.write({ ...this.record });
@@ -46,7 +60,10 @@ export class IdleSession {
   private merge(value: unknown) {
     const shared = readIdleRecord(value, this.ports.now());
     if (!shared) return;
-    this.record.lastActivity = Math.max(this.record.lastActivity, shared.lastActivity);
+    this.record.lastActivity = Math.max(
+      this.record.lastActivity,
+      shared.lastActivity,
+    );
     this.record.expired ||= shared.expired;
   }
 
@@ -59,9 +76,14 @@ export class IdleSession {
     if (this.expired) return;
     this.merge(this.ports.read());
     const elapsed = this.ports.now() - this.record.lastActivity;
-    const status = this.record.expired || elapsed >= IDLE_LOGOUT_MS
-      ? "expired" : elapsed >= IDLE_WARNING_MS ? "warning" : "active";
-    const remainingSeconds = status === "warning" ? Math.ceil((IDLE_LOGOUT_MS - elapsed) / 1000) : 0;
+    const status =
+      this.record.expired || elapsed >= IDLE_LOGOUT_MS
+        ? "expired"
+        : elapsed >= IDLE_WARNING_MS
+          ? "warning"
+          : "active";
+    const remainingSeconds =
+      status === "warning" ? Math.ceil((IDLE_LOGOUT_MS - elapsed) / 1000) : 0;
     if (status === "expired") {
       this.expired = true;
       this.record.expired = true;
@@ -69,7 +91,10 @@ export class IdleSession {
     } else if (this.dirty && this.ports.now() - this.lastWrite >= 1000) {
       this.persist();
     }
-    if (status !== this.view?.status || remainingSeconds !== this.view.remainingSeconds) {
+    if (
+      status !== this.view?.status ||
+      remainingSeconds !== this.view.remainingSeconds
+    ) {
       this.view = { status, remainingSeconds };
       this.ports.onChange(this.view);
     }
@@ -95,12 +120,14 @@ export class IdleSignOut {
   private completed = false;
   private cancelRetry: (() => void) | undefined;
 
-  constructor(private ports: {
-    signOut: () => Promise<{ error: unknown }>;
-    onSuccess: () => void;
-    onError: (failed: boolean) => void;
-    schedule: (retry: () => void, delay: number) => () => void;
-  }) {}
+  constructor(
+    private ports: {
+      signOut: () => Promise<{ error: unknown }>;
+      onSuccess: () => void;
+      onError: (failed: boolean) => void;
+      schedule: (retry: () => void, delay: number) => () => void;
+    },
+  ) {}
 
   async run() {
     if (this.disposed || this.pending || this.completed) return;
@@ -115,7 +142,9 @@ export class IdleSignOut {
     } catch {
       if (!this.disposed) {
         this.ports.onError(true);
-        this.cancelRetry = this.ports.schedule(() => { void this.run(); }, 5000);
+        this.cancelRetry = this.ports.schedule(() => {
+          void this.run();
+        }, 5000);
       }
     } finally {
       this.pending = false;

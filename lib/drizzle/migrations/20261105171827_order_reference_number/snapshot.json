@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "bfc94ebc-93a5-45cf-83e4-22bb09b4e114",
-  "prevIds": [
-    "ad75490a-2462-4237-80cf-751e2c8015a2"
-  ],
+  "prevIds": ["ad75490a-2462-4237-80cf-751e2c8015a2"],
   "ddl": [
     {
       "name": "better_auth",
@@ -1808,14 +1806,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "orderId"
-      ],
+      "columns": ["orderId"],
       "schemaTo": "public",
       "tableTo": "data",
-      "columnsTo": [
-        "sl"
-      ],
+      "columnsTo": ["sl"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "order_documents_orderId_data_sl_fkey",
@@ -1825,14 +1819,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "better_auth",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "account_user_id_user_id_fkey",
@@ -1842,14 +1832,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "better_auth",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "session_user_id_user_id_fkey",
@@ -1858,9 +1844,7 @@
       "table": "session"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "customers_pkey",
       "schema": "public",
@@ -1868,9 +1852,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "data_pkey",
       "schema": "public",
@@ -1878,9 +1860,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "miscellaneousExpenditures_pkey",
       "schema": "public",
@@ -1888,9 +1868,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "order_documents_pkey",
       "schema": "public",
@@ -1898,9 +1876,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "suppliers_pkey",
       "schema": "public",
@@ -1908,9 +1884,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -1918,9 +1892,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "account_pkey",
       "schema": "better_auth",
@@ -1928,9 +1900,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "rate_limit_pkey",
       "schema": "better_auth",
@@ -1938,9 +1908,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "session_pkey",
       "schema": "better_auth",
@@ -1948,9 +1916,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "user_pkey",
       "schema": "better_auth",
@@ -1958,9 +1924,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "verification_pkey",
       "schema": "better_auth",
@@ -1969,9 +1933,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "storagePath"
-      ],
+      "columns": ["storagePath"],
       "nullsNotDistinct": false,
       "name": "order_documents_storagePath_key",
       "schema": "public",
@@ -1980,9 +1942,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "key"
-      ],
+      "columns": ["key"],
       "nullsNotDistinct": false,
       "name": "rate_limit_key_key",
       "schema": "better_auth",
@@ -1991,9 +1951,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "token"
-      ],
+      "columns": ["token"],
       "nullsNotDistinct": false,
       "name": "session_token_key",
       "schema": "better_auth",
@@ -2002,9 +1960,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "user_email_key",
       "schema": "better_auth",

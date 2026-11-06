@@ -2,14 +2,20 @@ import "server-only";
 
 export function requireInvitationEmailConfig() {
   if (!process.env.RESEND_API_KEY || !process.env.RESEND_EMAIL) {
-    throw new Error("Set RESEND_API_KEY and RESEND_EMAIL before inviting users.");
+    throw new Error(
+      "Set RESEND_API_KEY and RESEND_EMAIL before inviting users.",
+    );
   }
   const baseURL = process.env.BETTER_AUTH_URL;
   if (!baseURL) throw new Error("Set BETTER_AUTH_URL before inviting users.");
   return new URL("/set-password", baseURL).href;
 }
 
-export async function sendInvitationEmail(invitation: { email: string; url: string; deliveryId: string }) {
+export async function sendInvitationEmail(invitation: {
+  email: string;
+  url: string;
+  deliveryId: string;
+}) {
   requireInvitationEmailConfig();
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",

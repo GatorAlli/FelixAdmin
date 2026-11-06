@@ -20,7 +20,8 @@ export default async function Summary() {
   await requireUser();
   const currentYear = new Date().getFullYear();
   const [orders, { supplierSuggestions }] = await Promise.all([
-    db.select().from(data).orderBy(asc(data.sl)), getOrderDatalists(),
+    db.select().from(data).orderBy(asc(data.sl)),
+    getOrderDatalists(),
   ]);
   return (
     <div

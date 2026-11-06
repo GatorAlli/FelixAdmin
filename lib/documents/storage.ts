@@ -8,36 +8,51 @@ import { MAX_DOCUMENT_BYTES } from "@/lib/document-files";
 
 export class DocumentStorageError extends Error {}
 
-const keyPattern = /^orders\/[1-9]\d{0,9}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const keyPattern =
+  /^orders\/[1-9]\d{0,9}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function isWithin(parent: string, child: string) {
   const path = relative(parent, child);
-  return path === "" || (!path.startsWith(".." + sep) && path !== ".." && !isAbsolute(path));
+  return (
+    path === "" ||
+    (!path.startsWith(".." + sep) && path !== ".." && !isAbsolute(path))
+  );
 }
 
 async function rootDirectory() {
   const directory = resolve(process.cwd(), ".local/documents");
   const publicDirectory = resolve(process.cwd(), "public");
-  if (isWithin(publicDirectory, directory) || directory.split(sep).includes("public_html")) {
-    throw new DocumentStorageError("Documents must be stored outside public website directories.");
+  if (
+    isWithin(publicDirectory, directory) ||
+    directory.split(sep).includes("public_html")
+  ) {
+    throw new DocumentStorageError(
+      "Documents must be stored outside public website directories.",
+    );
   }
   await mkdir(directory, { recursive: true, mode: 0o700 });
   const root = await realpath(directory);
-  const publicRoot = await realpath(publicDirectory).catch(() => publicDirectory);
+  const publicRoot = await realpath(publicDirectory).catch(
+    () => publicDirectory,
+  );
   if (isWithin(publicRoot, root) || root.split(sep).includes("public_html")) {
-    throw new DocumentStorageError("The document directory resolves to a public website directory.");
+    throw new DocumentStorageError(
+      "The document directory resolves to a public website directory.",
+    );
   }
   return root;
 }
 
 async function documentPath(key: string, createParent = false) {
-  if (!keyPattern.test(key)) throw new DocumentStorageError("Invalid document storage path.");
+  if (!keyPattern.test(key))
+    throw new DocumentStorageError("Invalid document storage path.");
   const root = await rootDirectory();
   const parent = join(root, ...key.split("/").slice(0, -1));
   if (createParent) await mkdir(parent, { recursive: true, mode: 0o700 });
   // Reject symlinked subdirectories that could escape private storage.
   const actualParent = await realpath(parent);
-  if (!isWithin(root, actualParent)) throw new DocumentStorageError("Invalid document directory.");
+  if (!isWithin(root, actualParent))
+    throw new DocumentStorageError("Invalid document directory.");
   return join(actualParent, key.split("/").at(-1)!);
 }
 
@@ -46,9 +61,19 @@ export function isMissingDocument(error: unknown) {
 }
 
 // Stream bytes to a private temporary file; publish only a complete upload.
-export async function writeDocument(key: string, body: ReadableStream<Uint8Array>, expectedSize: number) {
-  if (!Number.isSafeInteger(expectedSize) || expectedSize <= 0 || expectedSize > MAX_DOCUMENT_BYTES) {
-    throw new DocumentStorageError("Choose a non-empty file no larger than 300 MB.");
+export async function writeDocument(
+  key: string,
+  body: ReadableStream<Uint8Array>,
+  expectedSize: number,
+) {
+  if (
+    !Number.isSafeInteger(expectedSize) ||
+    expectedSize <= 0 ||
+    expectedSize > MAX_DOCUMENT_BYTES
+  ) {
+    throw new DocumentStorageError(
+      "Choose a non-empty file no larger than 300 MB.",
+    );
   }
   const destination = await documentPath(key, true);
   const temporary = destination + "." + randomUUID() + ".part";
@@ -57,7 +82,11 @@ export async function writeDocument(key: string, body: ReadableStream<Uint8Array
     transform(chunk: Buffer, _encoding, callback) {
       size += chunk.length;
       if (size > expectedSize || size > MAX_DOCUMENT_BYTES) {
-        callback(new DocumentStorageError("The upload exceeds its declared size or the 300 MB limit."));
+        callback(
+          new DocumentStorageError(
+            "The upload exceeds its declared size or the 300 MB limit.",
+          ),
+        );
       } else callback(null, chunk);
     },
   });
@@ -68,13 +97,16 @@ export async function writeDocument(key: string, body: ReadableStream<Uint8Array
       limit,
       handle.createWriteStream(),
     );
-    if (size !== expectedSize) throw new DocumentStorageError("The uploaded file is incomplete.");
+    if (size !== expectedSize)
+      throw new DocumentStorageError("The uploaded file is incomplete.");
     // link() fails rather than overwriting an existing completed document.
     await link(temporary, destination);
     return size;
   } finally {
     await handle.close();
-    await unlink(temporary).catch(error => { if (!isMissingDocument(error)) throw error; });
+    await unlink(temporary).catch((error) => {
+      if (!isMissingDocument(error)) throw error;
+    });
   }
 }
 

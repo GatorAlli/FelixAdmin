@@ -62,7 +62,9 @@ export default function TableBody({
     })),
     ...additionalSuppliers.map((name) => ({
       name,
-      total: sumMoneyAmounts(supplierAmounts.map((amounts) => amounts.get(name))),
+      total: sumMoneyAmounts(
+        supplierAmounts.map((amounts) => amounts.get(name)),
+      ),
     })),
   ];
 
@@ -93,7 +95,10 @@ export default function TableBody({
             setSelectedYear(year);
           }}
         >
-          <SelectTrigger className="w-45 shrink-0 bg-white" aria-label="Select year">
+          <SelectTrigger
+            className="w-45 shrink-0 bg-white"
+            aria-label="Select year"
+          >
             <SelectValue placeholder="Select year" />
           </SelectTrigger>
           <SelectContent>
@@ -163,7 +168,9 @@ export default function TableBody({
                       {e.felixOrderRef}
                     </td>
                     <td className={cellStyling}>{e.paymentMode}</td>
-                    <td className={clsx(cellStyling, "text-left tabular-nums")}>{formatMoney(e.clientOrderValue)}</td>
+                    <td className={clsx(cellStyling, "text-left tabular-nums")}>
+                      {formatMoney(e.clientOrderValue)}
+                    </td>
                     <td className={cellStyling}>{e.projectName}</td>
                     <td className={cellStyling}>{e.clientName}</td>
                     <td className={cellStyling}>{e.endUser}</td>
@@ -200,7 +207,6 @@ export default function TableBody({
         </div>
       </div>
       <div className="flex min-w-0 shrink-0 items-center gap-4 pt-4">
-
         <div
           className="h-10 w-max min-w-0 shrink overflow-x-auto overflow-y-hidden rounded-lg border border-input bg-white focus-visible:outline-2 focus-visible:outline-ring [scrollbar-width:thin]"
           role="region"
@@ -208,13 +214,20 @@ export default function TableBody({
           tabIndex={0}
         >
           <div className="flex h-full w-max items-center divide-x divide-border whitespace-nowrap text-sm">
-            {supplierTotals.length ? supplierTotals.map(({ name, total }) => (
-              <div key={name} className="flex shrink-0 items-center gap-2 px-4">
-                <span className="font-semibold">{name}</span>
-                <span className="tabular-nums">{formatMoney(total)} USD</span>
-              </div>
-            )) : (
-              <span className="px-4 text-muted-foreground">No supplier totals</span>
+            {supplierTotals.length ? (
+              supplierTotals.map(({ name, total }) => (
+                <div
+                  key={name}
+                  className="flex shrink-0 items-center gap-2 px-4"
+                >
+                  <span className="font-semibold">{name}</span>
+                  <span className="tabular-nums">{formatMoney(total)} USD</span>
+                </div>
+              ))
+            ) : (
+              <span className="px-4 text-muted-foreground">
+                No supplier totals
+              </span>
             )}
           </div>
         </div>

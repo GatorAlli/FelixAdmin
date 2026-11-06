@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "930a6ddc-0ae9-4498-ba36-d8c695be2263",
-  "prevIds": [
-    "e6b441c9-d61d-4533-9e26-2df58ecbd8c7"
-  ],
+  "prevIds": ["e6b441c9-d61d-4533-9e26-2df58ecbd8c7"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -882,9 +880,7 @@
       "table": "users"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "data_pkey",
       "schema": "public",
@@ -892,9 +888,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",

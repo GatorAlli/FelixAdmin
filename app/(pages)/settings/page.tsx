@@ -19,13 +19,17 @@ const manrope = Manrope({
 export default async function Settings() {
   const user = await requireUser();
   const [profile] = user.email
-    ? await db.select({ status: users.status }).from(users)
-        .where(eq(users.email, user.email)).limit(1)
+    ? await db
+        .select({ status: users.status })
+        .from(users)
+        .where(eq(users.email, user.email))
+        .limit(1)
     : [];
   if (profile?.status !== "admin") redirect("/home");
 
   const [datalists, managedUsers] = await Promise.all([
-    getOrderDatalists(), listManagedUsers(user.id),
+    getOrderDatalists(),
+    listManagedUsers(user.id),
   ]);
   return (
     <div className={`min-h-screen ${manrope.className}`}>

@@ -26,11 +26,18 @@ test("fees use their respective costs and commission subtracts all costs", () =>
     miscellaneousHandlingCost: "1.10",
     commission: "702.40",
   });
-  assert.equal(calculateOrderTotals({ ...exampleOrder, projectValue: "100" }).commission, "-197.60");
+  assert.equal(
+    calculateOrderTotals({ ...exampleOrder, projectValue: "100" }).commission,
+    "-197.60",
+  );
 });
 
 test("zero costs are valid and half-cent handling fees round upward", () => {
-  const emptyOrder = calculateOrderTotals({ ...exampleOrder, suppliers: [], expenses: [] });
+  const emptyOrder = calculateOrderTotals({
+    ...exampleOrder,
+    suppliers: [],
+    expenses: [],
+  });
   assert.equal(emptyOrder.commission, "1000.00");
   const smallOrder = calculateOrderTotals({
     ...exampleOrder,
@@ -41,8 +48,15 @@ test("zero costs are valid and half-cent handling fees round upward", () => {
 });
 
 test("invalid or overflowing costs do not produce a misleading commission", () => {
-  assert.equal(calculateOrderTotals({ ...exampleOrder, projectValue: "" }).commission, null);
-  assert.equal(calculateOrderTotals({ ...exampleOrder, orderHandlingFee: "-5" }).commission, null);
+  assert.equal(
+    calculateOrderTotals({ ...exampleOrder, projectValue: "" }).commission,
+    null,
+  );
+  assert.equal(
+    calculateOrderTotals({ ...exampleOrder, orderHandlingFee: "-5" })
+      .commission,
+    null,
+  );
   const overflowingOrder = calculateOrderTotals({
     ...exampleOrder,
     suppliers: [
