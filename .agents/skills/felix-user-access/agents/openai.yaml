@@ -1,0 +1,4 @@
+interface:
+  display_name: "Felix User Access"
+  short_description: "Roles, invitations, passwords, and session safeguards"
+  default_prompt: "Use $felix-user-access to implement this access-management change with server-enforced roles and safe invitations."

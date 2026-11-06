@@ -1,0 +1,4 @@
+interface:
+  display_name: "Felix Orders"
+  short_description: "Order calculations, forms, and saved-data compatibility"
+  default_prompt: "Use $felix-orders to implement this order-workspace change while preserving currency calculations and saved orders."

@@ -14,6 +14,7 @@ export const auth = betterAuth({
     provider: "pg",
     schemaName: "better_auth",
     schema: authSchema, // Map authentication models to generated Drizzle tables.
+    transaction: true,
   }),
 
   // Allow authentication calls in Server Actions to set cookies.

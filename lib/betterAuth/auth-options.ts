@@ -6,6 +6,8 @@ export const authOptions = {
   emailAndPassword: {
     enabled: true,
     disableSignUp: true,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
     password: {
       hash: async (password: string) => {
         if (Buffer.byteLength(password, "utf8") > 72) {
@@ -50,6 +52,7 @@ export const authOptions = {
         window: 60,
         max: 5,
       },
+      "/reset-password": { window: 60, max: 5 },
     },
   },
 } satisfies BetterAuthOptions;

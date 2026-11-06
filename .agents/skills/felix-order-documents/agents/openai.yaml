@@ -1,0 +1,4 @@
+interface:
+  display_name: "Felix Order Documents"
+  short_description: "Private uploads, downloads, and supplier attachments"
+  default_prompt: "Use $felix-order-documents to implement this attachment change while preserving private storage and order permissions."

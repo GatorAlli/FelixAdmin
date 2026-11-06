@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { getOrderDatalists } from "@/lib/drizzle/order-datalists";
 import SettingsLists from "./SettingsLists";
 import { Manrope } from "next/font/google";
+import { listManagedUsers } from "@/lib/user-management/service";
+import UsersTable from "./UsersTable";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -22,11 +24,14 @@ export default async function Settings() {
     : [];
   if (profile?.status !== "admin") redirect("/home");
 
-  const datalists = await getOrderDatalists();
+  const [datalists, managedUsers] = await Promise.all([
+    getOrderDatalists(), listManagedUsers(user.id),
+  ]);
   return (
     <div className={`min-h-screen ${manrope.className}`}>
       <Navbar />
       <SettingsLists {...datalists} />
+      <UsersTable users={managedUsers} currentUserId={user.id} />
     </div>
   );
 }
