@@ -76,24 +76,20 @@ export async function saveDatalist(
       } else if (kind === "customers") {
         await transaction.delete(customers);
         if (parsed.values.length)
-          await transaction
-            .insert(customers)
-            .values(
-              parsed.values.map((customerName, index) => ({
-                customerName,
-                address: customerAddresses.values[index],
-              })),
-            );
+          await transaction.insert(customers).values(
+            parsed.values.map((customerName, index) => ({
+              customerName,
+              address: customerAddresses.values[index],
+            })),
+          );
       } else {
         await transaction.delete(miscellaneousExpenditures);
         if (parsed.values.length)
-          await transaction
-            .insert(miscellaneousExpenditures)
-            .values(
-              parsed.values.map((miscellaneousExpenditureType) => ({
-                miscellaneousExpenditureType,
-              })),
-            );
+          await transaction.insert(miscellaneousExpenditures).values(
+            parsed.values.map((miscellaneousExpenditureType) => ({
+              miscellaneousExpenditureType,
+            })),
+          );
       }
     });
     revalidatePath("/settings");
