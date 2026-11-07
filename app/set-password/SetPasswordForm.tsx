@@ -23,8 +23,8 @@ export default function SetPasswordForm({ token }: { token: string }) {
         </>
       ) : !token ? (
         <p role="alert">
-          This invitation is invalid or has expired. Ask your administrator to
-          resend it.
+          This password link is invalid or has expired. Request a new link from
+          the sign-in page or ask your administrator to resend your invitation.
         </p>
       ) : (
         <form
@@ -56,7 +56,7 @@ export default function SetPasswordForm({ token }: { token: string }) {
                 setMessage(
                   error.status === 429
                     ? "Too many attempts. Wait one minute and try again."
-                    : "Could not create your password. The invitation may have expired or already been used. Ask your administrator to resend it.",
+                    : "Could not set your password. The link may have expired or already been used. Request a new link from the sign-in page or ask your administrator to resend your invitation.",
                 );
               else setComplete(true);
             } catch {

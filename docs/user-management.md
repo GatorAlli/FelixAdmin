@@ -10,6 +10,13 @@ and a Better Auth password-reset token. The recipient creates their first passwo
 on `/set-password`. Tokens expire in one hour, are consumed once, and are never
 returned to the admin's browser. Public registration stays disabled.
 
+The sign-in page's Forgot Password form uses Better Auth's public reset endpoint
+to email existing login accounts, including pending admin invitations, through
+Resend. Unknown addresses receive the same confirmation and no email. Requests
+are limited to three per minute per IP. Reset links open the same `/set-password`
+page, with the destination built only from server `BETTER_AUTH_URL`. They expire
+after one hour, work once, and revoke existing sessions after a password change.
+
 Resend delivers email after commit. Delivery failure leaves a pending account
 with a visible retry action. Resending is limited to once a minute, invalidates
 the old link, and is available only before a password has been set. Email delivery

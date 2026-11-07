@@ -53,6 +53,7 @@ export const authOptions = {
         max: 5,
       },
       "/reset-password": { window: 60, max: 5 },
+      "/request-password-reset": { window: 60, max: 3 },
     },
   },
 } satisfies BetterAuthOptions;

@@ -3,7 +3,7 @@
 import { useTransientMessage } from "@/lib/use-transient-message";
 import Image from "next/image";
 import { Sora, Manrope } from "next/font/google";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,8 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useTransientMessage();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [isRequestingReset, setIsRequestingReset] = useState(false);
   const { data: session } = authClient.useSession();
 
   const router = useRouter();
@@ -100,16 +102,40 @@ export default function App() {
             <h1
               className={`text-4xl md:text-[44px] tracking-tight text-black mb-3 leading-tight ${sora.className}`}
             >
-              {" "}
-              Welcome Back{" "}
+              {isPasswordReset ? "Password Reset" : "Welcome Back"}
             </h1>
           </div>
           {/* Sign In Form */}
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              if (isSigningIn) return;
+              if (isSigningIn || isRequestingReset) return;
               const loginEmail = email.trim().toLowerCase();
+              if (isPasswordReset) {
+                if (!loginEmail) {
+                  setMessage("Enter your email address.");
+                  return;
+                }
+                setIsRequestingReset(true);
+                setMessage("");
+                try {
+                  const { error } = await authClient.requestPasswordReset({
+                    email: loginEmail,
+                  });
+                  setMessage(
+                    error
+                      ? error.status === 429
+                        ? "Too many attempts. Please wait a minute and try again."
+                        : "Could not send the reset email. Please try again."
+                      : "If this email is registered, you will receive a password reset link. Check your inbox and spam folder.",
+                  );
+                } catch {
+                  setMessage("Could not send the reset email. Please try again.");
+                } finally {
+                  setIsRequestingReset(false);
+                }
+                return;
+              }
               if (loginEmail && password) {
                 setIsSigningIn(true);
                 setMessage("");
@@ -155,6 +181,8 @@ export default function App() {
                 id="email"
                 placeholder="Email address"
                 type="email"
+                required={isPasswordReset}
+                disabled={isRequestingReset}
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -162,44 +190,90 @@ export default function App() {
                 className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-primary focus-visible:border-primary placeholder:text-gray-400"
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="password"
-                className="text-[13px] uppercase tracking-wide font-semibold text-gray-900"
-              >
-                Password
-              </Label>
-              <Input
-                id="password"
-                placeholder="Password"
-                type="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                }}
-                className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-primary focus-visible:border-primary placeholder:text-gray-400"
-              />
-            </div>
+            {!isPasswordReset && (
+              <div className="flex flex-col gap-2">
+                <Label
+                  htmlFor="password"
+                  className="text-[13px] uppercase tracking-wide font-semibold text-gray-900"
+                >
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  placeholder="Password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                  }}
+                  className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-primary focus-visible:border-primary placeholder:text-gray-400"
+                />
+                <button
+                  type="button"
+                  disabled={isSigningIn}
+                  onClick={() => {
+                    setIsPasswordReset(true);
+                    setPassword("");
+                    setMessage("");
+                  }}
+                  className="self-end text-xs text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary disabled:opacity-50"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
             {/* animated button */}
-            <Button
-              type="submit"
-              disabled={isSigningIn}
-              aria-busy={isSigningIn}
-              className="w-full normal-case bg-primary hover:bg-primary/90 text-white mt-4 py-7 px-6 text-[17px] font-semibold rounded-lg transition-colors group"
-            >
-              <div className="relative flex w-full items-center justify-between">
-                <span className="relative z-10">
-                  {isSigningIn ? "Signing in…" : "Sign In"}
-                </span>
-                {/* Arrow moving */}
-                <div className="bg-black/10 p-1.5 rounded-lg group-hover:bg-black/20 transition-all duration-300 group-hover:translate-x-1 shrink-0 z-10">
-                  <ArrowRight
-                    className="h-5 w-5 text-white"
+            {isPasswordReset ? (
+              <div className="self-end flex items-center gap-3 -mt-3">
+                <Button
+                  type="button"
+                  disabled={isRequestingReset}
+                  onClick={() => {
+                    setIsPasswordReset(false);
+                    setMessage("");
+                  }}
+                  className="w-auto normal-case bg-primary hover:bg-primary/90 text-white h-10 px-4 gap-2 text-sm font-semibold rounded-lg transition-colors group"
+                >
+                  <ArrowLeft
+                    className="size-4 transition-transform group-hover:-translate-x-1"
                     strokeWidth={2.5}
                   />
-                </div>
+                  <span>Return</span>
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isRequestingReset}
+                  aria-busy={isRequestingReset}
+                  className="w-auto normal-case bg-primary hover:bg-primary/90 text-white h-10 px-4 gap-2 text-sm font-semibold rounded-lg transition-colors group"
+                >
+                  <span>{isRequestingReset ? "Sending…" : "Submit"}</span>
+                  <ArrowRight
+                    className="size-4 transition-transform group-hover:translate-x-1"
+                    strokeWidth={2.5}
+                  />
+                </Button>
               </div>
-            </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={isSigningIn}
+                aria-busy={isSigningIn}
+                className="w-full normal-case bg-primary hover:bg-primary/90 text-white mt-4 py-7 px-6 text-[17px] font-semibold rounded-lg transition-colors group"
+              >
+                <div className="relative flex w-full items-center justify-between">
+                  <span className="relative z-10">
+                    {isSigningIn ? "Signing in…" : "Sign In"}
+                  </span>
+                  {/* Arrow moving */}
+                  <div className="bg-black/10 p-1.5 rounded-lg group-hover:bg-black/20 transition-all duration-300 group-hover:translate-x-1 shrink-0 z-10">
+                    <ArrowRight
+                      className="h-5 w-5 text-white"
+                      strokeWidth={2.5}
+                    />
+                  </div>
+                </div>
+              </Button>
+            )}
             {message && <Label role="status">{message}</Label>}
           </form>
         </div>

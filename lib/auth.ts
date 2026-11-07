@@ -6,9 +6,14 @@ import { nextCookies } from "better-auth/next-js";
 import { authOptions } from "./betterAuth/auth-options";
 import { db } from "./drizzle/drizzle-index";
 import * as authSchema from "./drizzle/auth-schema";
+import { sendPasswordResetEmail } from "./user-management/email";
 
 export const auth = betterAuth({
   ...authOptions,
+  emailAndPassword: {
+    ...authOptions.emailAndPassword,
+    sendResetPassword: sendPasswordResetEmail,
+  },
 
   database: drizzleAdapter(db, {
     provider: "pg",
