@@ -10,6 +10,8 @@ import { Manrope } from "next/font/google";
 import { listManagedUsers } from "@/lib/user-management/service";
 import UsersTable from "./UsersTable";
 
+export const metadata = { title: "Settings" };
+
 const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],

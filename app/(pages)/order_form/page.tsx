@@ -7,6 +7,8 @@ import { users } from "@/lib/drizzle/schema";
 import { redirect } from "next/navigation";
 import { canEditOrder } from "@/lib/drizzle/order-access";
 
+export const metadata = { title: "New Order" };
+
 // Prepare a new order with the current profile, suggestions and Bangladesh date.
 export default async function OrderForm() {
   const user = await requireUser();

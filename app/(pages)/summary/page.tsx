@@ -6,6 +6,8 @@ import { asc } from "drizzle-orm";
 import { getOrderDatalists } from "@/lib/drizzle/order-datalists";
 import TableBody from "./TableBody";
 import { Sora, Manrope } from "next/font/google";
+export const metadata = { title: "Order Summary" };
+
 const sora = Sora({
   subsets: ["latin"],
   weight: ["600"],

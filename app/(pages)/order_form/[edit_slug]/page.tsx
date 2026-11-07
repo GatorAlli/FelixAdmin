@@ -7,6 +7,8 @@ import { data, users, orderDocuments } from "@/lib/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
+export const metadata = { title: "Order Details" };
+
 // Load one saved order and its document metadata for the shared form component.
 export default async function OrderForm({
   params,

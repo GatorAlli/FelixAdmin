@@ -1,6 +1,6 @@
 import SetPasswordForm from "./SetPasswordForm";
 
-export const metadata = { title: "Create password | Felix Controls" };
+export const metadata = { title: "Create Password" };
 
 export default async function SetPasswordPage({
   searchParams,

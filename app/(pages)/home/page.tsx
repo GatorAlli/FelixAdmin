@@ -9,6 +9,8 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { canEditOrder } from "@/lib/drizzle/order-access";
 
+export const metadata = { title: "Home" };
+
 const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
