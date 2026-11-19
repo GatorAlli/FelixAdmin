@@ -1,6 +1,6 @@
 export const accessLabels = {
   admin: "Admin",
-  order: "Order manager",
+  proposal: "Proposal manager",
   guest: "Guest",
 } as const;
 
@@ -28,7 +28,7 @@ export function readInvitation(input: unknown) {
     throw new Error("Enter a valid email address.");
   }
   if (typeof access !== "string" || !Object.hasOwn(accessLabels, access)) {
-    throw new Error("Choose Admin, Order manager, or Guest access.");
+    throw new Error("Choose Admin, Proposal manager, or Guest access.");
   }
   return {
     name: name.trim(),

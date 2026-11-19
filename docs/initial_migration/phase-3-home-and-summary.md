@@ -1,6 +1,6 @@
 # Phase 3: Home and Summary
 
-[❮ Phase 2 Proposal Form](phase-2-proposal-form.md) | Next: Phase 4 Settings, Roles and Branding ❯
+[❮ Phase 2 Proposal Form](phase-2-proposal-form.md) | [Phase 4 Settings, Roles and Branding ❯](phase-4-settings-roles-branding.md)
 
 ---
 
@@ -1489,4 +1489,4 @@ What does the **Secured** total show?
 
 ---
 
-[❮ Phase 2 Proposal Form](phase-2-proposal-form.md) | Next: Phase 4 Settings, Roles and Branding ❯
+[❮ Phase 2 Proposal Form](phase-2-proposal-form.md) | [Phase 4 Settings, Roles and Branding ❯](phase-4-settings-roles-branding.md)

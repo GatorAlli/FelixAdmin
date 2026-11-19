@@ -1,0 +1,4 @@
+interface:
+  display_name: "Felix Proposals"
+  short_description: "Proposal forms, BDT conversion, and saved-data compatibility"
+  default_prompt: "Use $felix-proposals to implement this proposal-workspace change while preserving BDT conversion and saved proposals."

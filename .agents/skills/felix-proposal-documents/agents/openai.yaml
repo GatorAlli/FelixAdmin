@@ -1,0 +1,4 @@
+interface:
+  display_name: "Felix Proposal Documents"
+  short_description: "Private proposal uploads and downloads"
+  default_prompt: "Use $felix-proposal-documents to implement this document change while preserving private storage and proposal permissions."

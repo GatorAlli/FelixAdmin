@@ -1,20 +1,16 @@
 import type { DocumentSummary } from "./drizzle/schema";
 
-// Called only after the order save succeeds. Files stay outside Server Action payloads.
-export async function uploadOrderDocument(
-  orderId: number,
+// Called only after the proposal save succeeds. Files stay outside Server Action payloads.
+export async function uploadProposalDocument(
+  proposalId: number,
   file: File,
-  supplierRowKey?: string,
 ): Promise<DocumentSummary> {
-  const response = await fetch(`/api/orders/${orderId}/documents`, {
+  const response = await fetch(`/api/proposals/${proposalId}/documents`, {
     method: "POST",
     headers: {
       "Content-Type": file.type || "application/octet-stream",
       "X-File-Name": encodeURIComponent(file.name),
       "X-File-Size": String(file.size),
-      ...(supplierRowKey
-        ? { "X-Supplier-Row-Key": encodeURIComponent(supplierRowKey) }
-        : {}),
     },
     body: file,
   });

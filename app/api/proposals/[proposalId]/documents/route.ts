@@ -1,13 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { eq } from "drizzle-orm";
-import { restoreSupplierRows } from "@/lib/drizzle/currency";
-import { data, orderDocuments } from "@/lib/drizzle/schema";
+import { proposals, proposalDocuments } from "@/lib/drizzle/schema";
 import { readDocumentMetadata } from "@/lib/document-files";
 import {
   documentAccess,
   hasDocumentOrigin,
-  parseOrderId,
+  parseProposalId,
 } from "@/lib/documents/access";
 import {
   DocumentStorageError,
@@ -19,22 +18,22 @@ export const runtime = "nodejs";
 
 export async function POST(
   request: Request,
-  context: { params: Promise<{ orderId: string }> },
+  context: { params: Promise<{ proposalId: string }> },
 ) {
   if (!hasDocumentOrigin(request))
     return Response.json(
       { ok: false, message: "Invalid request origin." },
       { status: 403 },
     );
-  const orderId = parseOrderId((await context.params).orderId);
-  if (!orderId)
+  const proposalId = parseProposalId((await context.params).proposalId);
+  if (!proposalId)
     return Response.json(
-      { ok: false, message: "Invalid order." },
+      { ok: false, message: "Invalid proposal." },
       { status: 400 },
     );
   let savedPath: string | undefined;
   try {
-    const access = await documentAccess(orderId, true, request.headers);
+    const access = await documentAccess(proposalId, true, request.headers);
     if (!access.ok) return Response.json(access, { status: access.status });
     let name: string;
     try {
@@ -56,26 +55,7 @@ export async function POST(
         { ok: false, message: "Choose a file first." },
         { status: 400 },
       );
-    let supplierRowKey: string | null;
-    try {
-      const header = request.headers.get("x-supplier-row-key");
-      supplierRowKey = header === null ? null : decodeURIComponent(header);
-    } catch {
-      return Response.json(
-        { ok: false, message: "Invalid supplier row." },
-        { status: 400 },
-      );
-    }
-    if (
-      supplierRowKey !== null &&
-      (!supplierRowKey || supplierRowKey.length > 240)
-    ) {
-      return Response.json(
-        { ok: false, message: "Invalid supplier row." },
-        { status: 400 },
-      );
-    }
-    const storagePath = "orders/" + orderId + "/" + randomUUID();
+    const storagePath = "proposals/" + proposalId + "/" + randomUUID();
     const sizeBytes = await writeDocument(
       storagePath,
       request.body,
@@ -83,45 +63,37 @@ export async function POST(
     );
     savedPath = storagePath;
     // A role or access flag may have changed while a large file was uploading.
-    const currentAccess = await documentAccess(orderId, true, request.headers);
+    const currentAccess = await documentAccess(
+      proposalId,
+      true,
+      request.headers,
+    );
     if (!currentAccess.ok)
       return Response.json(currentAccess, { status: currentAccess.status });
     const document = await db.transaction(async (transaction) => {
-      // Lock only after streaming, and serialize with supplier-row saves.
-      const [order] = await transaction
-        .select()
-        .from(data)
-        .where(eq(data.sl, orderId))
+      // Lock only after streaming, so the proposal cannot vanish mid-insert.
+      const [proposal] = await transaction
+        .select({ sl: proposals.sl })
+        .from(proposals)
+        .where(eq(proposals.sl, proposalId))
         .for("update");
-      if (
-        !order ||
-        (supplierRowKey !== null &&
-          !restoreSupplierRows(order).some(
-            (row) => row.rowKey === supplierRowKey,
-          ))
-      ) {
-        throw new DocumentStorageError(
-          "Save this supplier row before attaching a document.",
-        );
-      }
+      if (!proposal) throw new DocumentStorageError("Proposal not found.");
       const [saved] = await transaction
-        .insert(orderDocuments)
+        .insert(proposalDocuments)
         .values({
-          orderId,
+          proposalId,
           storagePath,
           sizeBytes,
-          supplierRowKey,
           title: metadata.originalName.slice(0, 120),
           originalName: metadata.originalName,
           mimeType: metadata.mimeType,
           uploadedBy: access.user.id,
         })
         .returning({
-          supplierRowKey: orderDocuments.supplierRowKey,
-          id: orderDocuments.id,
-          title: orderDocuments.title,
-          originalName: orderDocuments.originalName,
-          sizeBytes: orderDocuments.sizeBytes,
+          id: proposalDocuments.id,
+          title: proposalDocuments.title,
+          originalName: proposalDocuments.originalName,
+          sizeBytes: proposalDocuments.sizeBytes,
         });
       return saved;
     });

@@ -2,7 +2,7 @@ BE SHORT AND CONCISE
 
 ## Project
 
-Felix Controls Limited admin page: internal order-management and user-administration app. Stack: React, TypeScript, Next.js, Tailwind CSS, Drizzle ORM, Postgres, Better Auth.
+Felix Controls Limited proposal workspace: internal proposal-management and user-administration app, forked from the order-management app (conversion history in `docs/initial_migration/`). Stack: React, TypeScript, Next.js, Tailwind CSS, Drizzle ORM, Postgres, Better Auth.
 
 ## Working agreements (all agents)
 
@@ -16,9 +16,9 @@ Felix Controls Limited admin page: internal order-management and user-administra
 
 | Skill                                                                                                        | Source                       | When to use                                                                                                                                                                                               |
 | ------------------------------------------------------------------------------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [felix-orders](.agents/skills/felix-orders/SKILL.md)                                                         | project                      | Order forms, supplier/expense rows, currency calculations, references, summaries, Settings catalogs.                                                                                                      |
+| [felix-proposals](.agents/skills/felix-proposals/SKILL.md)                                                   | project                      | Proposal forms, BDT conversion and rates, project status, references, Home/Summary, Settings catalogs.                                                                                                    |
 | [felix-user-access](.agents/skills/felix-user-access/SKILL.md)                                               | project                      | Authentication, roles, invitations, user removal, idle sessions.                                                                                                                                          |
-| [felix-order-documents](.agents/skills/felix-order-documents/SKILL.md)                                       | project                      | Private uploads, downloads, deletion, supplier attachments.                                                                                                                                               |
+| [felix-proposal-documents](.agents/skills/felix-proposal-documents/SKILL.md)                                 | project                      | Private proposal uploads, downloads, deletion.                                                                                                                                                            |
 | [better-auth-best-practices](.agents/skills/better-auth-best-practices/SKILL.md)                             | better-auth/skills           | General Better Auth configuration guidance.                                                                                                                                                               |
 | [better-auth-security-best-practices](.agents/skills/better-auth-security-best-practices/SKILL.md)           | better-auth/skills           | Better Auth security hardening.                                                                                                                                                                           |
 | [create-auth](.agents/skills/create-auth/SKILL.md)                                                           | better-auth/skills           | Scaffolding a new Better Auth instance.                                                                                                                                                                   |
@@ -67,10 +67,10 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   ├── create-auth/SKILL.md                 # Scaffolding a new Better Auth instance
 │   ├── create-readme/SKILL.md               # Writing/updating README.md
 │   ├── email-and-password-best-practices/SKILL.md  # Better Auth email/password flows
-│   ├── felix-order-documents/               # Project skill: order/supplier document uploads
+│   ├── felix-proposal-documents/            # Project skill: proposal document uploads
 │   │   ├── SKILL.md                         # Contract description
 │   │   └── agents/openai.yaml               # OpenAI-agent skill metadata
-│   ├── felix-orders/                        # Project skill: order forms and currency calculations
+│   ├── felix-proposals/                     # Project skill: proposal forms and BDT conversion
 │   │   ├── SKILL.md                         # Contract description
 │   │   └── agents/openai.yaml               # OpenAI-agent skill metadata
 │   ├── felix-user-access/                   # Project skill: auth, roles, invitations
@@ -91,7 +91,7 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   ├── hooks/format.mjs                     # PostToolUse hook: prettier --write on the edited file
 │   ├── settings.json                        # Registers the format hook for Edit/Write/MultiEdit
 │   └── skills/                              # Symlinks into .agents/skills for Claude Code
-├── .local/documents/orders/<orderId>/<uuid> # Private order-document bytes (see lib/documents/storage.ts)
+├── .local/documents/proposals/<proposalId>/<uuid> # Private proposal-document bytes (see lib/documents/storage.ts)
 ├── .vscode/settings.json                    # Editor Tailwind IntelliSense config
 ├── app/
 │   ├── (pages)/                             # Authenticated routes, wrapped by layout.tsx's session check
@@ -103,14 +103,14 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   │   ├── proposal_form/
 │   │   │   ├── [proposalId]/page.tsx        # View/edit an existing proposal
 │   │   │   ├── DocumentFileInput.tsx        # File picker control for document uploads
-│   │   │   ├── OrderDocuments.tsx           # Proposal document list/upload UI (renamed in Phase 5)
 │   │   │   ├── PageBody.tsx                 # Proposal form state, BDT preview, save orchestration
+│   │   │   ├── ProposalDocuments.tsx        # Proposal document list/upload UI
 │   │   │   ├── actions.ts                   # Server actions: createProposal/updateProposal
 │   │   │   └── page.tsx                     # New-proposal route
 │   │   ├── settings/
-│   │   │   ├── SettingsLists.tsx            # Supplier/customer/expense catalog editor UI
+│   │   │   ├── SettingsLists.tsx            # Client/system catalog editor UI
 │   │   │   ├── UsersTable.tsx               # User management table UI
-│   │   │   ├── actions.ts                   # Server actions: save catalogs
+│   │   │   ├── actions.ts                   # Server action: saveDatalist (clients/systems, admin only)
 │   │   │   ├── page.tsx                     # Settings route, admin-only redirect
 │   │   │   └── user-actions.ts              # Server actions: invite/edit/remove users
 │   │   └── summary/
@@ -118,7 +118,7 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   │       └── page.tsx                     # Summary route
 │   ├── api/
 │   │   ├── auth/[...all]/route.ts           # Better Auth catch-all handler
-│   │   └── orders/[orderId]/documents/
+│   │   └── proposals/[proposalId]/documents/
 │   │       ├── [documentId]/route.ts        # Download/delete a single document
 │   │       └── route.ts                     # Upload a document
 │   ├── components/signOutButton.tsx         # Sign-out action button
@@ -144,12 +144,15 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │       └── year-select.tsx                  # Year filter used by Home and Summary
 ├── docker/postgres/
 │   ├── init.sql                             # Local dev role/database bootstrap
-│   └── schema.sql                           # Reference schema dump for local Postgres
+│   └── schema.sql                           # Reference schema dump (`drizzle-kit export --sql`); loaded by service.test.ts
 ├── docs/
 │   ├── initial_migration/                   # Per-phase reports for the order→proposal conversion
 │   │   ├── phase-1-data-and-helpers.md      # Phase 1: schema, currency, helpers, tests, migrations
 │   │   ├── phase-2-proposal-form.md         # Phase 2: proposal form route, actions, PageBody
-│   │   └── phase-3-home-and-summary.md      # Phase 3: Home list, Summary table, shared helpers
+│   │   ├── phase-3-home-and-summary.md      # Phase 3: Home list, Summary table, shared helpers
+│   │   ├── phase-4-settings-roles-branding.md  # Phase 4: Settings lists, proposal role, wording
+│   │   ├── phase-5-documents.md             # Phase 5: proposal document API, storage, upload helper
+│   │   └── phase-6-docs-and-verification.md # Phase 6: skills, docs, build and secret scan
 │   ├── proposal-conversion-plan.md          # Plan for converting the order app into the proposal app
 │   ├── reports/user-management-code-report.md  # Snapshot report of user-management change set
 │   └── user-management.md                   # User-management contract/behavior notes
@@ -166,7 +169,7 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   ├── document-files.test.ts               # Tests for document metadata/validation helpers
 │   ├── document-files.ts                    # Document size limit and metadata types
 │   ├── document-uploads.test.ts             # Tests for client upload orchestration
-│   ├── document-uploads.ts                  # Browser-side document upload helper
+│   ├── document-uploads.ts                  # Browser-side uploadProposalDocument helper
 │   ├── documents/
 │   │   ├── access.ts                        # Authorization checks for document routes
 │   │   ├── storage.test.ts                  # Tests for private filesystem storage
@@ -200,6 +203,7 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   └── utils.ts                             # Re-exports cn()
 ├── public/                                   # Static assets (logo, default Next.js icons)
 ├── scripts/create-user.ts                   # CLI: provision an initial admin user directly
+├── .gitignore                             # Git ignore rules (includes /.local/ document uploads)
 ├── .prettierignore                          # Paths Prettier skips
 ├── .prettierrc                              # Prettier config (Tailwind plugin, tailwindFunctions)
 ├── AGENTS.md                                # This file: canonical agent instructions
@@ -219,9 +223,9 @@ Paths above are relative to this repository. Read the relevant source files; ski
 
 ## Architecture notes
 
-- **Auth model**: Better Auth (`better_auth.*` tables) owns login/session identity; `public.users` owns the application profile (name, role). The two link by email, not a foreign key — see the `felix-user-access` skill. Roles (`admin`, `order`, `guest`) are always read from the current database profile, never from the client or a cached session.
-- **Orders**: money is stored as decimal strings with exact scaled-integer arithmetic (no floats). Built-in suppliers use fixed USD columns; custom suppliers use JSON rows keyed by a stable `rowKey` that survives rename/reorder and is what document attachments reference. See the `felix-orders` skill.
-- **Documents**: metadata lives in Postgres (`order_documents`); bytes live on the local filesystem under `.local/documents/orders/<orderId>/<uuid>`, outside `public/`. Uploads/downloads stream through Node.js API routes, not Server Actions, with private/no-store/attachment headers. See the `felix-order-documents` skill.
+- **Auth model**: Better Auth (`better_auth.*` tables) owns login/session identity; `public.users` owns the application profile (name, role). The two link by email, not a foreign key — see the `felix-user-access` skill. Roles (`admin`, `proposal`, `guest`) are always read from the current database profile, never from the client or a cached session.
+- **Proposals**: money is stored as decimal strings with exact scaled-integer arithmetic (no floats). Values keep their original amount and currency plus a server-computed BDT equivalent; each proposal saves its own "1 unit = X BDT" rates. References are `FCL/Quote/YYYY/NNN`; status is Current/Secured/Lost. See the `felix-proposals` skill.
+- **Documents**: metadata lives in Postgres (`proposal_documents`); bytes live on the local filesystem under `.local/documents/proposals/<proposalId>/<uuid>`, outside `public/`. Uploads/downloads stream through Node.js API routes, not Server Actions, with private/no-store/attachment headers. See the `felix-proposal-documents` skill.
 - **Database**: Drizzle ORM against Postgres. Migrations are generated pairs (`migration.sql` + `snapshot.json`) under `lib/drizzle/migrations/`; schema lives in `lib/drizzle/schema.ts` (app tables) and `lib/drizzle/auth-schema.ts` (Better Auth tables).
 - **Styling**: Tailwind CSS v4, CSS-first config via `app/globals.css`, with `cn`/`cva` for conditional classes (see `components/ui/`).
 

@@ -194,7 +194,7 @@ export default function UsersTable({
                         onClick={() => {
                           if (
                             window.confirm(
-                              `Remove ${user.name} (${user.email})? They will lose access immediately. Existing orders will be kept.`,
+                              `Remove ${user.name} (${user.email})? They will lose access immediately. Existing proposals will be kept.`,
                             )
                           )
                             perform(() => removeUser(user.id));

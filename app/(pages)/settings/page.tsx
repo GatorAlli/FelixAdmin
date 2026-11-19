@@ -4,7 +4,7 @@ import { db } from "@/lib/drizzle/drizzle-index";
 import { users } from "@/lib/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { getOrderDatalists } from "@/lib/drizzle/order-datalists";
+import { getProposalDatalists } from "@/lib/drizzle/proposal-datalists";
 import SettingsLists from "./SettingsLists";
 import { Manrope } from "next/font/google";
 import { listManagedUsers } from "@/lib/user-management/service";
@@ -17,7 +17,7 @@ const manrope = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-// Only admins can load the editable supplier, customer and expense lists.
+// Only admins can load the editable client and system lists.
 export default async function Settings() {
   const user = await requireUser();
   const [profile] = user.email
@@ -30,7 +30,7 @@ export default async function Settings() {
   if (profile?.status !== "admin") redirect("/home");
 
   const [datalists, managedUsers] = await Promise.all([
-    getOrderDatalists(),
+    getProposalDatalists(),
     listManagedUsers(user.id),
   ]);
   return (

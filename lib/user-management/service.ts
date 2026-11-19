@@ -59,7 +59,7 @@ export async function listManagedUsers(
       ),
     )
     .orderBy(
-      sql`case ${users.status} when 'admin' then 0 when 'order' then 1 when 'guest' then 2 else 3 end`,
+      sql`case ${users.status} when 'admin' then 0 when 'proposal' then 1 when 'guest' then 2 else 3 end`,
       asc(authSchema.user.name),
       asc(authSchema.user.email),
     );
@@ -116,7 +116,7 @@ export async function changeManagedUser(
             like(authSchema.verification.identifier, "reset-password:%"),
           ),
         );
-      // Account and session foreign keys cascade. Order attribution stays untouched.
+      // Account and session foreign keys cascade. Proposal attribution stays untouched.
       await transaction
         .delete(authSchema.user)
         .where(eq(authSchema.user.id, id));

@@ -24,11 +24,11 @@ const manrope = Manrope({
 // Decorative background for the login screen.
 const FallingParticles = () => {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       {[...Array(30)].map((_, i) => (
         <div
           key={i}
-          className="absolute top-[-10%] w-1 h-1 bg-white/20 rounded-lg"
+          className="absolute top-[-10%] h-1 w-1 rounded-lg bg-white/20"
           style={{
             // Vary particles by index so their settings stay consistent across renders.
             left: `${(i * 37) % 100}%`,
@@ -59,14 +59,14 @@ export default function App() {
 
   const router = useRouter();
 
-  // Visitors with an existing session go straight to the order list.
+  // Visitors with an existing session go straight to the proposal list.
   useEffect(() => {
     if (session) router.replace("/home");
   }, [router, session]);
 
   return (
-    <div className={`min-h-screen flex w-full bg-muted ${manrope.className}`}>
-      <div className="relative hidden md:flex md:w-1/2 bg-primary items-center justify-center overflow-hidden">
+    <div className={`flex min-h-screen w-full bg-muted ${manrope.className}`}>
+      <div className="relative hidden items-center justify-center overflow-hidden bg-primary md:flex md:w-1/2">
         <FallingParticles />
         <div className="relative z-10 w-[70%] max-w-lg">
           <Image
@@ -75,32 +75,32 @@ export default function App() {
             width={600}
             height={600}
             priority
-            className="object-contain w-full h-auto"
+            className="h-auto w-full object-contain"
           />
         </div>
       </div>
-      <div className="w-full md:w-1/2 flex flex-col relative bg-muted">
+      <div className="relative flex w-full flex-col bg-muted md:w-1/2">
         <div className="absolute top-6 right-8 z-20"></div>
         {/* Content */}
-        <div className="flex-1 flex flex-col justify-center px-8 sm:px-16 lg:px-24 max-w-2xl mx-auto w-full mt-12 md:mt-0">
+        <div className="mx-auto mt-12 flex w-full max-w-2xl flex-1 flex-col justify-center px-8 sm:px-16 md:mt-0 lg:px-24">
           {/* Logo */}
-          <div className="mb-12 relative">
+          <div className="relative mb-12">
             <Image
               src="/logo.svg"
               alt="Felix Controls Limited"
               width={160}
               height={45}
-              className="object-contain mb-6 w-40 h-auto"
+              className="mb-6 h-auto w-40 object-contain"
             />
             {/* animated line */}
-            <div className="w-full h-px bg-gray-200 relative flex items-center">
+            <div className="relative flex h-px w-full items-center bg-gray-200">
               <Plus className="absolute -right-3 h-4 w-4 text-primary opacity-50" />
             </div>
           </div>
           {/* Header part */}
           <div className="mb-10">
             <h1
-              className={`text-4xl md:text-[44px] tracking-tight text-black mb-3 leading-tight ${sora.className}`}
+              className={`mb-3 text-4xl leading-tight tracking-tight text-black md:text-[44px] ${sora.className}`}
             >
               {isPasswordReset ? "Password Reset" : "Welcome Back"}
             </h1>
@@ -130,7 +130,9 @@ export default function App() {
                       : "If this email is registered, you will receive a password reset link. Check your inbox and spam folder.",
                   );
                 } catch {
-                  setMessage("Could not send the reset email. Please try again.");
+                  setMessage(
+                    "Could not send the reset email. Please try again.",
+                  );
                 } finally {
                   setIsRequestingReset(false);
                 }
@@ -173,7 +175,7 @@ export default function App() {
             <div className="flex flex-col gap-2">
               <Label
                 htmlFor="email"
-                className="text-[13px] uppercase tracking-wide font-semibold text-gray-900"
+                className="text-[13px] font-semibold tracking-wide text-gray-900 uppercase"
               >
                 Email Address
               </Label>
@@ -187,14 +189,14 @@ export default function App() {
                 onChange={(e) => {
                   setEmail(e.target.value);
                 }}
-                className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-primary focus-visible:border-primary placeholder:text-gray-400"
+                className="w-full rounded-lg border-gray-200 bg-white px-4 py-6 text-base font-normal shadow-sm placeholder:text-gray-400 focus-visible:border-primary focus-visible:ring-primary"
               />
             </div>
             {!isPasswordReset && (
               <div className="flex flex-col gap-2">
                 <Label
                   htmlFor="password"
-                  className="text-[13px] uppercase tracking-wide font-semibold text-gray-900"
+                  className="text-[13px] font-semibold tracking-wide text-gray-900 uppercase"
                 >
                   Password
                 </Label>
@@ -206,7 +208,7 @@ export default function App() {
                   onChange={(e) => {
                     setPassword(e.target.value);
                   }}
-                  className="w-full py-6 px-4 text-base font-normal bg-white border-gray-200 rounded-lg shadow-sm focus-visible:ring-primary focus-visible:border-primary placeholder:text-gray-400"
+                  className="w-full rounded-lg border-gray-200 bg-white px-4 py-6 text-base font-normal shadow-sm placeholder:text-gray-400 focus-visible:border-primary focus-visible:ring-primary"
                 />
                 <button
                   type="button"
@@ -224,7 +226,7 @@ export default function App() {
             )}
             {/* animated button */}
             {isPasswordReset ? (
-              <div className="self-end flex items-center gap-3 -mt-3">
+              <div className="-mt-3 flex items-center gap-3 self-end">
                 <Button
                   type="button"
                   disabled={isRequestingReset}
@@ -232,7 +234,7 @@ export default function App() {
                     setIsPasswordReset(false);
                     setMessage("");
                   }}
-                  className="w-auto normal-case bg-primary hover:bg-primary/90 text-white h-10 px-4 gap-2 text-sm font-semibold rounded-lg transition-colors group"
+                  className="group h-10 w-auto gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white normal-case transition-colors hover:bg-primary/90"
                 >
                   <ArrowLeft
                     className="size-4 transition-transform group-hover:-translate-x-1"
@@ -244,7 +246,7 @@ export default function App() {
                   type="submit"
                   disabled={isRequestingReset}
                   aria-busy={isRequestingReset}
-                  className="w-auto normal-case bg-primary hover:bg-primary/90 text-white h-10 px-4 gap-2 text-sm font-semibold rounded-lg transition-colors group"
+                  className="group h-10 w-auto gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white normal-case transition-colors hover:bg-primary/90"
                 >
                   <span>{isRequestingReset ? "Sending…" : "Submit"}</span>
                   <ArrowRight
@@ -258,14 +260,14 @@ export default function App() {
                 type="submit"
                 disabled={isSigningIn}
                 aria-busy={isSigningIn}
-                className="w-full normal-case bg-primary hover:bg-primary/90 text-white mt-4 py-7 px-6 text-[17px] font-semibold rounded-lg transition-colors group"
+                className="group mt-4 w-full rounded-lg bg-primary px-6 py-7 text-[17px] font-semibold text-white normal-case transition-colors hover:bg-primary/90"
               >
                 <div className="relative flex w-full items-center justify-between">
                   <span className="relative z-10">
                     {isSigningIn ? "Signing in…" : "Sign In"}
                   </span>
                   {/* Arrow moving */}
-                  <div className="bg-black/10 p-1.5 rounded-lg group-hover:bg-black/20 transition-all duration-300 group-hover:translate-x-1 shrink-0 z-10">
+                  <div className="z-10 shrink-0 rounded-lg bg-black/10 p-1.5 transition-all duration-300 group-hover:translate-x-1 group-hover:bg-black/20">
                     <ArrowRight
                       className="h-5 w-5 text-white"
                       strokeWidth={2.5}

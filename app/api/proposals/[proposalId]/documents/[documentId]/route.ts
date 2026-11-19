@@ -1,11 +1,11 @@
 import { Readable } from "node:stream";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/drizzle/drizzle-index";
-import { orderDocuments } from "@/lib/drizzle/schema";
+import { proposalDocuments } from "@/lib/drizzle/schema";
 import {
   documentAccess,
   hasDocumentOrigin,
-  parseOrderId,
+  parseProposalId,
 } from "@/lib/documents/access";
 import {
   isMissingDocument,
@@ -15,7 +15,7 @@ import {
 
 export const runtime = "nodejs";
 
-type Context = { params: Promise<{ orderId: string; documentId: string }> };
+type Context = { params: Promise<{ proposalId: string; documentId: string }> };
 
 async function findDocument(
   request: Request,
@@ -23,24 +23,24 @@ async function findDocument(
   editing: boolean,
 ) {
   const params = await context.params;
-  const orderId = parseOrderId(params.orderId);
+  const proposalId = parseProposalId(params.proposalId);
   if (
-    !orderId ||
+    !proposalId ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       params.documentId,
     )
   ) {
     return { ok: false as const, status: 400, message: "Invalid document." };
   }
-  const access = await documentAccess(orderId, editing, request.headers);
+  const access = await documentAccess(proposalId, editing, request.headers);
   if (!access.ok) return access;
   const [document] = await db
     .select()
-    .from(orderDocuments)
+    .from(proposalDocuments)
     .where(
       and(
-        eq(orderDocuments.id, params.documentId),
-        eq(orderDocuments.orderId, orderId),
+        eq(proposalDocuments.id, params.documentId),
+        eq(proposalDocuments.proposalId, proposalId),
       ),
     )
     .limit(1);
@@ -96,11 +96,11 @@ export async function DELETE(request: Request, context: Context) {
     if (!result.ok) return Response.json(result, { status: result.status });
     await removeDocumentFile(result.document.storagePath);
     await db
-      .delete(orderDocuments)
+      .delete(proposalDocuments)
       .where(
         and(
-          eq(orderDocuments.id, result.document.id),
-          eq(orderDocuments.orderId, result.document.orderId),
+          eq(proposalDocuments.id, result.document.id),
+          eq(proposalDocuments.proposalId, result.document.proposalId),
         ),
       );
     return Response.json({ ok: true });

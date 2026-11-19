@@ -3,7 +3,7 @@
 Settings loads the user table only after checking the signed-in admin's database
 profile. Every user action repeats authorization inside a transaction after
 acquiring the shared user-management lock. Roles remain in `public.users`:
-`admin`, `order` (Order manager), and `guest`. Better Auth owns logins and sessions.
+`admin`, `proposal` (Proposal manager), and `guest`. Better Auth owns logins and sessions.
 
 Adding a user atomically creates a login without credentials, its role profile,
 and a Better Auth password-reset token. The recipient creates their first password
@@ -24,7 +24,7 @@ and the database cannot commit atomically; an admin can retry a failed delivery.
 For larger deployments, replace the manual retry with a durable email outbox.
 
 Removal atomically deletes the login, its sessions and credentials, its profile,
-and outstanding password tokens. Orders, documents, and author attribution stay
+and outstanding password tokens. Proposals, documents, and author attribution stay
 intact. Self-removal and last-admin removal are rejected. No database migration
 is required. Other tools that edit profiles directly must honor the same lock.
 
@@ -48,5 +48,5 @@ USER_MANAGEMENT_TEST_DATABASE_URL=postgres://.../felix_user_management_check nod
 
 The test installs the existing schema and exercises permissions, pending logins,
 password creation, expired and reused links, concurrent invitations, deletion,
-session revocation, and preserved orders. It does not send email.
+session revocation, and preserved proposals. It does not send email.
 The integration test requires Node 22.15 or newer for its module loader hook.

@@ -15,8 +15,8 @@ import { clsx } from "clsx";
 import Link from "next/link";
 import { createProposal, updateProposal } from "./actions";
 import { type Proposal, type DocumentSummary } from "@/lib/drizzle/schema";
-import OrderDocuments, { type DocumentDraft } from "./OrderDocuments";
-import { uploadOrderDocument } from "@/lib/document-uploads";
+import ProposalDocuments, { type DocumentDraft } from "./ProposalDocuments";
+import { uploadProposalDocument } from "@/lib/document-uploads";
 import { useRouter } from "next/navigation";
 import { canEditProposal } from "@/lib/drizzle/proposal-access";
 
@@ -287,7 +287,7 @@ export default function PageBody({
       for (const draft of documentDrafts) {
         if (!draft.file) continue;
         try {
-          const document = await uploadOrderDocument(savedId, draft.file);
+          const document = await uploadProposalDocument(savedId, draft.file);
           setDocuments((rows) => [...rows, document]);
           setDocumentDrafts((rows) =>
             rows.filter((row) => row.id !== draft.id),
@@ -625,9 +625,9 @@ export default function PageBody({
             </div>
           )}
           {/* File selections are staged here and uploaded by the form submit handler. */}
-          <OrderDocuments
+          <ProposalDocuments
             key={proposalDetails?.sl ?? "new"}
-            orderId={proposalDetails?.sl ?? createdProposalId}
+            proposalId={proposalDetails?.sl ?? createdProposalId}
             initialDocuments={documents}
             drafts={documentDrafts}
             setDrafts={setDocumentDrafts}

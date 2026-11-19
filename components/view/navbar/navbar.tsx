@@ -23,7 +23,7 @@ const navigationLinks = [
   { href: "/settings", label: "Settings" },
 ];
 
-// Exact paths keep navigation links unselected on Order Form pages.
+// Exact paths keep navigation links unselected on Proposal Form pages.
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -33,15 +33,15 @@ export default function Navbar() {
     <nav
       aria-label="Main navigation"
       className={cn(
-        "w-full bg-card border-b border-gray-200 px-4 sm:px-6 md:px-8 flex items-center justify-between gap-3 sticky top-0 z-50 shadow-sm h-[68px]",
+        "sticky top-0 z-50 flex h-[68px] w-full items-center justify-between gap-3 border-b border-gray-200 bg-card px-4 shadow-sm sm:px-6 md:px-8",
         manrope.className,
       )}
     >
-      <div className="flex min-w-0 flex-1 items-center h-full">
+      <div className="flex h-full min-w-0 flex-1 items-center">
         {/* Logo */}
         <Link
           href="/home"
-          className="flex items-center gap-3 cursor-pointer min-w-0 md:mr-8 lg:mr-12"
+          className="flex min-w-0 cursor-pointer items-center gap-3 md:mr-8 lg:mr-12"
         >
           <svg
             className="h-10 w-auto shrink-0"
@@ -73,18 +73,18 @@ export default function Navbar() {
               strokeLinejoin="round"
             />
           </svg>
-          <div className="min-w-0 flex flex-col border-l border-gray-200 pl-3 py-0.5 justify-center">
+          <div className="flex min-w-0 flex-col justify-center border-l border-gray-200 py-0.5 pl-3">
             <span
-              className={`truncate text-[13px] sm:text-[15px] font-extrabold leading-none text-gray-900 mb-1 ${sora.className}`}
+              className={`mb-1 truncate text-[13px] leading-none font-extrabold text-gray-900 sm:text-[15px] ${sora.className}`}
             >
               Felix Controls Limited
             </span>
-            <span className="truncate text-[10px] text-gray-500 font-semibold tracking-wide leading-none">
-              Order Workspace
+            <span className="truncate text-[10px] leading-none font-semibold tracking-wide text-gray-500">
+              Proposal Workspace
             </span>
           </div>
         </Link>
-        <div className="hidden md:flex items-center h-full gap-8 text-[15px] font-medium text-gray-600">
+        <div className="hidden h-full items-center gap-8 text-[15px] font-medium text-gray-600 md:flex">
           {navigationLinks.map(({ href, label }) => {
             const active = pathname === href;
             return (
@@ -93,14 +93,14 @@ export default function Navbar() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative h-full flex items-center transition-colors group",
-                  active ? "text-primary font-semibold" : "hover:text-primary",
+                  "group relative flex h-full items-center transition-colors",
+                  active ? "font-semibold text-primary" : "hover:text-primary",
                 )}
               >
                 {label}
                 <span
                   className={cn(
-                    "absolute bottom-0 left-0 w-full h-0.75 bg-primary transition-transform duration-300 ease-out origin-left",
+                    "absolute bottom-0 left-0 h-0.75 w-full origin-left bg-primary transition-transform duration-300 ease-out",
                     active
                       ? "scale-x-100"
                       : "scale-x-0 group-hover:scale-x-100",
@@ -184,7 +184,7 @@ export default function Navbar() {
               setIsSigningOut(false);
             }
           }}
-          className="flex size-10 sm:h-auto sm:w-auto items-center justify-center gap-2 text-gray-500 hover:text-black transition-colors text-[15px] font-medium disabled:cursor-wait disabled:opacity-50"
+          className="flex size-10 items-center justify-center gap-2 text-[15px] font-medium text-gray-500 transition-colors hover:text-black disabled:cursor-wait disabled:opacity-50 sm:h-auto sm:w-auto"
         >
           <LogOut className="h-4 w-4" strokeWidth={2} />
           <span className="hidden sm:inline">
@@ -194,7 +194,7 @@ export default function Navbar() {
         {signOutError && (
           <p
             role="alert"
-            className="absolute right-4 top-full mt-2 rounded-lg border bg-card p-3 text-sm text-destructive shadow-sm"
+            className="absolute top-full right-4 mt-2 rounded-lg border bg-card p-3 text-sm text-destructive shadow-sm"
           >
             {signOutError}
           </p>

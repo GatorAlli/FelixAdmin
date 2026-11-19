@@ -2,7 +2,7 @@ const integerFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-// Sum the displayed cents exactly, including totals larger than a single order.
+// Sum the displayed cents exactly, including totals larger than a single proposal.
 export function sumMoneyAmounts(values: (string | null | undefined)[]): string {
   const cents = values.reduce((total, value) => {
     const amount = formatMoney(value, "0.00").replace(/[,\.]/g, "");

@@ -1,88 +1,14 @@
 CREATE SCHEMA "better_auth";
 
-CREATE TABLE "customers" (
-	"sl" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "customers_sl_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"customerName" varchar NOT NULL,
-	"address" text
+CREATE TABLE "clients" (
+	"sl" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "clients_sl_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"clientName" varchar NOT NULL
 );
 
-ALTER TABLE "customers" ENABLE ROW LEVEL SECURITY;
-CREATE TABLE "data" (
-	"sl" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "data_sl_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"createdBy" varchar NOT NULL,
-	"orderManagerAccess" boolean DEFAULT true NOT NULL,
-	"lastEditedBy" varchar,
-	"lastEditedAt" timestamp with time zone,
-	"createdDate" date,
-	"felixOrderRef" varchar NOT NULL,
-	"paymentMode" varchar,
-	"clientOrderValue" numeric(18,2),
-	"clientOrderOriginalValue" numeric(18,2),
-	"clientOrderCurrency" varchar,
-	"projectName" varchar,
-	"projectNotes" text,
-	"clientName" varchar,
-	"endUser" varchar,
-	"productSystem" text,
-	"orderHandledBy" varchar,
-	"referenceNumber" text,
-	"importedBy" varchar,
-	"suppliers" text,
-	"gbpToUsdRate" numeric(18,8),
-	"eurToUsdRate" numeric(18,8),
-	"usdToSgdRate" numeric(18,2),
-	"supplierCurrencyDetails" jsonb,
-	"customSupplierDetails" jsonb DEFAULT '[]' NOT NULL,
-	"trane" numeric(18,2),
-	"belimo" numeric(18,2),
-	"danfoss" numeric(18,2),
-	"honeywell" numeric(18,2),
-	"regeltechnik" numeric(18,2),
-	"dwyer" numeric(18,2),
-	"alps" numeric(18,2),
-	"control4" numeric(18,2),
-	"lutron" numeric(18,2),
-	"landisGyr" numeric(18,2),
-	"rbh" numeric(18,2),
-	"prostar" numeric(18,2),
-	"gissmatic" numeric(18,2),
-	"zkteco" numeric(18,2),
-	"adteshia" numeric(18,2),
-	"fike" numeric(18,2),
-	"tecofi" numeric(18,2),
-	"sewo" numeric(18,2),
-	"ebelco" numeric(18,2),
-	"dooya" numeric(18,2),
-	"pogo" numeric(18,2),
-	"parkHelp" numeric(18,2),
-	"foshan" numeric(18,2),
-	"kele" numeric(18,2),
-	"multicable" numeric(18,2),
-	"deyz" numeric(18,2),
-	"simens" numeric(18,2),
-	"flashTurtle" numeric(18,2),
-	"servo" numeric(18,2),
-	"haboo" numeric(18,2),
-	"others" numeric(18,2),
-	"misCost" numeric(18,2),
-	"miscellaneousExpenses" jsonb,
-	"paymentNotes" text,
-	"calculationCurrencies" jsonb,
-	"orderHandlingFee" numeric(18,4),
-	"miscellaneousHandlingFee" numeric(18,4)
-);
-
-ALTER TABLE "data" ENABLE ROW LEVEL SECURITY;
-CREATE TABLE "miscellaneousExpenditures" (
-	"sl" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "miscellaneousExpenditures_sl_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"miscellaneousExpenditureType" varchar
-);
-
-ALTER TABLE "miscellaneousExpenditures" ENABLE ROW LEVEL SECURITY;
-CREATE TABLE "order_documents" (
+ALTER TABLE "clients" ENABLE ROW LEVEL SECURITY;
+CREATE TABLE "proposal_documents" (
 	"id" uuid PRIMARY KEY,
-	"orderId" integer NOT NULL,
-	"supplierRowKey" varchar(240),
+	"proposalId" integer NOT NULL,
 	"title" varchar(120) NOT NULL,
 	"originalName" varchar(255) NOT NULL,
 	"storagePath" text NOT NULL UNIQUE,
@@ -92,13 +18,41 @@ CREATE TABLE "order_documents" (
 	"createdAt" timestamp with time zone DEFAULT now() NOT NULL
 );
 
-ALTER TABLE "order_documents" ENABLE ROW LEVEL SECURITY;
-CREATE TABLE "suppliers" (
-	"sl" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "suppliers_sl_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"supplierName" varchar
+ALTER TABLE "proposal_documents" ENABLE ROW LEVEL SECURITY;
+CREATE TABLE "proposals" (
+	"sl" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "proposals_sl_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"referenceNumber" varchar NOT NULL UNIQUE,
+	"createdBy" varchar NOT NULL,
+	"createdDate" date NOT NULL,
+	"lastEditedBy" varchar,
+	"lastEditedAt" timestamp with time zone,
+	"proposalManagerAccess" boolean DEFAULT true NOT NULL,
+	"projectName" varchar NOT NULL,
+	"clientName" varchar NOT NULL,
+	"endUser" varchar,
+	"consultant" varchar,
+	"system" varchar,
+	"valueOriginal" numeric(18,2),
+	"valueCurrency" varchar,
+	"valueBdt" numeric(18,2),
+	"usdToBdtRate" numeric(18,2) NOT NULL,
+	"sgdToBdtRate" numeric(18,2) NOT NULL,
+	"eurToBdtRate" numeric(18,2) NOT NULL,
+	"gbpToBdtRate" numeric(18,2) NOT NULL,
+	"projectStatus" varchar DEFAULT 'Current' NOT NULL,
+	"finalizationDate" date,
+	"proposalNotes" text,
+	CONSTRAINT "proposals_project_status_check" CHECK ("projectStatus" in ('Current', 'Secured', 'Lost')),
+	CONSTRAINT "proposals_value_currency_check" CHECK ("valueCurrency" in ('USD', 'SGD', 'EUR', 'GBP', 'BDT'))
 );
 
-ALTER TABLE "suppliers" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "proposals" ENABLE ROW LEVEL SECURITY;
+CREATE TABLE "systems" (
+	"sl" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "systems_sl_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"systemName" varchar NOT NULL
+);
+
+ALTER TABLE "systems" ENABLE ROW LEVEL SECURITY;
 CREATE TABLE "users" (
 	"sl" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "users_sl_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
 	"name" varchar,
@@ -160,11 +114,10 @@ CREATE TABLE "better_auth"."verification" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 
-CREATE INDEX "order_documents_supplier_row_idx" ON "order_documents" ("orderId", "supplierRowKey");
-CREATE INDEX "order_documents_order_id_idx" ON "order_documents" ("orderId");
+CREATE INDEX "proposal_documents_proposal_id_idx" ON "proposal_documents" ("proposalId");
 CREATE INDEX "account_userId_idx" ON "better_auth"."account" ("user_id");
 CREATE INDEX "session_userId_idx" ON "better_auth"."session" ("user_id");
 CREATE INDEX "verification_identifier_idx" ON "better_auth"."verification" ("identifier");
-ALTER TABLE "order_documents" ADD CONSTRAINT "order_documents_orderId_data_sl_fkey" FOREIGN KEY ("orderId") REFERENCES "data"("sl");
+ALTER TABLE "proposal_documents" ADD CONSTRAINT "proposal_documents_proposalId_proposals_sl_fkey" FOREIGN KEY ("proposalId") REFERENCES "proposals"("sl");
 ALTER TABLE "better_auth"."account" ADD CONSTRAINT "account_user_id_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "better_auth"."user"("id") ON DELETE CASCADE;
 ALTER TABLE "better_auth"."session" ADD CONSTRAINT "session_user_id_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "better_auth"."user"("id") ON DELETE CASCADE;

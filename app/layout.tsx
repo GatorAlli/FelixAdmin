@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     default: "Sign In | Felix Controls",
     template: "%s | Felix Controls",
   },
-  description: "Felix Controls order management portal.",
+  description: "Felix Controls proposal management portal.",
   icons: {
     icon: { url: "/logo.svg", type: "image/svg+xml" },
   },
@@ -46,7 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         outfitHeading.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

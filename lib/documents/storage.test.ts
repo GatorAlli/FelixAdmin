@@ -26,7 +26,7 @@ async function fixture(t: TestContext) {
     process.chdir(original);
     await rm(application, { recursive: true, force: true });
   });
-  return { directory, key: "orders/1/" + randomUUID() };
+  return { directory, key: "proposals/1/" + randomUUID() };
 }
 
 function body(...chunks: string[]) {
@@ -70,7 +70,7 @@ test("rejects incomplete, oversized and aborted uploads without keeping partial 
     },
   });
   await assert.rejects(writeDocument(key, aborted, 2), /Disconnected/);
-  assert.deepEqual(await readdir(join(directory, "orders", "1")), []);
+  assert.deepEqual(await readdir(join(directory, "proposals", "1")), []);
 });
 
 test("does not overwrite an existing completed file", async (t) => {
@@ -80,7 +80,7 @@ test("does not overwrite an existing completed file", async (t) => {
     code: "EEXIST",
   });
   assert.equal((await readFile(join(directory, key))).toString(), "original");
-  assert.deepEqual(await readdir(join(directory, "orders", "1")), [
+  assert.deepEqual(await readdir(join(directory, "proposals", "1")), [
     key.split("/").at(-1),
   ]);
 });
@@ -89,8 +89,9 @@ test("rejects traversal and symlink escapes", async (t) => {
   const { directory, key } = await fixture(t);
   for (const unsafe of [
     "../secret",
-    "orders/1/../../secret",
-    "orders/0/" + randomUUID(),
+    "proposals/1/../../secret",
+    "proposals/0/" + randomUUID(),
+    "orders/1/" + randomUUID(),
     "/etc/passwd",
   ]) {
     await assert.rejects(
@@ -100,8 +101,8 @@ test("rejects traversal and symlink escapes", async (t) => {
   }
   const outside = await mkdtemp(join(tmpdir(), "felix-outside-"));
   t.after(() => rm(outside, { recursive: true, force: true }));
-  await mkdir(join(directory, "orders"));
-  await symlink(outside, join(directory, "orders", "1"), "dir");
+  await mkdir(join(directory, "proposals"));
+  await symlink(outside, join(directory, "proposals", "1"), "dir");
   await assert.rejects(
     writeDocument(key, body("x"), 1),
     /Invalid document directory/,
@@ -131,7 +132,7 @@ test("does not follow symlinked document files on download", async (t) => {
   const { directory, key } = await fixture(t);
   const outside = join(directory, "secret.txt");
   await writeFile(outside, "private");
-  await mkdir(join(directory, "orders", "1"), { recursive: true });
+  await mkdir(join(directory, "proposals", "1"), { recursive: true });
   await symlink(outside, join(directory, key));
   await assert.rejects(openDocument(key), { code: "ELOOP" });
 });

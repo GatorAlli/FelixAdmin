@@ -19,7 +19,7 @@ export async function sendInvitationEmail(invitation: {
   return sendAccountEmail({
     ...invitation,
     subject: "Create your Felix Controls password",
-    text: `You have been invited to the Felix Controls Order Workspace.\n\nCreate your password using this link:\n${invitation.url}\n\nThis link expires in one hour and can be used once. If it expires, ask your administrator to resend the invitation.\n\nIf you were not expecting this invitation, you can ignore this email.`,
+    text: `You have been invited to the Felix Controls Proposal Workspace.\n\nCreate your password using this link:\n${invitation.url}\n\nThis link expires in one hour and can be used once. If it expires, ask your administrator to resend the invitation.\n\nIf you were not expecting this invitation, you can ignore this email.`,
   });
 }
 

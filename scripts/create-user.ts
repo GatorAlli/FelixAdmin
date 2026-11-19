@@ -57,18 +57,18 @@ async function main() {
       {
         name: "Read only",
         value: "guest",
-        description: "View orders and download documents.",
+        description: "View proposals and download documents.",
       },
       {
-        name: "Order manager",
-        value: "order",
+        name: "Proposal manager",
+        value: "proposal",
         description:
-          "Create orders and edit orders with manager access enabled.",
+          "Create proposals and edit proposals with manager access enabled.",
       },
       {
         name: "Admin",
         value: "admin",
-        description: "Edit all orders, manage access and change Settings.",
+        description: "Edit all proposals, manage access and change Settings.",
       },
     ],
   });

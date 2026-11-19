@@ -1,5 +1,7 @@
 # Proposal App Conversion Plan
 
+**Status:** All six phases are complete. Each phase has a report in [`initial_migration/`](initial_migration/phase-1-data-and-helpers.md).
+
 Convert the forked Felix Controls order-management app into a proposal-management app, reusing as much as possible.
 
 ## What stays

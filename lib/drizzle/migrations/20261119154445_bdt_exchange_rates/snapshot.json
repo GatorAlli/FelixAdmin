@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "f8a51c82-9591-4d2f-a313-745632704f01",
-  "prevIds": [
-    "8ca5cf79-03bd-48ae-bb99-f66f244184f5"
-  ],
+  "prevIds": ["8ca5cf79-03bd-48ae-bb99-f66f244184f5"],
   "ddl": [
     {
       "name": "better_auth",
@@ -1193,14 +1191,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "proposalId"
-      ],
+      "columns": ["proposalId"],
       "schemaTo": "public",
       "tableTo": "proposals",
-      "columnsTo": [
-        "sl"
-      ],
+      "columnsTo": ["sl"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "proposal_documents_proposalId_proposals_sl_fkey",
@@ -1210,14 +1204,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "better_auth",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "account_user_id_user_id_fkey",
@@ -1227,14 +1217,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "better_auth",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "session_user_id_user_id_fkey",
@@ -1243,9 +1229,7 @@
       "table": "session"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "clients_pkey",
       "schema": "public",
@@ -1253,9 +1237,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "proposal_documents_pkey",
       "schema": "public",
@@ -1263,9 +1245,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "proposals_pkey",
       "schema": "public",
@@ -1273,9 +1253,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "systems_pkey",
       "schema": "public",
@@ -1283,9 +1261,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "sl"
-      ],
+      "columns": ["sl"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -1293,9 +1269,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "account_pkey",
       "schema": "better_auth",
@@ -1303,9 +1277,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "rate_limit_pkey",
       "schema": "better_auth",
@@ -1313,9 +1285,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "session_pkey",
       "schema": "better_auth",
@@ -1323,9 +1293,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "user_pkey",
       "schema": "better_auth",
@@ -1333,9 +1301,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "verification_pkey",
       "schema": "better_auth",
@@ -1344,9 +1310,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "storagePath"
-      ],
+      "columns": ["storagePath"],
       "nullsNotDistinct": false,
       "name": "proposal_documents_storagePath_key",
       "schema": "public",
@@ -1355,9 +1319,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "referenceNumber"
-      ],
+      "columns": ["referenceNumber"],
       "nullsNotDistinct": false,
       "name": "proposals_referenceNumber_key",
       "schema": "public",
@@ -1366,9 +1328,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "key"
-      ],
+      "columns": ["key"],
       "nullsNotDistinct": false,
       "name": "rate_limit_key_key",
       "schema": "better_auth",
@@ -1377,9 +1337,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "token"
-      ],
+      "columns": ["token"],
       "nullsNotDistinct": false,
       "name": "session_token_key",
       "schema": "better_auth",
@@ -1388,9 +1346,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "user_email_key",
       "schema": "better_auth",

@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 // Draft rows hold local files; saved documents contain metadata returned by the server.
 export type DocumentDraft = { id: number; file: File | null };
 
-export default function OrderDocuments({
-  orderId,
+export default function ProposalDocuments({
+  proposalId,
   initialDocuments,
   editable,
   disabled,
@@ -24,7 +24,7 @@ export default function OrderDocuments({
   setDrafts: React.Dispatch<React.SetStateAction<DocumentDraft[]>>;
   onUploadedDocumentRemoved: (id: string) => void;
   onBusyChange: (busy: boolean) => void;
-  orderId?: number;
+  proposalId?: number;
   initialDocuments: DocumentSummary[];
   editable: boolean;
   disabled: boolean;
@@ -82,7 +82,7 @@ export default function OrderDocuments({
             <span className="flex w-6 shrink-0 items-center justify-center text-base font-semibold tracking-normal tabular-nums">
               {index + 1}.
             </span>
-            <span className="min-w-0 flex-1 break-words text-sm">
+            <span className="min-w-0 flex-1 text-sm break-words">
               {document.originalName}
             </span>
             <Button
@@ -91,7 +91,9 @@ export default function OrderDocuments({
               disabled={unavailable}
               render={
                 <a
-                  href={"/api/orders/" + orderId + "/documents/" + document.id}
+                  href={
+                    "/api/proposals/" + proposalId + "/documents/" + document.id
+                  }
                   download
                 />
               }
@@ -108,9 +110,12 @@ export default function OrderDocuments({
                 aria-label={`Remove ${document.originalName}`}
                 onClick={() =>
                   void run(async () => {
-                    if (!orderId) return;
+                    if (!proposalId) return;
                     const response = await fetch(
-                      "/api/orders/" + orderId + "/documents/" + document.id,
+                      "/api/proposals/" +
+                        proposalId +
+                        "/documents/" +
+                        document.id,
                       {
                         method: "DELETE",
                       },

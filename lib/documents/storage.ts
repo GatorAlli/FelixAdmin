@@ -9,7 +9,7 @@ import { MAX_DOCUMENT_BYTES } from "@/lib/document-files";
 export class DocumentStorageError extends Error {}
 
 const keyPattern =
-  /^orders\/[1-9]\d{0,9}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  /^proposals\/[1-9]\d{0,9}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function isWithin(parent: string, child: string) {
   const path = relative(parent, child);

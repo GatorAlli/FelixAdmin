@@ -79,7 +79,7 @@ test(
       const input = {
         name: "New Manager",
         email: " MANAGER@example.com ",
-        access: "order",
+        access: "proposal",
       };
       await assert.rejects(
         changeManagedUser(guestId, { kind: "invite", input }),
@@ -107,7 +107,7 @@ test(
         (user) => user.email === invitation.email,
       )!;
       assert.ok(manager.pending);
-      assert.equal(manager.access, "order");
+      assert.equal(manager.access, "proposal");
       assert.equal(Object.hasOwn(manager, "password"), false);
       await assert.rejects(
         auth.api.signInEmail({
@@ -171,7 +171,7 @@ test(
         body: { email: invitation.email, password: "Test password 123" },
       });
       assert.ok(signedIn.token);
-      await client`insert into data ("createdBy", "felixOrderRef") values ('New Manager', 'KEEP-001')`;
+      await client`insert into proposals ("referenceNumber", "createdBy", "createdDate", "projectName", "clientName", "usdToBdtRate", "sgdToBdtRate", "eurToBdtRate", "gbpToBdtRate") values ('KEEP-001', 'New Manager', '2026-01-01', 'Kept project', 'Kept client', 125, 96.15, 150, 175)`;
       await assert.rejects(
         changeManagedUser(guestId, { kind: "remove", id: manager.id }),
         /Only admins/,
@@ -195,8 +195,9 @@ test(
         0,
       );
       assert.equal(
-        (await client`select * from data where "felixOrderRef" = 'KEEP-001'`)
-          .length,
+        (
+          await client`select * from proposals where "referenceNumber" = 'KEEP-001'`
+        ).length,
         1,
       );
       await assert.rejects(
