@@ -52,6 +52,13 @@
       "skillPath": "better-auth/organization/SKILL.md",
       "computedHash": ""
     },
+    "postgres-drizzle": {
+      "source": "ccheney/robust-skills",
+      "commit": "0eea7b060d12e3520556a73b15fbfa79480987d1",
+      "sourceType": "github",
+      "skillPath": "skills/postgres-drizzle/SKILL.md",
+      "computedHash": "8be51fda7b10d594110f7ec6ec0dcd91c2ed19898ae50388df0f4dc8f5536929"
+    },
     "supabase": {
       "source": "supabase/agent-skills",
       "sourceType": "github",

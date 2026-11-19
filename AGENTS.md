@@ -25,6 +25,7 @@ Felix Controls Limited admin page: internal order-management and user-administra
 | [email-and-password-best-practices](.agents/skills/email-and-password-best-practices/SKILL.md)               | better-auth/skills           | Email/password auth flows.                                                                                                                                                                                |
 | [organization-best-practices](.agents/skills/organization-best-practices/SKILL.md)                           | better-auth/skills           | Better Auth organization plugin (not currently used, kept for reference).                                                                                                                                 |
 | [two-factor-authentication-best-practices](.agents/skills/two-factor-authentication-best-practices/SKILL.md) | better-auth/skills           | Better Auth 2FA plugin (not currently used, kept for reference).                                                                                                                                          |
+| [postgres-drizzle](.agents/skills/postgres-drizzle/SKILL.md)                                                 | ccheney/robust-skills        | PostgreSQL and Drizzle schemas, queries, migrations, relations, and performance.                                                                                                                          |
 | [supabase](.agents/skills/supabase/SKILL.md)                                                                 | supabase/agent-skills        | General Supabase guidance.                                                                                                                                                                                |
 | [supabase-postgres-best-practices](.agents/skills/supabase-postgres-best-practices/SKILL.md)                 | supabase/agent-skills        | Postgres schema/query/indexing/locking guidance; use for any schema or SQL change.                                                                                                                        |
 | [frontend-design](.agents/skills/frontend-design/SKILL.md)                                                   | vercel-labs/agent-eval       | Building polished, non-generic UI.                                                                                                                                                                        |
@@ -77,6 +78,9 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   │   └── agents/openai.yaml               # OpenAI-agent skill metadata
 │   ├── frontend-design/                     # Non-generic UI design guidance
 │   ├── organization-best-practices/SKILL.md # Better Auth organization plugin (unused, reference)
+│   ├── postgres-drizzle/                    # PostgreSQL and Drizzle ORM guidance
+│   │   ├── SKILL.md                         # Workflow and reference index
+│   │   └── references/                     # Schema, migrations, queries, and performance guides
 │   ├── supabase/                            # Supabase general guidance
 │   ├── supabase-postgres-best-practices/     # Postgres schema/query/index/lock guidance
 │   ├── tailwind-4-docs/                     # Tailwind v4 documentation lookup, with a docs-sync script
