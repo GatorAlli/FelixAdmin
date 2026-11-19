@@ -1,1 +1,0 @@
-ALTER TABLE "data" ADD COLUMN "lastEditedBy" varchar;

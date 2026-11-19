@@ -1,1 +1,0 @@
-ALTER TABLE "data" ADD COLUMN "lastEditedAt" timestamp with time zone;

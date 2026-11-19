@@ -1,1 +1,0 @@
-ALTER TABLE "data" ADD COLUMN "customSupplierDetails" jsonb DEFAULT '[]' NOT NULL;
