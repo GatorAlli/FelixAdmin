@@ -5,30 +5,34 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatMoney } from "@/lib/format-money";
-import type { Order } from "@/lib/drizzle/schema";
+import type { Proposal } from "@/lib/drizzle/schema";
 import { clsx } from "clsx";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { saveOrderManagerAccess } from "./actions";
+import YearSelect from "@/components/view/year-select";
+import ProjectStatusBadge from "@/components/view/project-status-badge";
+import {
+  proposalsInYear,
+  selectableYears,
+} from "@/lib/drizzle/proposal-summary";
+import {
+  formatProposalDate,
+  formatProposalEditDate,
+} from "@/lib/drizzle/proposal-date";
+import { saveProposalManagerAccess } from "./actions";
 
 export default function TableBody({
-  orders,
+  proposals,
   currentYear,
-  adminStatus,
+  role,
 }: {
-  orders: Order[];
+  proposals: Proposal[];
   currentYear: number;
-  adminStatus: string;
+  role: string;
 }) {
   // Track the selected year and editing-access changes that have not been saved.
   const router = useRouter();
+  const isAdmin = role === "admin";
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [isSavingAccess, startAccessTransition] = useTransition();
   const [accessMessage, setAccessMessage] = useTransientMessage();
@@ -37,41 +41,35 @@ export default function TableBody({
     {},
   );
   const accessChanges = Object.entries(pendingAccess).map(
-    ([orderId, access]) => ({
-      orderId: Number(orderId),
+    ([proposalId, access]) => ({
+      proposalId: Number(proposalId),
       access,
     }),
   );
 
   // Derive rows from fresh server props so access changes survive year filtering.
-  const orderArray =
-    selectedYear === "all"
-      ? orders
-      : orders.filter((order) =>
-          order.felixOrderRef.startsWith(`FCL/FPO/${selectedYear}/`),
-        );
+  const visibleProposals = proposalsInYear(proposals, selectedYear);
 
-  // Only keep changes that differ from the saved order settings.
-  function changeAccess(order: Order, revoked: boolean) {
+  // Only keep changes that differ from the saved proposal settings.
+  function changeAccess(proposal: Proposal, revoked: boolean) {
     setAccessMessage("");
     setPendingAccess((current) => {
       const next = { ...current };
       const access = !revoked;
-      if (access === order.orderManagerAccess) delete next[order.sl];
-      else next[order.sl] = access;
+      if (access === proposal.proposalManagerAccess) delete next[proposal.sl];
+      else next[proposal.sl] = access;
       return next;
     });
   }
 
   // Send the pending batch to the admin-only server action.
   function saveAccess() {
-    if (adminStatus !== "admin" || !accessChanges.length || isSavingAccess)
-      return;
+    if (!isAdmin || !accessChanges.length || isSavingAccess) return;
     setAccessMessage("");
     setAccessError(false);
     startAccessTransition(async () => {
       try {
-        const result = await saveOrderManagerAccess(accessChanges);
+        const result = await saveProposalManagerAccess(accessChanges);
         setAccessMessage(result.message);
         setAccessError(!result.ok);
         if (result.ok) {
@@ -84,10 +82,6 @@ export default function TableBody({
       }
     });
   }
-  const years = Array.from(
-    { length: currentYear - 2024 + 1 },
-    (_, index) => 2024 + index,
-  );
 
   const headerStyling = clsx(
     "px-4 py-4 text-left text-[13px] font-bold text-black uppercase whitespace-nowrap bg-white border-b border-r border-gray-200 sticky top-0 z-10",
@@ -97,32 +91,30 @@ export default function TableBody({
     "px-4 py-3 text-left text-sm text-black whitespace-nowrap border-b border-r border-gray-200 group-hover:bg-gray-50 transition-colors",
   );
 
-  // Render the filtered orders, access controls and year selector.
+  // Render the filtered proposals, access controls and year selector.
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse">
+      <div className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full border-collapse text-left">
             <thead>
               <tr>
                 <th className={headerStyling}>SL</th>
                 <th className={headerStyling}>CREATED BY</th>
-                <th className={headerStyling}>ORDER NO.</th>
-                <th className={headerStyling}>CLIENT ORDER VALUE</th>
+                <th className={headerStyling}>REFERENCE NO.</th>
+                <th className={headerStyling}>DATE CREATED</th>
+                <th className={headerStyling}>LAST EDITED</th>
                 <th className={headerStyling}>PROJECT NAME</th>
                 <th className={headerStyling}>CLIENT NAME</th>
-                <th className={headerStyling}>END USER</th>
-                {adminStatus === "admin" ? (
-                  <th className={headerStyling}>REVOKE ACCESS</th>
-                ) : (
-                  <></>
-                )}
+                <th className={headerStyling}>STATUS</th>
+                <th className={headerStyling}>VALUE (BDT)</th>
+                {isAdmin && <th className={headerStyling}>REVOKE ACCESS</th>}
                 <th className={headerStyling}></th>
               </tr>
             </thead>
             <tbody className="bg-white">
-              {orderArray.map((e, key) => (
-                <tr className="hover:bg-gray-50 group" key={e.sl}>
+              {visibleProposals.map((e, key) => (
+                <tr className="group hover:bg-gray-50" key={e.sl}>
                   <td className={cellStyling}>{key + 1}</td>
                   <td className={cellStyling}>
                     <span className="font-extrabold text-black">
@@ -130,30 +122,40 @@ export default function TableBody({
                     </span>
                   </td>
                   <td className={`${cellStyling} font-bold text-black`}>
-                    {e.felixOrderRef}
+                    {e.referenceNumber}
                   </td>
-                  <td className={clsx(cellStyling, "text-left tabular-nums")}>
-                    {formatMoney(e.clientOrderValue)}
+                  <td className={clsx(cellStyling, "tabular-nums")}>
+                    {formatProposalDate(e.createdDate)}
+                  </td>
+                  <td className={clsx(cellStyling, "tabular-nums")}>
+                    {e.lastEditedAt
+                      ? formatProposalEditDate(e.lastEditedAt)
+                      : "—"}
                   </td>
                   <td className={cellStyling}>{e.projectName}</td>
                   <td className={cellStyling}>{e.clientName}</td>
-                  <td className={cellStyling}>{e.endUser}</td>
-                  {adminStatus === "admin" ? (
-                    <td className={`${cellStyling}`}>
+                  <td className={cellStyling}>
+                    <ProjectStatusBadge status={e.projectStatus} />
+                  </td>
+                  <td className={clsx(cellStyling, "text-left tabular-nums")}>
+                    {formatMoney(e.valueBdt)}
+                  </td>
+                  {isAdmin && (
+                    <td className={cellStyling}>
                       <Checkbox
-                        checked={!(pendingAccess[e.sl] ?? e.orderManagerAccess)}
+                        checked={
+                          !(pendingAccess[e.sl] ?? e.proposalManagerAccess)
+                        }
                         disabled={isSavingAccess}
-                        aria-label={`Revoke access for ${e.felixOrderRef}`}
+                        aria-label={`Revoke access for ${e.referenceNumber}`}
                         onCheckedChange={(checked) => changeAccess(e, checked)}
                       />
                     </td>
-                  ) : (
-                    <></>
                   )}
-                  <td className={`${cellStyling} text-left pr-6`}>
+                  <td className={`${cellStyling} pr-6 text-left`}>
                     <Link
-                      href={`/order_form/${e.sl}`}
-                      className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg text-[13px] font-bold uppercase tracking-wide transition-colors inline-block"
+                      href={`/proposal_form/${e.sl}`}
+                      className="inline-block rounded-lg bg-primary px-6 py-2 text-[13px] font-bold tracking-wide text-white uppercase transition-colors hover:bg-primary/90"
                     >
                       VIEW
                     </Link>
@@ -162,40 +164,22 @@ export default function TableBody({
               ))}
             </tbody>
           </table>
+          {visibleProposals.length === 0 && (
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+              No proposals for this year yet.
+            </p>
+          )}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 shrink-0 pt-4">
-        <div>
-          {/* Filter the original list so switching years restores the matching orders. */}
-          <Select
-            value={selectedYear}
-            items={[
-              { value: "all", label: "All Years" },
-              ...years.map((year) => ({
-                value: String(year),
-                label: String(year),
-              })),
-            ]}
-            onValueChange={(year) => {
-              if (year === null) return;
-              setSelectedYear(year);
-            }}
-          >
-            <SelectTrigger className="w-45 bg-white" aria-label="Select year">
-              <SelectValue placeholder="Select year" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Years</SelectItem>
-              {years.map((year) => (
-                <SelectItem key={year} value={String(year)}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {adminStatus === "admin" && (
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 pt-4">
+        {/* Filter the original list so switching years restores the matching proposals. */}
+        <YearSelect
+          value={selectedYear}
+          years={selectableYears(currentYear)}
+          onChange={setSelectedYear}
+        />
+        {isAdmin && (
           <Button
             type="button"
             className="ml-auto"

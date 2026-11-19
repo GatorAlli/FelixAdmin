@@ -96,9 +96,9 @@ Paths above are relative to this repository. Read the relevant source files; ski
 ├── app/
 │   ├── (pages)/                             # Authenticated routes, wrapped by layout.tsx's session check
 │   │   ├── home/
-│   │   │   ├── TableBody.tsx                # Orders list table, client-side row actions
-│   │   │   ├── actions.ts                   # Server actions: delete/bulk-manage orders
-│   │   │   └── page.tsx                     # Orders list page
+│   │   │   ├── TableBody.tsx                # Proposals list table, year filter, revoke-access checkboxes
+│   │   │   ├── actions.ts                   # Server action: saveProposalManagerAccess (admin only)
+│   │   │   └── page.tsx                     # Proposals list page
 │   │   ├── layout.tsx                       # Requires a session, mounts the idle-session monitor
 │   │   ├── proposal_form/
 │   │   │   ├── [proposalId]/page.tsx        # View/edit an existing proposal
@@ -114,7 +114,7 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   │   │   ├── page.tsx                     # Settings route, admin-only redirect
 │   │   │   └── user-actions.ts              # Server actions: invite/edit/remove users
 │   │   └── summary/
-│   │       ├── TableBody.tsx                # Aggregated summary table
+│   │       ├── TableBody.tsx                # All-fields proposal table and per-status BDT totals
 │   │       └── page.tsx                     # Summary route
 │   ├── api/
 │   │   ├── auth/[...all]/route.ts           # Better Auth catch-all handler
@@ -138,14 +138,18 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   │   ├── money-input.tsx                  # Currency-aware numeric input
 │   │   ├── select.tsx                       # Select
 │   │   └── textarea.tsx                     # Textarea
-│   └── view/navbar/navbar.tsx               # Top navigation bar
+│   └── view/
+│       ├── navbar/navbar.tsx                # Top navigation bar
+│       ├── project-status-badge.tsx         # Colour-coded Current/Secured/Lost badge
+│       └── year-select.tsx                  # Year filter used by Home and Summary
 ├── docker/postgres/
 │   ├── init.sql                             # Local dev role/database bootstrap
 │   └── schema.sql                           # Reference schema dump for local Postgres
 ├── docs/
 │   ├── initial_migration/                   # Per-phase reports for the order→proposal conversion
 │   │   ├── phase-1-data-and-helpers.md      # Phase 1: schema, currency, helpers, tests, migrations
-│   │   └── phase-2-proposal-form.md         # Phase 2: proposal form route, actions, PageBody
+│   │   ├── phase-2-proposal-form.md         # Phase 2: proposal form route, actions, PageBody
+│   │   └── phase-3-home-and-summary.md      # Phase 3: Home list, Summary table, shared helpers
 │   ├── proposal-conversion-plan.md          # Plan for converting the order app into the proposal app
 │   ├── reports/user-management-code-report.md  # Snapshot report of user-management change set
 │   └── user-management.md                   # User-management contract/behavior notes
@@ -182,6 +186,8 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   │   ├── proposal-date.ts                 # Asia/Dhaka date helpers, ISO date check, display formatting
 │   │   ├── proposal-reference.test.ts       # Tests for reference formatting and year prefixes
 │   │   ├── proposal-reference.ts            # Browser-safe FCL/Quote reference format and year prefix
+│   │   ├── proposal-summary.test.ts         # Tests for year filtering and status totals
+│   │   ├── proposal-summary.ts              # Browser-safe year filter, year list, per-status BDT totals
 │   │   ├── proposal-values.ts               # Proposal form validation and row values for save
 │   │   └── schema.ts                        # Drizzle table definitions (proposals, users, clients, systems, documents)
 │   ├── format-money.ts                      # Money string formatting/summation helpers

@@ -1,6 +1,6 @@
 # Phase 2: Proposal Form
 
-[❮ Phase 1 Data and Helpers](phase-1-data-and-helpers.md) | Next: Phase 3 Home and Summary ❯
+[❮ Phase 1 Data and Helpers](phase-1-data-and-helpers.md) | [Phase 3 Home and Summary ❯](phase-3-home-and-summary.md)
 
 ---
 
@@ -2144,4 +2144,4 @@ A proposal manager's access to a proposal was revoked by an admin. They open the
 
 ---
 
-[❮ Phase 1 Data and Helpers](phase-1-data-and-helpers.md) | Next: Phase 3 Home and Summary ❯
+[❮ Phase 1 Data and Helpers](phase-1-data-and-helpers.md) | [Phase 3 Home and Summary ❯](phase-3-home-and-summary.md)
