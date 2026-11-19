@@ -1,6 +1,6 @@
 # Phase 1: Data and Helpers
 
-[❮ Plan](../proposal-conversion-plan.md) | Next: Phase 2 Proposal Form ❯
+[❮ Plan](../proposal-conversion-plan.md) | [Phase 2 Proposal Form ❯](phase-2-proposal-form.md)
 
 ---
 
@@ -15,6 +15,8 @@ After this phase:
 - References look like **FCL/Quote/2026/001**
 - Only **Project Name**, **Client Name** and **Project Status** are required
 
+> **Revision:** Exchange rates were first stored relative to USD (GBP→USD, EUR→USD, USD→SGD, USD→BDT). They now go **straight to BDT**: every rate means "1 unit = X BDT". Sections 1, 3, 7, 10 and 11 show the revised code.
+
 > **Note:** The pages (`app/`) still use the old order names, so `npm run build` fails until Phases 2–5 update them. This is expected. The helpers and their tests work today.
 
 ### What Changed
@@ -25,7 +27,7 @@ After this phase:
 | Renamed   | `order-access` → `proposal-access`, `order-date` → `proposal-date`, `order-values` → `proposal-values`, `order-datalists` → `proposal-datalists`, `order-reference` → `next-proposal-reference` |
 | New       | `project-status.ts`, `proposal-reference.ts`, `proposal-reference.test.ts`                                                                                                                      |
 | Deleted   | `order-calculations.ts`, `order-calculations.test.ts`, `expenses.ts`, `custom-suppliers.ts`, all 25 old migrations                                                                              |
-| Generated | `migrations/20261119135308_initial_proposals/`                                                                                                                                                  |
+| Generated | `migrations/20261119135308_initial_proposals/`, `migrations/20261119154445_bdt_exchange_rates/`                                                                                                 |
 | Docs      | `AGENTS.md` file tree, this report                                                                                                                                                              |
 
 All files are in `lib/drizzle/` unless stated otherwise.
@@ -80,10 +82,11 @@ export const proposals = p.pgTable.withRLS(
     valueOriginal: p.numeric({ precision: 18, scale: 2 }),
     valueCurrency: p.varchar().$type<Currency>(),
     valueBdt: p.numeric({ precision: 18, scale: 2 }),
-    gbpToUsdRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
-    eurToUsdRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
-    usdToSgdRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
+    // Each rate is "1 unit = X BDT".
     usdToBdtRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
+    sgdToBdtRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
+    eurToBdtRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
+    gbpToBdtRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
 
     projectStatus: p
       .varchar()
@@ -116,7 +119,7 @@ export const proposals = p.pgTable.withRLS(
 | Access   | `proposalManagerAccess`                                        | `false` means an admin revoked editing for proposal managers |
 | Project  | `projectName`, `clientName`, `endUser`, `consultant`, `system` | The proposal's details                                       |
 | Value    | `valueOriginal`, `valueCurrency`, `valueBdt`                   | What the user typed, its currency, and the BDT equivalent    |
-| Rates    | `gbpToUsdRate`, `eurToUsdRate`, `usdToSgdRate`, `usdToBdtRate` | The rates saved with this proposal                           |
+| Rates    | `usdToBdtRate`, `sgdToBdtRate`, `eurToBdtRate`, `gbpToBdtRate` | The rates saved with this proposal (1 unit = X BDT)          |
 | Outcome  | `projectStatus`, `finalizationDate`, `proposalNotes`           | Current / Secured / Lost, the date, and notes                |
 
 ### Key Words Explained
@@ -238,7 +241,7 @@ isProjectStatus("Pending"); // false
 
 **File:** `lib/drizzle/currency.ts`
 
-### Before
+### Before (order app)
 
 The file held the 31 built-in supplier columns, supplier row types, and two converters: `convertToUsd()` and `convertFromUsd()`. Everything was totalled in **USD**.
 
@@ -246,9 +249,22 @@ The file held the 31 built-in supplier columns, supplier row types, and two conv
 export type Currency = "USD" | "EUR" | "GBP" | "SGD";
 ```
 
+### First Phase 1 Version (replaced)
+
+The first version kept the order app's USD-based rates and added one more:
+
+| Rate           | Meaning                    |
+| -------------- | -------------------------- |
+| `gbpToUsdRate` | 1 GBP = X USD              |
+| `eurToUsdRate` | 1 EUR = X USD              |
+| `usdToSgdRate` | 1 USD = X SGD (backwards!) |
+| `usdToBdtRate` | 1 USD = X BDT              |
+
+To get BDT from GBP, the code had to go **GBP → USD → BDT**. SGD was worse: it divided by one rate and multiplied by another. Each currency needed its own formula.
+
 ### After
 
-All supplier code is removed. BDT is added, and BDT is the new base currency.
+Every rate now points **straight at BDT**. One rule works for every currency.
 
 Example
 
@@ -261,135 +277,263 @@ export type Currency = (typeof currencies)[number];
 
 ### Exchange Rates
 
-The four rates are grouped into one object type, so functions take **one argument** instead of four.
+Example
+
+```ts
+// Every rate means "1 unit of this currency = X BDT".
+// Each proposal saves its own rates; these prefill new proposals.
+export type ExchangeRates = {
+  usdToBdtRate: string;
+  sgdToBdtRate: string;
+  eurToBdtRate: string;
+  gbpToBdtRate: string;
+};
+
+export const DEFAULT_USD_TO_BDT = "125.00";
+export const DEFAULT_SGD_TO_BDT = "96.15";
+export const DEFAULT_EUR_TO_BDT = "150.00";
+export const DEFAULT_GBP_TO_BDT = "175.00";
+```
+
+### Where the Defaults Come From
+
+USD → BDT = 125 is the rate you chose. The other three keep the order app's defaults, worked out in BDT:
+
+| Rate      | Order app default | Worked out           | New default |
+| --------- | ----------------- | -------------------- | ----------- |
+| USD → BDT | (new)             | —                    | **125.00**  |
+| GBP → BDT | 1 GBP = 1.40 USD  | 1.40 × 125           | **175.00**  |
+| EUR → BDT | 1 EUR = 1.20 USD  | 1.20 × 125           | **150.00**  |
+| SGD → BDT | 1 USD = 1.30 SGD  | 125 ÷ 1.30 = 96.153… | **96.15**   |
+
+> **Note:** These are only the starting values on a new proposal. Users can change them on every proposal.
+
+`isCurrency()`, `scaledDecimal()` and `isValidRate()` are **unchanged** from the first version.
+
+### Looking Up a Rate
+
+One small helper finds the rate for any currency:
 
 Example
 
 ```ts
-// Each proposal saves its own rates; these prefill new proposals.
-export type ExchangeRates = {
-  gbpToUsdRate: string;
-  eurToUsdRate: string;
-  usdToSgdRate: string;
-  usdToBdtRate: string;
-};
+const RATE_SCALE = BigInt(100); // Rates have at most 2 decimal places.
+const MAX_CENTS = BigInt("1000000000000000000"); // numeric(18,2) limit
 
-export const DEFAULT_GBP_TO_USD = "1.40";
-export const DEFAULT_EUR_TO_USD = "1.20";
-export const DEFAULT_USD_TO_SGD = "1.30";
-export const DEFAULT_USD_TO_BDT = "125.00";
-
-export const DEFAULT_EXCHANGE_RATES: ExchangeRates = {
-  gbpToUsdRate: DEFAULT_GBP_TO_USD,
-  eurToUsdRate: DEFAULT_EUR_TO_USD,
-  usdToSgdRate: DEFAULT_USD_TO_SGD,
-  usdToBdtRate: DEFAULT_USD_TO_BDT,
-};
-```
-
-The first three defaults are the **same as the order app**. `USD → BDT = 125` is new.
-
-`isCurrency()` now reads from the array instead of listing each currency:
-
-```ts
-export function isCurrency(value: unknown): value is Currency {
-  return currencies.includes(value as Currency);
+// The rate for one currency, scaled ×100. BDT is always 1 BDT = 1 BDT.
+function bdtRate(currency: Currency, rates: ExchangeRates): bigint | null {
+  if (currency === "BDT") return RATE_SCALE;
+  const text = {
+    USD: rates.usdToBdtRate,
+    SGD: rates.sgdToBdtRate,
+    EUR: rates.eurToBdtRate,
+    GBP: rates.gbpToBdtRate,
+  }[currency];
+  const parsed = scaledDecimal(text, 2, 10);
+  return parsed !== null && parsed > BigInt(0) ? parsed : null;
 }
 ```
 
-`scaledDecimal()` and `isValidRate()` are **unchanged**.
+- `"125.00"` becomes `12500n` (multiplied by 100, so there are no decimals)
+- BDT returns `100n`, which means "× 1.00"
+- A missing, zero or badly typed rate returns `null`
 
-### The convertToBdt() Function
-
-This replaces `convertToUsd()` and `convertFromUsd()`.
+### Rounding
 
 Example
 
 ```ts
+// Divide, rounding halves up (like Postgres numeric), then restore the decimal point.
+function roundedCents(numerator: bigint, denominator: bigint): string | null {
+  const cents = (numerator + denominator / BigInt(2)) / denominator;
+  if (cents >= MAX_CENTS) return null;
+  const text = cents.toString().padStart(3, "0");
+  return `${text.slice(0, -2)}.${text.slice(-2)}`;
+}
+```
+
+Adding half the denominator before dividing rounds `.5` up. Results larger than `numeric(18, 2)` can hold return `null`.
+
+### The convertToBdt() Function
+
+Example
+
+```ts
+// amount × rate. Returns null for invalid inputs or results exceeding numeric(18,2).
 export function convertToBdt(
   amount: string,
   currency: Currency,
   rates: ExchangeRates,
 ): string | null {
   const cents = scaledDecimal(amount, 2, 16);
-  if (cents === null) return null;
-
-  const rate = (text: string) => {
-    const parsed = scaledDecimal(text, 8, 10);
-    return parsed !== null && parsed > BigInt(0) ? parsed : null;
-  };
-  const scale = BigInt(100000000);
-  const usdToBdt = rate(rates.usdToBdtRate);
-  if (usdToBdt === null) return null;
-
-  // bdtCents = cents × numerator ÷ denominator
-  let numerator = BigInt(1);
-  let denominator = BigInt(1);
-  if (currency === "USD") {
-    numerator = usdToBdt;
-    denominator = scale;
-  } else if (currency === "GBP" || currency === "EUR") {
-    const toUsd = rate(
-      currency === "GBP" ? rates.gbpToUsdRate : rates.eurToUsdRate,
-    );
-    if (toUsd === null) return null;
-    numerator = toUsd * usdToBdt;
-    denominator = scale * scale;
-  } else if (currency === "SGD") {
-    // SGD uses the inverse rate: 1 USD = rate SGD.
-    const usdToSgd = rate(rates.usdToSgdRate);
-    if (usdToSgd === null) return null;
-    numerator = usdToBdt;
-    denominator = usdToSgd;
-  }
-
-  const bdtCents = (cents * numerator + denominator / BigInt(2)) / denominator;
-  if (bdtCents >= BigInt("1000000000000000000")) return null;
-  const text = bdtCents.toString().padStart(3, "0");
-  return `${text.slice(0, -2)}.${text.slice(-2)}`;
+  const rate = bdtRate(currency, rates);
+  if (cents === null || rate === null) return null;
+  return roundedCents(cents * rate, RATE_SCALE);
 }
 ```
 
-### Step by Step
+**BDT = amount × rate.** That is the whole formula, for every currency.
 
-1. **Turn the amount into whole cents.** `"12.50"` becomes `1250n`. A `BigInt` never loses precision
-2. **Turn each rate into a whole number.** Rates are multiplied by 100,000,000 (`scale`), so `"1.40"` becomes `140000000n`
-3. **Build one fraction** for the whole conversion:
+### The convertFromBdt() Function (new)
 
-| Currency | Formula                 | Numerator      | Denominator   |
-| -------- | ----------------------- | -------------- | ------------- |
-| BDT      | amount × 1              | 1              | 1             |
-| USD      | amount × USD→BDT        | USD→BDT        | scale         |
-| GBP, EUR | amount × →USD × →BDT    | →USD × USD→BDT | scale × scale |
-| SGD      | amount ÷ USD→SGD × →BDT | USD→BDT        | USD→SGD       |
+When a page needs to **show** a BDT value in another currency, it divides instead:
 
-4. **Divide once and round.** Adding half the denominator before dividing rounds `.5` up, the same way Postgres does
-5. **Check the limit.** `numeric(18, 2)` holds up to 9,999,999,999,999,999.99. Larger results return `null`
-6. **Put the decimal point back.** `1250n` becomes `"12.50"`
+Example
 
-> **Note:** GBP, EUR and SGD go through USD, but the result is rounded **only once**. Rounding to USD cents first and then to BDT would add a small error.
+```ts
+// bdtAmount ÷ rate. Used to show a saved BDT value in another currency.
+export function convertFromBdt(
+  bdtAmount: string,
+  currency: Currency,
+  rates: ExchangeRates,
+): string | null {
+  const cents = scaledDecimal(bdtAmount, 2, 16);
+  const rate = bdtRate(currency, rates);
+  if (cents === null || rate === null) return null;
+  return roundedCents(cents * RATE_SCALE, rate);
+}
+```
+
+**Other currency = BDT ÷ rate.**
 
 ### Examples
 
 With the default rates:
 
 ```ts
-convertToBdt("100", "BDT", rates); // "100.00"
-convertToBdt("100", "USD", rates); // "12500.00"   100 × 125
-convertToBdt("100", "GBP", rates); // "17500.00"   100 × 1.40 × 125
-convertToBdt("100", "EUR", rates); // "15000.00"   100 × 1.20 × 125
-convertToBdt("130", "SGD", rates); // "12500.00"   130 ÷ 1.30 × 125
-convertToBdt("-1", "USD", rates); //  null         negative amounts are rejected
+convertToBdt("100", "USD", rates); //   "12500.00"   100 × 125
+convertToBdt("100", "SGD", rates); //   "9615.00"    100 × 96.15
+convertToBdt("100", "EUR", rates); //   "15000.00"   100 × 150
+convertToBdt("100", "GBP", rates); //   "17500.00"   100 × 175
+convertToBdt("100", "BDT", rates); //   "100.00"     100 × 1
+
+convertFromBdt("12500", "USD", rates); // "100.00"   12500 ÷ 125
+convertFromBdt("100", "SGD", rates); //   "1.04"     100 ÷ 96.15 = 1.0400…
+convertToBdt("-1", "USD", rates); //      null       negative amounts are rejected
 ```
+
+### Before and After
+
+| Question                        | First version                                 | Now                     |
+| ------------------------------- | --------------------------------------------- | ----------------------- |
+| Rate meaning                    | Mixed: three "→ USD" style, one "USD →"       | Always "1 unit = X BDT" |
+| Formulas in `convertToBdt()`    | Four (BDT, USD, GBP/EUR, SGD)                 | One: amount × rate      |
+| Showing BDT in another currency | Not possible                                  | `convertFromBdt()`      |
+| A bad GBP rate                  | Could block other currencies via the USD step | Only affects GBP        |
+
+### Complete File
+
+<details>
+<summary>Full code: currency.ts</summary>
+
+```ts
+// Currencies a proposal value can be entered in. BDT is the base for totals.
+export const currencies = ["USD", "SGD", "EUR", "GBP", "BDT"] as const;
+
+export type Currency = (typeof currencies)[number];
+
+// Every rate means "1 unit of this currency = X BDT".
+// Each proposal saves its own rates; these prefill new proposals.
+export type ExchangeRates = {
+  usdToBdtRate: string;
+  sgdToBdtRate: string;
+  eurToBdtRate: string;
+  gbpToBdtRate: string;
+};
+
+export const DEFAULT_USD_TO_BDT = "125.00";
+export const DEFAULT_SGD_TO_BDT = "96.15";
+export const DEFAULT_EUR_TO_BDT = "150.00";
+export const DEFAULT_GBP_TO_BDT = "175.00";
+
+export const DEFAULT_EXCHANGE_RATES: ExchangeRates = {
+  usdToBdtRate: DEFAULT_USD_TO_BDT,
+  sgdToBdtRate: DEFAULT_SGD_TO_BDT,
+  eurToBdtRate: DEFAULT_EUR_TO_BDT,
+  gbpToBdtRate: DEFAULT_GBP_TO_BDT,
+};
+
+export function isCurrency(value: unknown): value is Currency {
+  return currencies.includes(value as Currency);
+}
+
+// Parse decimal strings into scaled integers, avoiding floating-point rounding.
+function scaledDecimal(value: string, scale: number, integerDigits: number) {
+  if (!/^\d+(?:\.\d+)?$/.test(value)) return null;
+  const [whole, fraction = ""] = value.split(".");
+  if (
+    whole.replace(/^0+/, "").length > integerDigits ||
+    fraction.length > scale
+  )
+    return null;
+  return BigInt(whole + fraction.padEnd(scale, "0"));
+}
+
+export function isValidRate(value: string) {
+  const parsed = scaledDecimal(value, 2, 10);
+  return parsed !== null && parsed > BigInt(0);
+}
+
+const RATE_SCALE = BigInt(100); // Rates have at most 2 decimal places.
+const MAX_CENTS = BigInt("1000000000000000000"); // numeric(18,2) limit
+
+// The rate for one currency, scaled ×100. BDT is always 1 BDT = 1 BDT.
+function bdtRate(currency: Currency, rates: ExchangeRates): bigint | null {
+  if (currency === "BDT") return RATE_SCALE;
+  const text = {
+    USD: rates.usdToBdtRate,
+    SGD: rates.sgdToBdtRate,
+    EUR: rates.eurToBdtRate,
+    GBP: rates.gbpToBdtRate,
+  }[currency];
+  const parsed = scaledDecimal(text, 2, 10);
+  return parsed !== null && parsed > BigInt(0) ? parsed : null;
+}
+
+// Divide, rounding halves up (like Postgres numeric), then restore the decimal point.
+function roundedCents(numerator: bigint, denominator: bigint): string | null {
+  const cents = (numerator + denominator / BigInt(2)) / denominator;
+  if (cents >= MAX_CENTS) return null;
+  const text = cents.toString().padStart(3, "0");
+  return `${text.slice(0, -2)}.${text.slice(-2)}`;
+}
+
+// amount × rate. Returns null for invalid inputs or results exceeding numeric(18,2).
+export function convertToBdt(
+  amount: string,
+  currency: Currency,
+  rates: ExchangeRates,
+): string | null {
+  const cents = scaledDecimal(amount, 2, 16);
+  const rate = bdtRate(currency, rates);
+  if (cents === null || rate === null) return null;
+  return roundedCents(cents * rate, RATE_SCALE);
+}
+
+// bdtAmount ÷ rate. Used to show a saved BDT value in another currency.
+export function convertFromBdt(
+  bdtAmount: string,
+  currency: Currency,
+  rates: ExchangeRates,
+): string | null {
+  const cents = scaledDecimal(bdtAmount, 2, 16);
+  const rate = bdtRate(currency, rates);
+  if (cents === null || rate === null) return null;
+  return roundedCents(cents * RATE_SCALE, rate);
+}
+```
+
+</details>
 
 ### Removed From currency.ts
 
-| Removed                                                                        | Why                                      |
-| ------------------------------------------------------------------------------ | ---------------------------------------- |
-| `supplierColumns` (31 suppliers)                                               | Proposals have no suppliers              |
-| `SupplierKey`, `SupplierCurrencyDetail`, `CustomSupplierDetail`, `SupplierRow` | Supplier types                           |
-| `restoreSupplierRows()`, `legacySupplierRowKey()`                              | Rebuilt supplier rows for the order form |
-| `convertToUsd()`, `convertFromUsd()`                                           | Replaced by `convertToBdt()`             |
+| Removed                                                                        | Why                                                 |
+| ------------------------------------------------------------------------------ | --------------------------------------------------- |
+| `supplierColumns` (31 suppliers)                                               | Proposals have no suppliers                         |
+| `SupplierKey`, `SupplierCurrencyDetail`, `CustomSupplierDetail`, `SupplierRow` | Supplier types                                      |
+| `restoreSupplierRows()`, `legacySupplierRowKey()`                              | Rebuilt supplier rows for the order form            |
+| `convertToUsd()`, `convertFromUsd()`                                           | Replaced by `convertToBdt()` and `convertFromBdt()` |
+| `DEFAULT_GBP_TO_USD`, `DEFAULT_EUR_TO_USD`, `DEFAULT_USD_TO_SGD`               | Replaced by the "→ BDT" defaults                    |
 
 ---
 
@@ -658,14 +802,14 @@ export function readProposalValues(
 
   // Blank rates fall back to the defaults, matching the prefilled form.
   const rates: ExchangeRates = {
-    gbpToUsdRate:
-      readText(formData, "gbpToUsdRate") || DEFAULT_EXCHANGE_RATES.gbpToUsdRate,
-    eurToUsdRate:
-      readText(formData, "eurToUsdRate") || DEFAULT_EXCHANGE_RATES.eurToUsdRate,
-    usdToSgdRate:
-      readText(formData, "usdToSgdRate") || DEFAULT_EXCHANGE_RATES.usdToSgdRate,
     usdToBdtRate:
       readText(formData, "usdToBdtRate") || DEFAULT_EXCHANGE_RATES.usdToBdtRate,
+    sgdToBdtRate:
+      readText(formData, "sgdToBdtRate") || DEFAULT_EXCHANGE_RATES.sgdToBdtRate,
+    eurToBdtRate:
+      readText(formData, "eurToBdtRate") || DEFAULT_EXCHANGE_RATES.eurToBdtRate,
+    gbpToBdtRate:
+      readText(formData, "gbpToBdtRate") || DEFAULT_EXCHANGE_RATES.gbpToBdtRate,
   };
   if (!Object.values(rates).every(isValidRate)) {
     return {
@@ -902,6 +1046,54 @@ proposals_value_currency_check
 
 ---
 
+### The Exchange-Rate Migration
+
+**Folder:** `lib/drizzle/migrations/20261119154445_bdt_exchange_rates/`
+
+The first migration was already applied to Neon when the rates changed. A migration that has been applied should **never be edited**, so a second one was generated:
+
+```bash
+npx drizzle-kit generate --name bdt_exchange_rates --hints '[...]'
+```
+
+Drizzle asked whether each new column was a **rename** of an old one. They are not: "1 GBP = X USD" and "1 GBP = X BDT" mean different things. The `--hints` option answered "create" for all three.
+
+Example
+
+```sql
+ALTER TABLE "proposals" ADD COLUMN "sgdToBdtRate" numeric(18,2) NOT NULL;
+ALTER TABLE "proposals" ADD COLUMN "eurToBdtRate" numeric(18,2) NOT NULL;
+ALTER TABLE "proposals" ADD COLUMN "gbpToBdtRate" numeric(18,2) NOT NULL;
+ALTER TABLE "proposals" DROP COLUMN "gbpToUsdRate";
+ALTER TABLE "proposals" DROP COLUMN "eurToUsdRate";
+ALTER TABLE "proposals" DROP COLUMN "usdToSgdRate";
+```
+
+`usdToBdtRate` already meant "1 USD = X BDT", so it stays.
+
+> **Note:** Adding a `NOT NULL` column with no default only works on an **empty** table. A check against Neon confirmed `proposals` has 0 rows.
+
+### Applying It
+
+It was applied with the same command as before:
+
+```bash
+npx drizzle-kit migrate
+```
+
+Drizzle skipped the first migration (already applied) and ran only the new one. Neon now shows:
+
+| Column         | Type           | Required |
+| -------------- | -------------- | -------- |
+| `usdToBdtRate` | numeric(18, 2) | Yes      |
+| `sgdToBdtRate` | numeric(18, 2) | Yes      |
+| `eurToBdtRate` | numeric(18, 2) | Yes      |
+| `gbpToBdtRate` | numeric(18, 2) | Yes      |
+
+`proposals` still has 22 columns (3 added, 3 dropped), and `drizzle.__drizzle_migrations` lists **2** applied migrations.
+
+---
+
 ## 11. Tests
 
 Three test files cover Phase 1. They run with Node's built-in test runner.
@@ -915,8 +1107,8 @@ node --import tsx --test lib/drizzle/currency.test.ts lib/drizzle/proposal-acces
 ### Result
 
 ```text
-ℹ tests 17
-ℹ pass 17
+ℹ tests 18
+ℹ pass 18
 ℹ fail 0
 ```
 
@@ -924,25 +1116,26 @@ The existing document and idle-session tests also still pass (17 of 17).
 
 ### What Each Test Proves
 
-| File                         | Test                                                                |
-| ---------------------------- | ------------------------------------------------------------------- |
-| `currency.test.ts`           | Every currency converts to BDT with the proposal's rates            |
-|                              | Rounding happens once; bad amounts, rates and overflow are rejected |
-|                              | Only the five currencies are accepted                               |
-|                              | Money totals add exact cents                                        |
-|                              | Saving recalculates BDT on the server, ignoring a fake value        |
-|                              | A blank value stores no currency                                    |
-|                              | An unsupported currency or bad rate is rejected                     |
-| `proposal-access.test.ts`    | Revoking access keeps admins able to edit                           |
-|                              | Guests, the old `"order"` role and unknown roles cannot edit        |
-|                              | A forged form cannot change access or the reference number          |
-|                              | A forged form cannot change `createdBy`                             |
-|                              | Project Name, Client Name and Project Status are required           |
-|                              | Optional fields are trimmed; blanks become `null`                   |
-|                              | Finalization Date must be a real date                               |
-| `proposal-reference.test.ts` | References use `FCL/Quote/YYYY/NNN`                                 |
-|                              | The year prefix only matches that year                              |
-|                              | Invalid years or sequences throw an error                           |
+| File                         | Test                                                              |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `currency.test.ts`           | Every currency converts directly to BDT with the proposal's rates |
+|                              | BDT converts back to any currency for display                     |
+|                              | Halves round up; bad amounts, rates and overflow are rejected     |
+|                              | Only the five currencies are accepted                             |
+|                              | Money totals add exact cents                                      |
+|                              | Saving recalculates BDT on the server, ignoring a fake value      |
+|                              | A blank value stores no currency                                  |
+|                              | An unsupported currency or bad rate is rejected                   |
+| `proposal-access.test.ts`    | Revoking access keeps admins able to edit                         |
+|                              | Guests, the old `"order"` role and unknown roles cannot edit      |
+|                              | A forged form cannot change access or the reference number        |
+|                              | A forged form cannot change `createdBy`                           |
+|                              | Project Name, Client Name and Project Status are required         |
+|                              | Optional fields are trimmed; blanks become `null`                 |
+|                              | Finalization Date must be a real date                             |
+| `proposal-reference.test.ts` | References use `FCL/Quote/YYYY/NNN`                               |
+|                              | The year prefix only matches that year                            |
+|                              | Invalid years or sequences throw an error                         |
 
 <details>
 <summary>Full test code: currency.test.ts</summary>
@@ -950,31 +1143,53 @@ The existing document and idle-session tests also still pass (17 of 17).
 ```ts
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { convertToBdt, isCurrency, type ExchangeRates } from "./currency";
+import {
+  convertFromBdt,
+  convertToBdt,
+  isCurrency,
+  type ExchangeRates,
+} from "./currency";
 import { readProposalValues } from "./proposal-values";
 import { sumMoneyAmounts } from "../format-money";
 
+// Every rate is "1 unit = X BDT".
 const rates: ExchangeRates = {
-  gbpToUsdRate: "1.40",
-  eurToUsdRate: "1.20",
-  usdToSgdRate: "1.30",
   usdToBdtRate: "125.00",
+  sgdToBdtRate: "96.15",
+  eurToBdtRate: "150.00",
+  gbpToBdtRate: "175.00",
 };
 
 // Money stays in decimal strings so large amounts do not lose cents.
-test("every currency converts to BDT using the proposal's rates", () => {
+test("every currency converts directly to BDT using the proposal's rates", () => {
   assert.equal(convertToBdt("100", "BDT", rates), "100.00");
   assert.equal(convertToBdt("100", "USD", rates), "12500.00");
-  assert.equal(convertToBdt("100", "GBP", rates), "17500.00");
+  assert.equal(convertToBdt("100", "SGD", rates), "9615.00");
   assert.equal(convertToBdt("100", "EUR", rates), "15000.00");
-  assert.equal(convertToBdt("130", "SGD", rates), "12500.00");
+  assert.equal(convertToBdt("100", "GBP", rates), "17500.00");
 });
 
-test("conversion rounds once and rejects invalid amounts, rates or overflow", () => {
-  // 1 SGD = 125 / 1.3 = 96.153846… BDT
-  assert.equal(convertToBdt("1", "SGD", rates), "96.15");
-  // 0.01 GBP = 0.01 × 1.4 × 125 = 1.75 BDT, with no intermediate USD rounding.
-  assert.equal(convertToBdt("0.01", "GBP", rates), "1.75");
+test("BDT converts back to any currency for display", () => {
+  assert.equal(convertFromBdt("12500", "USD", rates), "100.00");
+  assert.equal(convertFromBdt("9615", "SGD", rates), "100.00");
+  assert.equal(convertFromBdt("15000", "EUR", rates), "100.00");
+  assert.equal(convertFromBdt("17500", "GBP", rates), "100.00");
+  assert.equal(convertFromBdt("100", "BDT", rates), "100.00");
+  // 100 BDT ÷ 96.15 = 1.040041… SGD
+  assert.equal(convertFromBdt("100", "SGD", rates), "1.04");
+  assert.equal(convertFromBdt("-1", "USD", rates), null);
+  assert.equal(
+    convertFromBdt("100", "USD", { ...rates, usdToBdtRate: "0" }),
+    null,
+  );
+});
+
+test("conversion rounds halves up and rejects invalid amounts, rates or overflow", () => {
+  // 0.01 SGD × 96.15 = 0.9615 BDT, which rounds to 0.96
+  assert.equal(convertToBdt("0.01", "SGD", rates), "0.96");
+  // 0.5 BDT ÷ 125 = 0.004 USD, which rounds to 0.00; 0.63 ÷ 125 = 0.00504 → 0.01
+  assert.equal(convertFromBdt("0.5", "USD", rates), "0.00");
+  assert.equal(convertFromBdt("0.63", "USD", rates), "0.01");
   assert.equal(
     convertToBdt("9999999999999999.99", "BDT", rates),
     "9999999999999999.99",
@@ -987,8 +1202,13 @@ test("conversion rounds once and rejects invalid amounts, rates or overflow", ()
     null,
   );
   assert.equal(
-    convertToBdt("10", "SGD", { ...rates, usdToSgdRate: "0" }),
+    convertToBdt("10", "GBP", { ...rates, gbpToBdtRate: "1.234" }),
     null,
+  );
+  // A bad rate for one currency does not affect the others.
+  assert.equal(
+    convertToBdt("10", "EUR", { ...rates, gbpToBdtRate: "0" }),
+    "1500.00",
   );
 });
 
@@ -1024,8 +1244,8 @@ test("saving a value keeps the original amount and recalculates BDT on the serve
   assert.ok(result.ok);
   assert.equal(result.values.valueOriginal, "130");
   assert.equal(result.values.valueCurrency, "SGD");
-  assert.equal(result.values.valueBdt, "12500.00");
-  assert.equal(result.values.usdToBdtRate, "125.00");
+  assert.equal(result.values.valueBdt, "12499.50");
+  assert.equal(result.values.sgdToBdtRate, "96.15");
 });
 
 test("a blank value stores no currency or BDT amount", () => {
@@ -1241,10 +1461,10 @@ convertToBdt("10", "GBP", DEFAULT_EXCHANGE_RATES);
 <details>
 <summary>Show answer</summary>
 
-**`"1750.00"`**. 10 GBP × 1.40 = 14 USD, and 14 USD × 125 = 1,750 BDT.
+**`"1750.00"`**. 10 GBP × 175 = 1,750 BDT. Every currency uses the same rule: amount × rate.
 
 </details>
 
 ---
 
-[❮ Plan](../proposal-conversion-plan.md) | Next: Phase 2 Proposal Form ❯
+[❮ Plan](../proposal-conversion-plan.md) | [Phase 2 Proposal Form ❯](phase-2-proposal-form.md)

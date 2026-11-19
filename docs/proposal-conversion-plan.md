@@ -12,26 +12,26 @@ Built-in supplier columns, supplier/expense rows, payment mode, handling fees, c
 
 ## Decisions
 
-| Topic                    | Decision                                                                                          |
-| ------------------------ | ------------------------------------------------------------------------------------------------- |
-| Reference number         | Auto-generated `FCL/Quote/YYYY/NNN`, sequential per year (same allocation logic as orders).       |
-| Value currencies         | USD, SGD, EUR, GBP, BDT. Original amount + currency stored, plus a BDT equivalent.                |
-| Exchange rates           | Saved per proposal, prefilled and editable.                                                       |
-| Default rates            | GBP→USD 1.40, EUR→USD 1.20, USD→SGD 1.30 (existing), plus new USD→BDT 125.                        |
-| Required fields          | Project Name, Client Name, Project Status. Everything else optional, including Finalization Date. |
-| Project Status           | Current, Secured, Lost. Defaults to Current.                                                      |
-| Client and System        | Suggestions from Settings; free text allowed.                                                     |
-| End User and Consultant  | Free text.                                                                                        |
-| Roles                    | Admin / Proposal manager / Guest. Stored role value `order` becomes `proposal`.                   |
-| Per-proposal access lock | Kept (admin Revoke Access column on Home).                                                        |
-| Documents                | Proposal-level uploads kept; supplier attachments removed.                                        |
-| Summary                  | All fields, plus count and BDT total per status for the selected year.                            |
-| Database                 | Fresh Neon database. Delete the 25 order migrations and generate one baseline migration.          |
-| Customer addresses       | Dropped (proposals have no address field).                                                        |
+| Topic                    | Decision                                                                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Reference number         | Auto-generated `FCL/Quote/YYYY/NNN`, sequential per year (same allocation logic as orders).                                        |
+| Value currencies         | USD, SGD, EUR, GBP, BDT. Original amount + currency stored, plus a BDT equivalent.                                                 |
+| Exchange rates           | Saved per proposal, prefilled and editable.                                                                                        |
+| Default rates            | 1 unit = X BDT: USD 125, SGD 96.15, EUR 150, GBP 175. Values in other currencies are shown by dividing the BDT amount by the rate. |
+| Required fields          | Project Name, Client Name, Project Status. Everything else optional, including Finalization Date.                                  |
+| Project Status           | Current, Secured, Lost. Defaults to Current.                                                                                       |
+| Client and System        | Suggestions from Settings; free text allowed.                                                                                      |
+| End User and Consultant  | Free text.                                                                                                                         |
+| Roles                    | Admin / Proposal manager / Guest. Stored role value `order` becomes `proposal`.                                                    |
+| Per-proposal access lock | Kept (admin Revoke Access column on Home).                                                                                         |
+| Documents                | Proposal-level uploads kept; supplier attachments removed.                                                                         |
+| Summary                  | All fields, plus count and BDT total per status for the selected year.                                                             |
+| Database                 | Fresh Neon database. Delete the 25 order migrations and generate one baseline migration.                                           |
+| Customer addresses       | Dropped (proposals have no address field).                                                                                         |
 
 ## Data model
 
-- **`proposals`** (replaces `data`): `sl`, `referenceNumber` (unique), `createdBy`, `createdDate`, `lastEditedBy`, `lastEditedAt`, `proposalManagerAccess`, `projectName` (required), `clientName` (required), `endUser`, `consultant`, `system`, `valueOriginal`, `valueCurrency`, `valueBdt`, `gbpToUsdRate`, `eurToUsdRate`, `usdToSgdRate`, `usdToBdtRate`, `projectStatus` (required, check constraint, default `Current`), `finalizationDate`, `proposalNotes`.
+- **`proposals`** (replaces `data`): `sl`, `referenceNumber` (unique), `createdBy`, `createdDate`, `lastEditedBy`, `lastEditedAt`, `proposalManagerAccess`, `projectName` (required), `clientName` (required), `endUser`, `consultant`, `system`, `valueOriginal`, `valueCurrency`, `valueBdt`, `usdToBdtRate`, `sgdToBdtRate`, `eurToBdtRate`, `gbpToBdtRate`, `projectStatus` (required, check constraint, default `Current`), `finalizationDate`, `proposalNotes`.
 - **`clients`** (replaces `customers`, no address column).
 - **`systems`** (new Settings list).
 - **`proposal_documents`** (replaces `order_documents`, no `supplierRowKey`).
@@ -41,7 +41,7 @@ Built-in supplier columns, supplier/expense rows, payment mode, handling fees, c
 
 1. **Data and helpers**
    - Rewrite `lib/drizzle/schema.ts` per the data model.
-   - Trim `lib/drizzle/currency.ts`: remove supplier code, add `BDT` to `Currency`, add `convertToBdt` (existing rates to USD, then USD→BDT, computed in one scaled step to avoid double rounding), add `DEFAULT_USD_TO_BDT = "125.00"`.
+   - Trim `lib/drizzle/currency.ts`: remove supplier code, add `BDT` to `Currency`, add `convertToBdt` (amount × rate) and `convertFromBdt` (BDT ÷ rate), with every rate stored as "1 unit = X BDT".
    - Rename order helpers to proposal ones: `proposal-reference.ts` (`FCL/Quote/` prefix, new lock namespace, shared prefix helper for year filters), `proposal-access.ts`, `proposal-values.ts`, `proposal-date.ts`, `proposal-datalists.ts`, `datalist-values.ts` (clients/systems).
    - Delete `order-calculations.ts`, `expenses.ts`, `custom-suppliers.ts` and their tests.
    - Delete old migrations; `npx drizzle-kit generate` a baseline. Confirm before applying to Neon.

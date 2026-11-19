@@ -27,10 +27,11 @@ export const proposals = p.pgTable.withRLS(
     valueOriginal: p.numeric({ precision: 18, scale: 2 }),
     valueCurrency: p.varchar().$type<Currency>(),
     valueBdt: p.numeric({ precision: 18, scale: 2 }),
-    gbpToUsdRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
-    eurToUsdRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
-    usdToSgdRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
+    // Each rate is "1 unit = X BDT".
     usdToBdtRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
+    sgdToBdtRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
+    eurToBdtRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
+    gbpToBdtRate: p.numeric({ precision: 18, scale: 2 }).notNull(),
 
     projectStatus: p
       .varchar()

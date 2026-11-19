@@ -1,73 +1,68 @@
-import { getOrderDatalists } from "@/lib/drizzle/order-datalists";
-import { currentOrderDate } from "@/lib/drizzle/order-date";
+import { getProposalDatalists } from "@/lib/drizzle/proposal-datalists";
+import { currentProposalDate } from "@/lib/drizzle/proposal-date";
 import { requireUser } from "@/lib/betterAuth/session";
 import { db } from "@/lib/drizzle/drizzle-index";
 import PageBody from "../PageBody";
-import { data, users, orderDocuments } from "@/lib/drizzle/schema";
+import { proposals, users, proposalDocuments } from "@/lib/drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
-export const metadata = { title: "Order Details" };
+export const metadata = { title: "Proposal Details" };
 
-// Load one saved order and its document metadata for the shared form component.
-export default async function OrderForm({
+// Load one saved proposal and its document metadata for the shared form component.
+export default async function ProposalDetails({
   params,
 }: {
-  params: Promise<{ edit_slug: string }>;
+  params: Promise<{ proposalId: string }>;
 }) {
   const user = await requireUser();
 
-  let adminStatus = "";
-  let username = "";
-
-  const { edit_slug } = await params;
+  const { proposalId } = await params;
   if (
-    !/^\d+$/.test(edit_slug) ||
-    !Number.isSafeInteger(Number(edit_slug)) ||
-    Number(edit_slug) < 1 ||
-    Number(edit_slug) > 2147483647
+    !/^\d+$/.test(proposalId) ||
+    !Number.isSafeInteger(Number(proposalId)) ||
+    Number(proposalId) < 1 ||
+    Number(proposalId) > 2147483647
   )
     notFound();
-  const order = await db
+
+  const [proposal] = await db
     .select()
-    .from(data)
-    .where(eq(data.sl, Number(edit_slug)))
+    .from(proposals)
+    .where(eq(proposals.sl, Number(proposalId)))
     .limit(1);
-  if (!order[0]) notFound();
+  if (!proposal) notFound();
 
-  const documents = await db
-    .select({
-      id: orderDocuments.id,
-      supplierRowKey: orderDocuments.supplierRowKey,
-      title: orderDocuments.title,
-      originalName: orderDocuments.originalName,
-      sizeBytes: orderDocuments.sizeBytes,
-    })
-    .from(orderDocuments)
-    .where(eq(orderDocuments.orderId, order[0].sl))
-    .orderBy(orderDocuments.createdAt);
-
-  const userArray = await db.select().from(users);
-
-  userArray.forEach((e) => {
-    if (e.email === user.email) {
-      username = e.name?.trim() ?? "";
-      adminStatus = e.status ?? "";
-      return;
-    }
-  });
-
-  const datalists = await getOrderDatalists();
+  const [documents, [profile], datalists] = await Promise.all([
+    db
+      .select({
+        id: proposalDocuments.id,
+        title: proposalDocuments.title,
+        originalName: proposalDocuments.originalName,
+        sizeBytes: proposalDocuments.sizeBytes,
+      })
+      .from(proposalDocuments)
+      .where(eq(proposalDocuments.proposalId, proposal.sl))
+      .orderBy(proposalDocuments.createdAt),
+    user.email
+      ? db
+          .select({ name: users.name, status: users.status })
+          .from(users)
+          .where(eq(users.email, user.email))
+          .limit(1)
+      : Promise.resolve([]),
+    getProposalDatalists(),
+  ]);
 
   return (
     <div>
       <PageBody
         {...datalists}
-        orderDetails={order[0]}
+        proposalDetails={proposal}
         initialDocuments={documents}
-        isAdmin={adminStatus}
-        username={username}
-        currentDate={currentOrderDate()}
+        role={profile?.status ?? ""}
+        username={profile?.name?.trim() ?? ""}
+        currentDate={currentProposalDate()}
       />
     </div>
   );

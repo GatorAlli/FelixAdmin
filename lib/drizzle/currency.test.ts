@@ -1,30 +1,52 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { convertToBdt, isCurrency, type ExchangeRates } from "./currency";
+import {
+  convertFromBdt,
+  convertToBdt,
+  isCurrency,
+  type ExchangeRates,
+} from "./currency";
 import { readProposalValues } from "./proposal-values";
 import { sumMoneyAmounts } from "../format-money";
 
+// Every rate is "1 unit = X BDT".
 const rates: ExchangeRates = {
-  gbpToUsdRate: "1.40",
-  eurToUsdRate: "1.20",
-  usdToSgdRate: "1.30",
   usdToBdtRate: "125.00",
+  sgdToBdtRate: "96.15",
+  eurToBdtRate: "150.00",
+  gbpToBdtRate: "175.00",
 };
 
 // Money stays in decimal strings so large amounts do not lose cents.
-test("every currency converts to BDT using the proposal's rates", () => {
+test("every currency converts directly to BDT using the proposal's rates", () => {
   assert.equal(convertToBdt("100", "BDT", rates), "100.00");
   assert.equal(convertToBdt("100", "USD", rates), "12500.00");
-  assert.equal(convertToBdt("100", "GBP", rates), "17500.00");
+  assert.equal(convertToBdt("100", "SGD", rates), "9615.00");
   assert.equal(convertToBdt("100", "EUR", rates), "15000.00");
-  assert.equal(convertToBdt("130", "SGD", rates), "12500.00");
+  assert.equal(convertToBdt("100", "GBP", rates), "17500.00");
 });
 
-test("conversion rounds once and rejects invalid amounts, rates or overflow", () => {
-  // 1 SGD = 125 / 1.3 = 96.153846… BDT
-  assert.equal(convertToBdt("1", "SGD", rates), "96.15");
-  // 0.01 GBP = 0.01 × 1.4 × 125 = 1.75 BDT, with no intermediate USD rounding.
-  assert.equal(convertToBdt("0.01", "GBP", rates), "1.75");
+test("BDT converts back to any currency for display", () => {
+  assert.equal(convertFromBdt("12500", "USD", rates), "100.00");
+  assert.equal(convertFromBdt("9615", "SGD", rates), "100.00");
+  assert.equal(convertFromBdt("15000", "EUR", rates), "100.00");
+  assert.equal(convertFromBdt("17500", "GBP", rates), "100.00");
+  assert.equal(convertFromBdt("100", "BDT", rates), "100.00");
+  // 100 BDT ÷ 96.15 = 1.040041… SGD
+  assert.equal(convertFromBdt("100", "SGD", rates), "1.04");
+  assert.equal(convertFromBdt("-1", "USD", rates), null);
+  assert.equal(
+    convertFromBdt("100", "USD", { ...rates, usdToBdtRate: "0" }),
+    null,
+  );
+});
+
+test("conversion rounds halves up and rejects invalid amounts, rates or overflow", () => {
+  // 0.01 SGD × 96.15 = 0.9615 BDT, which rounds to 0.96
+  assert.equal(convertToBdt("0.01", "SGD", rates), "0.96");
+  // 0.5 BDT ÷ 125 = 0.004 USD, which rounds to 0.00; 0.63 ÷ 125 = 0.00504 → 0.01
+  assert.equal(convertFromBdt("0.5", "USD", rates), "0.00");
+  assert.equal(convertFromBdt("0.63", "USD", rates), "0.01");
   assert.equal(
     convertToBdt("9999999999999999.99", "BDT", rates),
     "9999999999999999.99",
@@ -37,8 +59,13 @@ test("conversion rounds once and rejects invalid amounts, rates or overflow", ()
     null,
   );
   assert.equal(
-    convertToBdt("10", "SGD", { ...rates, usdToSgdRate: "0" }),
+    convertToBdt("10", "GBP", { ...rates, gbpToBdtRate: "1.234" }),
     null,
+  );
+  // A bad rate for one currency does not affect the others.
+  assert.equal(
+    convertToBdt("10", "EUR", { ...rates, gbpToBdtRate: "0" }),
+    "1500.00",
   );
 });
 
@@ -74,8 +101,8 @@ test("saving a value keeps the original amount and recalculates BDT on the serve
   assert.ok(result.ok);
   assert.equal(result.values.valueOriginal, "130");
   assert.equal(result.values.valueCurrency, "SGD");
-  assert.equal(result.values.valueBdt, "12500.00");
-  assert.equal(result.values.usdToBdtRate, "125.00");
+  assert.equal(result.values.valueBdt, "12499.50");
+  assert.equal(result.values.sgdToBdtRate, "96.15");
 });
 
 test("a blank value stores no currency or BDT amount", () => {

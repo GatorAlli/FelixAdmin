@@ -1,42 +1,38 @@
-import { getOrderDatalists } from "@/lib/drizzle/order-datalists";
-import { currentOrderDate } from "@/lib/drizzle/order-date";
+import { getProposalDatalists } from "@/lib/drizzle/proposal-datalists";
+import { currentProposalDate } from "@/lib/drizzle/proposal-date";
 import { requireUser } from "@/lib/betterAuth/session";
 import PageBody from "./PageBody";
 import { db } from "@/lib/drizzle/drizzle-index";
 import { users } from "@/lib/drizzle/schema";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { canEditOrder } from "@/lib/drizzle/order-access";
+import { canEditProposal } from "@/lib/drizzle/proposal-access";
 
-export const metadata = { title: "New Order" };
+export const metadata = { title: "New Proposal" };
 
-// Prepare a new order with the current profile, suggestions and Bangladesh date.
-export default async function OrderForm() {
+// Prepare a new proposal with the current profile, suggestions and Bangladesh date.
+export default async function ProposalForm() {
   const user = await requireUser();
+  const [profile] = user.email
+    ? await db
+        .select({ name: users.name, status: users.status })
+        .from(users)
+        .where(eq(users.email, user.email))
+        .limit(1)
+    : [];
+  const role = profile?.status ?? "";
 
-  let adminStatus = "";
-  let username = "";
+  if (!canEditProposal(role, true)) redirect("/home");
 
-  const userArray = await db.select().from(users);
-
-  userArray.forEach((e) => {
-    if (e.email === user.email) {
-      username = e.name?.trim() ?? "";
-      adminStatus = String(e.status);
-      return;
-    }
-  });
-
-  if (!canEditOrder(adminStatus, true)) redirect("/home");
-
-  const datalists = await getOrderDatalists();
+  const datalists = await getProposalDatalists();
 
   return (
     <div>
       <PageBody
         {...datalists}
-        isAdmin={adminStatus}
-        username={username}
-        currentDate={currentOrderDate()}
+        role={role}
+        username={profile?.name?.trim() ?? ""}
+        currentDate={currentProposalDate()}
       />
     </div>
   );

@@ -53,14 +53,14 @@ export function readProposalValues(
 
   // Blank rates fall back to the defaults, matching the prefilled form.
   const rates: ExchangeRates = {
-    gbpToUsdRate:
-      readText(formData, "gbpToUsdRate") || DEFAULT_EXCHANGE_RATES.gbpToUsdRate,
-    eurToUsdRate:
-      readText(formData, "eurToUsdRate") || DEFAULT_EXCHANGE_RATES.eurToUsdRate,
-    usdToSgdRate:
-      readText(formData, "usdToSgdRate") || DEFAULT_EXCHANGE_RATES.usdToSgdRate,
     usdToBdtRate:
       readText(formData, "usdToBdtRate") || DEFAULT_EXCHANGE_RATES.usdToBdtRate,
+    sgdToBdtRate:
+      readText(formData, "sgdToBdtRate") || DEFAULT_EXCHANGE_RATES.sgdToBdtRate,
+    eurToBdtRate:
+      readText(formData, "eurToBdtRate") || DEFAULT_EXCHANGE_RATES.eurToBdtRate,
+    gbpToBdtRate:
+      readText(formData, "gbpToBdtRate") || DEFAULT_EXCHANGE_RATES.gbpToBdtRate,
   };
   if (!Object.values(rates).every(isValidRate)) {
     return {

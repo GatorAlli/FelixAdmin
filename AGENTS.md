@@ -100,14 +100,13 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   │   │   ├── actions.ts                   # Server actions: delete/bulk-manage orders
 │   │   │   └── page.tsx                     # Orders list page
 │   │   ├── layout.tsx                       # Requires a session, mounts the idle-session monitor
-│   │   ├── order_form/
-│   │   │   ├── [edit_slug]/page.tsx         # Edit-existing-order route
+│   │   ├── proposal_form/
+│   │   │   ├── [proposalId]/page.tsx        # View/edit an existing proposal
 │   │   │   ├── DocumentFileInput.tsx        # File picker control for document uploads
-│   │   │   ├── OrderDocuments.tsx           # Order-level document list/upload UI
-│   │   │   ├── PageBody.tsx                 # Order form state, calculations, save orchestration
-│   │   │   ├── SupplierDocument.tsx         # Per-supplier attachment dialog
-│   │   │   ├── actions.ts                   # Server actions: save/validate orders
-│   │   │   └── page.tsx                     # New-order route
+│   │   │   ├── OrderDocuments.tsx           # Proposal document list/upload UI (renamed in Phase 5)
+│   │   │   ├── PageBody.tsx                 # Proposal form state, BDT preview, save orchestration
+│   │   │   ├── actions.ts                   # Server actions: createProposal/updateProposal
+│   │   │   └── page.tsx                     # New-proposal route
 │   │   ├── settings/
 │   │   │   ├── SettingsLists.tsx            # Supplier/customer/expense catalog editor UI
 │   │   │   ├── UsersTable.tsx               # User management table UI
@@ -145,7 +144,8 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   └── schema.sql                           # Reference schema dump for local Postgres
 ├── docs/
 │   ├── initial_migration/                   # Per-phase reports for the order→proposal conversion
-│   │   └── phase-1-data-and-helpers.md      # Phase 1: schema, currency, helpers, tests, baseline migration
+│   │   ├── phase-1-data-and-helpers.md      # Phase 1: schema, currency, helpers, tests, migrations
+│   │   └── phase-2-proposal-form.md         # Phase 2: proposal form route, actions, PageBody
 │   ├── proposal-conversion-plan.md          # Plan for converting the order app into the proposal app
 │   ├── reports/user-management-code-report.md  # Snapshot report of user-management change set
 │   └── user-management.md                   # User-management contract/behavior notes
@@ -170,10 +170,10 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   ├── drizzle/
 │   │   ├── auth-schema.ts                   # Better Auth's Drizzle tables (better_auth schema)
 │   │   ├── currency.test.ts                 # Tests for BDT conversion and value saving
-│   │   ├── currency.ts                      # Currencies, default exchange rates, exact BDT conversion
+│   │   ├── currency.ts                      # Currencies, "1 unit = X BDT" rates, exact to/from-BDT conversion
 │   │   ├── datalist-values.ts               # Validation for Settings client/system lists
 │   │   ├── drizzle-index.ts                 # Drizzle db client instance
-│   │   ├── migrations/                      # Drizzle-generated SQL migrations + snapshots (baseline: initial_proposals)
+│   │   ├── migrations/                      # Drizzle-generated SQL migrations + snapshots (initial_proposals, bdt_exchange_rates)
 │   │   ├── next-proposal-reference.ts       # FCL/Quote/YYYY/NNN allocation inside a transaction (advisory lock)
 │   │   ├── project-status.ts                # Current/Secured/Lost status values and guard
 │   │   ├── proposal-access.test.ts          # Tests for canEditProposal and proposal form validation
