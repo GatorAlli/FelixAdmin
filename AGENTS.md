@@ -144,6 +144,7 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   ├── init.sql                             # Local dev role/database bootstrap
 │   └── schema.sql                           # Reference schema dump for local Postgres
 ├── docs/
+│   ├── proposal-conversion-plan.md          # Plan for converting the order app into the proposal app
 │   ├── reports/user-management-code-report.md  # Snapshot report of user-management change set
 │   └── user-management.md                   # User-management contract/behavior notes
 ├── lib/
