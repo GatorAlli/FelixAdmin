@@ -144,6 +144,8 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   ├── init.sql                             # Local dev role/database bootstrap
 │   └── schema.sql                           # Reference schema dump for local Postgres
 ├── docs/
+│   ├── initial_migration/                   # Per-phase reports for the order→proposal conversion
+│   │   └── phase-1-data-and-helpers.md      # Phase 1: schema, currency, helpers, tests, baseline migration
 │   ├── proposal-conversion-plan.md          # Plan for converting the order app into the proposal app
 │   ├── reports/user-management-code-report.md  # Snapshot report of user-management change set
 │   └── user-management.md                   # User-management contract/behavior notes
@@ -167,22 +169,21 @@ Paths above are relative to this repository. Read the relevant source files; ski
 │   │   └── storage.ts                       # Private filesystem read/write/delete for document bytes
 │   ├── drizzle/
 │   │   ├── auth-schema.ts                   # Better Auth's Drizzle tables (better_auth schema)
-│   │   ├── currency.test.ts                 # Tests for currency conversion helpers
-│   │   ├── currency.ts                      # Supplier columns, currency conversion
-│   │   ├── custom-suppliers.ts              # Custom (non-built-in) supplier row helpers
-│   │   ├── datalist-values.ts               # Default suggestion lists for Settings catalogs
+│   │   ├── currency.test.ts                 # Tests for BDT conversion and value saving
+│   │   ├── currency.ts                      # Currencies, default exchange rates, exact BDT conversion
+│   │   ├── datalist-values.ts               # Validation for Settings client/system lists
 │   │   ├── drizzle-index.ts                 # Drizzle db client instance
-│   │   ├── expenses.ts                      # Miscellaneous expense row helpers
-│   │   ├── migrations/                      # Drizzle-generated SQL migrations + snapshots, one pair per change
-│   │   ├── order-access.test.ts             # Tests for canEditOrder
-│   │   ├── order-access.ts                  # Role/order-manager-access edit-permission check
-│   │   ├── order-calculations.test.ts       # Tests for order totals/panel calculations
-│   │   ├── order-calculations.ts            # Order totals and calculation-panel fields
-│   │   ├── order-date.ts                    # Asia/Dhaka current-date helper for new orders
-│   │   ├── order-datalists.ts               # Server loader for Settings suggestion lists
-│   │   ├── order-reference.ts               # FCL/FPO/YYYY/NNN reference allocation (advisory lock)
-│   │   ├── order-values.ts                  # Order row serialization/defaults for save
-│   │   └── schema.ts                        # Drizzle table definitions (orders, users, documents, etc.)
+│   │   ├── migrations/                      # Drizzle-generated SQL migrations + snapshots (baseline: initial_proposals)
+│   │   ├── next-proposal-reference.ts       # FCL/Quote/YYYY/NNN allocation inside a transaction (advisory lock)
+│   │   ├── project-status.ts                # Current/Secured/Lost status values and guard
+│   │   ├── proposal-access.test.ts          # Tests for canEditProposal and proposal form validation
+│   │   ├── proposal-access.ts               # Role/proposal-manager-access edit-permission check
+│   │   ├── proposal-datalists.ts            # Server loader for Settings suggestion lists
+│   │   ├── proposal-date.ts                 # Asia/Dhaka date helpers, ISO date check, display formatting
+│   │   ├── proposal-reference.test.ts       # Tests for reference formatting and year prefixes
+│   │   ├── proposal-reference.ts            # Browser-safe FCL/Quote reference format and year prefix
+│   │   ├── proposal-values.ts               # Proposal form validation and row values for save
+│   │   └── schema.ts                        # Drizzle table definitions (proposals, users, clients, systems, documents)
 │   ├── format-money.ts                      # Money string formatting/summation helpers
 │   ├── use-transient-message.ts             # Client hook: short-lived success/error message state
 │   ├── user-management/

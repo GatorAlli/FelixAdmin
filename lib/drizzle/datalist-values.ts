@@ -1,20 +1,7 @@
-import { supplierColumns } from "./currency";
-
-export type DatalistKind = "suppliers" | "customers" | "expenses";
-
-export const defaultSupplierSuggestions = Object.keys(supplierColumns);
-export const defaultExpenseSuggestions = [
-  "FREIGHT: USA TO SINGAPORE",
-  "FREIGHT: GERMANY TO SINGAPORE",
-  "FREIGHT: CHINA TO SINGAPORE",
-  "Bank Fee",
-  "DHL Cost",
-  "UPS Cost",
-];
+export type DatalistKind = "clients" | "systems";
 
 // Trim suggestions and reject duplicates before Settings replaces the stored list.
 export function readDatalistValues(
-  kind: DatalistKind,
   input: unknown,
 ): { ok: true; values: string[] } | { ok: false; message: string } {
   if (!Array.isArray(input) || input.length > 500) {
@@ -41,28 +28,7 @@ export function readDatalistValues(
     if (seen.has(key))
       return { ok: false, message: `Duplicate suggestion: ${trimmed}.` };
     seen.add(key);
-    values.push(kind === "suppliers" ? key : trimmed);
+    values.push(trimmed);
   }
   return { ok: true, values };
-}
-
-// Addresses are optional and stay paired with the customer at the same index.
-export function readCustomerAddresses(
-  input: unknown,
-  count: number,
-): { ok: true; values: (string | null)[] } | { ok: false; message: string } {
-  if (
-    !Array.isArray(input) ||
-    input.length !== count ||
-    input.some(
-      (value) => typeof value !== "string" || value.trim().length > 1000,
-    )
-  ) {
-    return {
-      ok: false,
-      message:
-        "Enter one optional address per customer, up to 1000 characters each.",
-    };
-  }
-  return { ok: true, values: input.map((value) => value.trim() || null) };
 }

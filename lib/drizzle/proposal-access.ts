@@ -1,7 +1,7 @@
 // Roles come from the authenticated user's database profile, never from FormData.
-export function canEditOrder(
+export function canEditProposal(
   status: string | null | undefined,
-  orderManagerAccess: boolean,
+  proposalManagerAccess: boolean,
 ) {
-  return status === "admin" || (status === "order" && orderManagerAccess);
+  return status === "admin" || (status === "proposal" && proposalManagerAccess);
 }

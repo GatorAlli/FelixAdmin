@@ -1,53 +1,34 @@
-import type { NewOrder } from "./schema";
-import { DEFAULT_PANEL_CURRENCIES, panelFields } from "./order-calculations";
-import { sumUsdAmounts, type MiscellaneousExpense } from "./expenses";
+import type { NewProposal } from "./schema";
 import {
-  supplierColumns,
-  type SupplierKey,
-  type SupplierCurrencyDetail,
-  type CustomSupplierDetail,
-  legacySupplierRowKey,
-  DEFAULT_GBP_TO_USD,
-  DEFAULT_EUR_TO_USD,
-  DEFAULT_USD_TO_SGD,
+  DEFAULT_EXCHANGE_RATES,
+  convertToBdt,
   isCurrency,
   isValidRate,
-  convertToUsd,
+  type ExchangeRates,
 } from "./currency";
+import { isProjectStatus } from "./project-status";
+import { isIsoDate } from "./proposal-date";
 
 function readText(formData: FormData, name: string) {
   const value = formData.get(name);
   return typeof value === "string" ? value.trim() : "";
 }
 
-// Fees are optional percentages, with up to four decimal places.
-function readOptionalFee(formData: FormData, name: string) {
-  const value = readText(formData, name);
-  if (!value) return { value: null, error: null };
-  const [whole] = value.split(".");
-  if (
-    !/^\d+(?:\.\d{1,4})?$/.test(value) ||
-    whole.replace(/^0+/, "").length > 14
-  ) {
-    return {
-      value: null,
-      error: `${name} must be a non-negative percentage with at most 4 decimal places.`,
-    };
-  }
-  return { value, error: null };
-}
-
 // Both creating and editing use the same field validation and conversion.
-export function readOrderValues(
+export function readProposalValues(
   formData: FormData,
   authenticatedUsername: string,
-  allowedSupplierNames: readonly string[] = Object.keys(supplierColumns),
 ):
   | {
       ok: true;
       values: Omit<
-        NewOrder,
-        "sl" | "felixOrderRef" | "createdDate" | "orderManagerAccess"
+        NewProposal,
+        | "sl"
+        | "referenceNumber"
+        | "createdDate"
+        | "proposalManagerAccess"
+        | "lastEditedBy"
+        | "lastEditedAt"
       >;
     }
   | { ok: false; message: string } {
@@ -57,279 +38,78 @@ export function readOrderValues(
     return { ok: false, message: "Created by is required." };
   }
 
+  // Project Name, Client Name and Project Status are the only required fields.
   const projectName = readText(formData, "projectName");
   const clientName = readText(formData, "clientName");
+  const projectStatus = readText(formData, "projectStatus");
   if (!projectName) return { ok: false, message: "Project Name is required." };
-  if (!clientName) return { ok: false, message: "Customer Name is required." };
+  if (!clientName) return { ok: false, message: "Client Name is required." };
+  if (!isProjectStatus(projectStatus)) {
+    return {
+      ok: false,
+      message: "Choose Current, Secured or Lost for Project Status.",
+    };
+  }
 
-  const gbpToUsdRate = readText(formData, "gbpToUsdRate") || DEFAULT_GBP_TO_USD;
-  const eurToUsdRate = readText(formData, "eurToUsdRate") || DEFAULT_EUR_TO_USD;
-  const usdToSgdRate = readText(formData, "usdToSgdRate") || DEFAULT_USD_TO_SGD;
-  if (
-    !isValidRate(gbpToUsdRate) ||
-    !isValidRate(eurToUsdRate) ||
-    !isValidRate(usdToSgdRate)
-  ) {
+  // Blank rates fall back to the defaults, matching the prefilled form.
+  const rates: ExchangeRates = {
+    gbpToUsdRate:
+      readText(formData, "gbpToUsdRate") || DEFAULT_EXCHANGE_RATES.gbpToUsdRate,
+    eurToUsdRate:
+      readText(formData, "eurToUsdRate") || DEFAULT_EXCHANGE_RATES.eurToUsdRate,
+    usdToSgdRate:
+      readText(formData, "usdToSgdRate") || DEFAULT_EXCHANGE_RATES.usdToSgdRate,
+    usdToBdtRate:
+      readText(formData, "usdToBdtRate") || DEFAULT_EXCHANGE_RATES.usdToBdtRate,
+  };
+  if (!Object.values(rates).every(isValidRate)) {
     return {
       ok: false,
       message:
-        "All three exchange rates must be positive decimals with at most 2 decimal places.",
+        "All four exchange rates must be positive decimals with at most 2 decimal places.",
     };
   }
 
-  const orderHandlingFee = readOptionalFee(formData, "orderHandlingFee");
-  const miscellaneousHandlingFee = readOptionalFee(
-    formData,
-    "miscellaneousHandlingFee",
-  );
-  const feeError = orderHandlingFee.error ?? miscellaneousHandlingFee.error;
-  if (feeError) return { ok: false, message: feeError };
-
-  // Existing clientOrderValue stays in USD for summaries; keep the input separately.
-  const clientOrderOriginalValue = readText(formData, "clientOrderValue");
-  const clientOrderCurrency = formData.get("clientOrderCurrency") ?? "USD";
-  if (!isCurrency(clientOrderCurrency)) {
-    return {
-      ok: false,
-      message: "Choose a valid currency for the order value.",
-    };
-  }
-  const clientOrderUsdValue = clientOrderOriginalValue
-    ? convertToUsd(
-        clientOrderOriginalValue,
-        clientOrderCurrency,
-        gbpToUsdRate,
-        eurToUsdRate,
-        usdToSgdRate,
-      )
-    : null;
-  if (clientOrderOriginalValue && clientOrderUsdValue === null) {
-    return {
-      ok: false,
-      message:
-        "Enter a valid order value (up to 2 decimal places and within the supported range).",
-    };
-  }
-
-  // Validate supplier rows and keep both original currency details and USD amounts.
-  const supplierRowKeys = formData.getAll("supplierRowKey");
-  const usedRowKeys = new Set<string>();
-  const supplierNames = formData.getAll("supplier");
-  const supplierAmounts = formData.getAll("supplierAmount");
-  const supplierCurrencies = formData.getAll("supplierCurrency");
-  const supplierCurrencyDetails: SupplierCurrencyDetail[] = [];
-  if (
-    supplierNames.length !== supplierAmounts.length ||
-    supplierNames.length !== supplierCurrencies.length
-  ) {
-    return { ok: false, message: "Supplier rows are incomplete." };
-  }
-  const allowedSuppliers = new Set(
-    allowedSupplierNames.map((name) => name.trim().toUpperCase()),
-  );
-  const customSupplierDetails: CustomSupplierDetail[] = [];
-  const customUsdAmounts: string[] = [];
-  const supplierValues: Partial<Record<SupplierKey, string>> = {};
-  const selectedSuppliers: string[] = [];
-
-  for (let index = 0; index < supplierNames.length; index++) {
-    const supplierName = supplierNames[index];
-    const supplierAmount = supplierAmounts[index];
-    const name =
-      typeof supplierName === "string" ? supplierName.trim().toUpperCase() : "";
-    const amount =
-      typeof supplierAmount === "string" ? supplierAmount.trim() : "";
-
-    // The initial blank supplier row is optional; partially filled rows are not.
-    if (!name && !amount) continue;
-    if (!name || !amount) {
-      return {
-        ok: false,
-        message: "Complete both supplier and amount for each row.",
-      };
+  // Value is optional. When present, keep the input and recompute BDT on the server.
+  const valueOriginal = readText(formData, "value");
+  let valueCurrency: NewProposal["valueCurrency"] = null;
+  let valueBdt: string | null = null;
+  if (valueOriginal) {
+    const currency = formData.get("valueCurrency");
+    if (!isCurrency(currency)) {
+      return { ok: false, message: "Choose a valid currency for the value." };
     }
-
-    if (!allowedSuppliers.has(name) || name.length > 200) {
-      return {
-        ok: false,
-        message: `Unknown supplier: ${name}. Add new suppliers in Settings first.`,
-      };
-    }
-    const rowKey = supplierRowKeys.length
-      ? supplierRowKeys[index]
-      : legacySupplierRowKey(name);
-    if (
-      typeof rowKey !== "string" ||
-      !rowKey ||
-      rowKey.length > 240 ||
-      /[\x00-\x1f\x7f]/.test(rowKey) ||
-      usedRowKeys.has(rowKey)
-    ) {
+    valueCurrency = currency;
+    valueBdt = convertToBdt(valueOriginal, currency, rates);
+    if (valueBdt === null) {
       return {
         ok: false,
         message:
-          "Supplier row references are invalid. Reload the order and try again.",
+          "Enter a valid value (up to 2 decimal places and within the supported range).",
       };
     }
-    usedRowKeys.add(rowKey);
-    const column = Object.hasOwn(supplierColumns, name)
-      ? supplierColumns[name as keyof typeof supplierColumns]
-      : undefined;
-    if (selectedSuppliers.includes(name)) {
-      return { ok: false, message: `${name} can only be entered once.` };
-    }
-
-    const currency = supplierCurrencies[index];
-    if (!isCurrency(currency)) {
-      return { ok: false, message: `Choose a valid currency for ${name}.` };
-    }
-    const usdAmount = convertToUsd(
-      amount,
-      currency,
-      gbpToUsdRate,
-      eurToUsdRate,
-      usdToSgdRate,
-    );
-    if (usdAmount === null) {
-      return {
-        ok: false,
-        message: `Enter a valid amount for ${name} (up to 2 decimal places and within the supported range).`,
-      };
-    }
-
-    if (column) {
-      supplierValues[column] = usdAmount;
-      supplierCurrencyDetails.push({
-        rowKey,
-        supplier: column,
-        amount,
-        currency,
-      });
-    } else {
-      customSupplierDetails.push({ rowKey, name, amount, currency });
-      customUsdAmounts.push(usdAmount);
-    }
-    selectedSuppliers.push(name);
   }
 
-  // Expenses follow the same original-amount and USD-total split as suppliers.
-  const expenseNames = formData.getAll("expenseName");
-  const expenseAmounts = formData.getAll("expenseAmount");
-  const expenseCurrencies = formData.getAll("expenseCurrency");
-  if (
-    expenseNames.length !== expenseAmounts.length ||
-    expenseNames.length !== expenseCurrencies.length
-  ) {
-    return { ok: false, message: "Expenditure rows are incomplete." };
-  }
-  const miscellaneousExpenses: MiscellaneousExpense[] = [];
-  const expenseNameSet = new Set<string>();
-  const usdExpenses: string[] = [];
-  for (let index = 0; index < expenseNames.length; index++) {
-    const rawName = expenseNames[index];
-    const rawAmount = expenseAmounts[index];
-    const name =
-      typeof rawName === "string" ? rawName.trim().toUpperCase() : "";
-    const amount = typeof rawAmount === "string" ? rawAmount.trim() : "";
-    if (!name && !amount) continue;
-    if (!name || !amount) {
-      return {
-        ok: false,
-        message: "Complete both expenditure name and amount for each row.",
-      };
-    }
-    if (expenseNameSet.has(name)) {
-      return { ok: false, message: `${name} can only be entered once.` };
-    }
-    const currency = expenseCurrencies[index];
-    if (!isCurrency(currency)) {
-      return { ok: false, message: `Choose a valid currency for ${name}.` };
-    }
-    const usdAmount = convertToUsd(
-      amount,
-      currency,
-      gbpToUsdRate,
-      eurToUsdRate,
-      usdToSgdRate,
-    );
-    if (usdAmount === null) {
-      return {
-        ok: false,
-        message: `Enter a valid amount for ${name} (up to 2 decimal places and within the supported range).`,
-      };
-    }
-    expenseNameSet.add(name);
-    miscellaneousExpenses.push({ name, amount, currency });
-    usdExpenses.push(usdAmount);
-  }
-  const totalMiscellaneousCost = sumUsdAmounts(usdExpenses);
-  if (totalMiscellaneousCost === null) {
-    return {
-      ok: false,
-      message: "The combined miscellaneous cost exceeds the supported range.",
-    };
-  }
-
-  const materialTotal = sumUsdAmounts([
-    ...Object.values(supplierValues),
-    ...customUsdAmounts,
-  ]);
-  if (materialTotal === null) {
-    return {
-      ok: false,
-      message: "The combined material cost exceeds the supported range.",
-    };
-  }
-  // Display currencies affect the panel only; stored totals remain in USD.
-  const calculationCurrencies = { ...DEFAULT_PANEL_CURRENCIES };
-  for (const [key] of panelFields) {
-    const currency = formData.get(`panelCurrency-${key}`) ?? "USD";
-    if (!isCurrency(currency)) {
-      return {
-        ok: false,
-        message: "Choose a valid currency for each calculation-panel value.",
-      };
-    }
-    calculationCurrencies[key] = currency;
-  }
-
-  const importedBy = readText(formData, "importedBy");
-  if (importedBy && importedBy !== "Felix" && importedBy !== "Customer") {
-    return { ok: false, message: "Choose Felix or Customer for Imported By." };
+  const finalizationDate = readText(formData, "finalizationDate");
+  if (finalizationDate && !isIsoDate(finalizationDate)) {
+    return { ok: false, message: "Enter a valid Finalization Date." };
   }
 
   // Build the database fields explicitly; unrelated browser fields are ignored.
   const values = {
-    referenceNumber: readText(formData, "referenceNumber") || null,
-    importedBy: importedBy ? (importedBy as "Felix" | "Customer") : null,
     createdBy,
-    calculationCurrencies,
-    gbpToUsdRate,
-    eurToUsdRate,
-    usdToSgdRate,
-    supplierCurrencyDetails,
-    customSupplierDetails,
-    paymentMode: readText(formData, "paymentMode") || null,
-    clientOrderValue: clientOrderUsdValue,
-    clientOrderOriginalValue: clientOrderOriginalValue || null,
-    clientOrderCurrency,
     projectName,
-    projectNotes: readText(formData, "projectNotes") || null,
-    orderHandlingFee: orderHandlingFee.value,
-    miscellaneousHandlingFee: miscellaneousHandlingFee.value,
     clientName,
     endUser: readText(formData, "endUser") || null,
-    productSystem: readText(formData, "productSystem") || null,
-    orderHandledBy: readText(formData, "orderHandledBy") || null,
-    suppliers: selectedSuppliers.length ? selectedSuppliers.join(", ") : null,
-    // Clear amounts for suppliers that were removed from the form during editing.
-    ...(Object.fromEntries(
-      Object.values(supplierColumns).map((column) => [column, null]),
-    ) as Record<SupplierKey, null>),
-    ...supplierValues,
-    misCost: miscellaneousExpenses.length ? totalMiscellaneousCost : null,
-    miscellaneousExpenses,
-    paymentNotes: readText(formData, "paymentNotes") || null,
+    consultant: readText(formData, "consultant") || null,
+    system: readText(formData, "system") || null,
+    valueOriginal: valueOriginal || null,
+    valueCurrency,
+    valueBdt,
+    ...rates,
+    projectStatus,
+    finalizationDate: finalizationDate || null,
+    proposalNotes: readText(formData, "proposalNotes") || null,
   };
 
   return { ok: true, values };

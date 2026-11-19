@@ -2,28 +2,16 @@ import "server-only";
 
 import { asc } from "drizzle-orm";
 import { db } from "@/lib/drizzle/drizzle-index";
-import { suppliers, customers, miscellaneousExpenditures } from "./schema";
+import { clients, systems } from "./schema";
 
 // Called only after the page has authenticated its visitor.
-export async function getOrderDatalists() {
-  const [supplierRows, customerRows, expenseRows] = await Promise.all([
-    db.select().from(suppliers).orderBy(asc(suppliers.sl)),
-    db.select().from(customers).orderBy(asc(customers.sl)),
-    db
-      .select()
-      .from(miscellaneousExpenditures)
-      .orderBy(asc(miscellaneousExpenditures.sl)),
+export async function getProposalDatalists() {
+  const [clientRows, systemRows] = await Promise.all([
+    db.select().from(clients).orderBy(asc(clients.sl)),
+    db.select().from(systems).orderBy(asc(systems.sl)),
   ]);
   return {
-    supplierSuggestions: supplierRows.flatMap((row) =>
-      row.supplierName ? [row.supplierName] : [],
-    ),
-    customerSuggestions: customerRows.map((row) => row.customerName),
-    customerAddresses: customerRows.map((row) => row.address ?? ""),
-    expenseSuggestions: expenseRows.flatMap((row) =>
-      row.miscellaneousExpenditureType
-        ? [row.miscellaneousExpenditureType]
-        : [],
-    ),
+    clientSuggestions: clientRows.map((row) => row.clientName),
+    systemSuggestions: systemRows.map((row) => row.systemName),
   };
 }

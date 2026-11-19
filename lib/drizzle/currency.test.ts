@@ -1,32 +1,57 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { convertToUsd, convertFromUsd, restoreSupplierRows } from "./currency";
-import { readOrderValues } from "./order-values";
+import { convertToBdt, isCurrency, type ExchangeRates } from "./currency";
+import { readProposalValues } from "./proposal-values";
 import { sumMoneyAmounts } from "../format-money";
 
+const rates: ExchangeRates = {
+  gbpToUsdRate: "1.40",
+  eurToUsdRate: "1.20",
+  usdToSgdRate: "1.30",
+  usdToBdtRate: "125.00",
+};
+
 // Money stays in decimal strings so large amounts do not lose cents.
-test("USD, GBP, EUR and SGD convert using the order's rates", () => {
-  assert.equal(convertToUsd("100", "USD", "1.4", "1.2", "1.3"), "100.00");
-  assert.equal(convertToUsd("100", "GBP", "1.4", "1.2", "1.3"), "140.00");
-  assert.equal(convertToUsd("100", "EUR", "1.4", "1.2", "1.3"), "120.00");
-  assert.equal(convertToUsd("130", "SGD", "1.4", "1.2", "1.3"), "100.00");
-  assert.equal(convertFromUsd("100", "SGD", "1.4", "1.2", "1.3"), "130.00");
-  assert.equal(convertFromUsd("-140", "GBP", "1.4", "1.2"), "-100.00");
+test("every currency converts to BDT using the proposal's rates", () => {
+  assert.equal(convertToBdt("100", "BDT", rates), "100.00");
+  assert.equal(convertToBdt("100", "USD", rates), "12500.00");
+  assert.equal(convertToBdt("100", "GBP", rates), "17500.00");
+  assert.equal(convertToBdt("100", "EUR", rates), "15000.00");
+  assert.equal(convertToBdt("130", "SGD", rates), "12500.00");
 });
 
-test("conversion rounds half cents and rejects invalid amounts or overflow", () => {
-  assert.equal(convertToUsd("0.01", "GBP", "0.5", "1"), "0.01");
-  assert.equal(convertToUsd("1", "SGD", "1", "1", "1.3"), "0.77");
+test("conversion rounds once and rejects invalid amounts, rates or overflow", () => {
+  // 1 SGD = 125 / 1.3 = 96.153846… BDT
+  assert.equal(convertToBdt("1", "SGD", rates), "96.15");
+  // 0.01 GBP = 0.01 × 1.4 × 125 = 1.75 BDT, with no intermediate USD rounding.
+  assert.equal(convertToBdt("0.01", "GBP", rates), "1.75");
   assert.equal(
-    convertToUsd("9999999999999999.99", "USD", "1", "1"),
+    convertToBdt("9999999999999999.99", "BDT", rates),
     "9999999999999999.99",
   );
-  assert.equal(convertToUsd("9999999999999999.99", "EUR", "1", "2"), null);
-  assert.equal(convertToUsd("-1", "USD", "1", "1"), null);
-  assert.equal(convertToUsd("10", "SGD", "1", "1", "0"), null);
+  assert.equal(convertToBdt("9999999999999999.99", "USD", rates), null);
+  assert.equal(convertToBdt("-1", "USD", rates), null);
+  assert.equal(convertToBdt("1.234", "USD", rates), null);
+  assert.equal(
+    convertToBdt("10", "USD", { ...rates, usdToBdtRate: "0" }),
+    null,
+  );
+  assert.equal(
+    convertToBdt("10", "SGD", { ...rates, usdToSgdRate: "0" }),
+    null,
+  );
 });
 
-test("supplier totals add exact cents and ignore empty amounts", () => {
+test("only the five supported currencies are accepted", () => {
+  for (const currency of ["USD", "SGD", "EUR", "GBP", "BDT"]) {
+    assert.equal(isCurrency(currency), true);
+  }
+  for (const currency of ["usd", "INR", "", null, undefined]) {
+    assert.equal(isCurrency(currency), false);
+  }
+});
+
+test("money totals add exact cents and ignore empty amounts", () => {
   assert.equal(sumMoneyAmounts(["0.10", "0.20", null, undefined, ""]), "0.30");
   assert.equal(
     sumMoneyAmounts(["9999999999999999.99", "0.02"]),
@@ -36,74 +61,45 @@ test("supplier totals add exact cents and ignore empty amounts", () => {
   assert.equal(sumMoneyAmounts([]), "0.00");
 });
 
-test("saving an SGD supplier keeps the original amount and recalculates USD", () => {
+test("saving a value keeps the original amount and recalculates BDT on the server", () => {
   const form = new FormData();
   form.set("projectName", "Test project");
-  form.set("clientName", "Test customer");
-  form.set("gbpToUsdRate", "1.40");
-  form.set("eurToUsdRate", "1.20");
-  form.set("usdToSgdRate", "1.30");
-  form.set("supplier", "HONEYWELL");
-  form.set("supplierAmount", "130");
-  form.set("supplierCurrency", "SGD");
-  form.set("supplierUsd", "999999");
+  form.set("clientName", "Test client");
+  form.set("projectStatus", "Current");
+  form.set("value", "130");
+  form.set("valueCurrency", "SGD");
+  form.set("valueBdt", "999999");
 
-  const result = readOrderValues(form, "Test user");
+  const result = readProposalValues(form, "Test user");
   assert.ok(result.ok);
-  assert.equal(result.values.honeywell, "100.00");
-  const restored = restoreSupplierRows({
-    ...result.values,
-    supplierCurrencyDetails: result.values.supplierCurrencyDetails ?? null,
-  });
-  assert.equal(restored[0].amount, "130");
-  assert.equal(restored[0].currency, "SGD");
+  assert.equal(result.values.valueOriginal, "130");
+  assert.equal(result.values.valueCurrency, "SGD");
+  assert.equal(result.values.valueBdt, "12500.00");
+  assert.equal(result.values.usdToBdtRate, "125.00");
 });
 
-test("supplier document references survive rename, reorder and row removal", () => {
+test("a blank value stores no currency or BDT amount", () => {
   const form = new FormData();
-  form.set("projectName", "Attachment regression");
-  form.set("clientName", "Test customer");
-  for (const [name, rowKey] of [
-    ["SQUARE", "row-square"],
-    ["TRANE", "row-trane"],
-  ]) {
-    form.append("supplier", name);
-    form.append("supplierAmount", "100");
-    form.append("supplierCurrency", "USD");
-    form.append("supplierRowKey", rowKey);
-  }
-  const result = readOrderValues(form, "Tester", ["SQUARE", "TRANE"]);
+  form.set("projectName", "Test project");
+  form.set("clientName", "Test client");
+  form.set("projectStatus", "Current");
+  form.set("valueCurrency", "USD");
+  const result = readProposalValues(form, "Test user");
   assert.ok(result.ok);
-  const restored = restoreSupplierRows({
-    ...result.values,
-    supplierCurrencyDetails: result.values.supplierCurrencyDetails ?? null,
-  });
-  assert.deepEqual(
-    restored.map((row) => [row.supplier, row.rowKey]),
-    [
-      ["TRANE", "row-trane"],
-      ["SQUARE", "row-square"],
-    ],
-  );
-  const renamed = restoreSupplierRows({
-    supplierCurrencyDetails: [],
-    customSupplierDetails: [
-      { name: "RENAMED", amount: "100", currency: "USD", rowKey: "row-square" },
-    ],
-  });
-  assert.equal(renamed[0].rowKey, "row-square");
-  assert.ok(!renamed.some((row) => row.rowKey === "row-trane"));
+  assert.equal(result.values.valueOriginal, null);
+  assert.equal(result.values.valueCurrency, null);
+  assert.equal(result.values.valueBdt, null);
 });
 
-test("rejects duplicate supplier document references", () => {
+test("a value with an unsupported currency or bad rate is rejected", () => {
   const form = new FormData();
-  form.set("projectName", "Test");
-  form.set("clientName", "Test");
-  for (const name of ["TRANE", "BELIMO"]) {
-    form.append("supplier", name);
-    form.append("supplierAmount", "1");
-    form.append("supplierCurrency", "USD");
-    form.append("supplierRowKey", "same-row");
-  }
-  assert.equal(readOrderValues(form, "Tester").ok, false);
+  form.set("projectName", "Test project");
+  form.set("clientName", "Test client");
+  form.set("projectStatus", "Current");
+  form.set("value", "100");
+  form.set("valueCurrency", "INR");
+  assert.equal(readProposalValues(form, "Test user").ok, false);
+  form.set("valueCurrency", "USD");
+  form.set("usdToBdtRate", "0");
+  assert.equal(readProposalValues(form, "Test user").ok, false);
 });
